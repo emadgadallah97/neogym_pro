@@ -59,6 +59,8 @@ Route::group(['middleware'=>['guest']],function(){
             Route::resource('branches', 'branchesController');
         });
 require base_path('routes/settings.php');
+require base_path('routes/employees.php');
+
 
         Route::group(['namespace'=>'dashbord'],function()
         {

@@ -13,6 +13,8 @@ return [
     |
     */
     'title' => 'نظام ادارة الجيم',
+    'employees' => 'الموظفين',
+
 
     // Patient management
     'patients' => 'المرضي',

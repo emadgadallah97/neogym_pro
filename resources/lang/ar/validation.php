@@ -28,6 +28,7 @@ return [
         'file' => 'The :attribute must be between :min and :max kilobytes.',
         'string' => 'The :attribute must be between :min and :max characters.',
         'array' => 'The :attribute must have between :min and :max items.',
+
     ],
     'boolean' => 'The :attribute field must be true or false.',
     'confirmed' => 'The :attribute confirmation does not match.',
@@ -132,6 +133,15 @@ return [
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',
+                    'branches.required' => ['required' => 'يجب اختيار فرع واحد على الأقل.'],
+        'branches.array' => ['array' => 'صيغة الفروع غير صحيحة.'],
+        'branches.*.exists' => ['exists' => 'الفرع المختار غير صحيح.'],
+
+        'primary_branch_id.required' => ['required' => 'الفرع الأساسي مطلوب.'],
+        'primary_branch_id.exists' => ['exists' => 'الفرع الأساسي المختار غير صحيح.'],
+
+        'compensation_type.in' => ['in' => 'نوع التعويض غير صحيح.'],
+        'commission_percent.max' => ['max' => 'نسبة العمولة يجب ألا تزيد عن 100.'],
         ],
     ],
 
@@ -146,6 +156,44 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+         'first_name' => 'الاسم الأول',
+        'last_name' => 'الاسم الأخير',
+        'job_id' => 'الوظيفة',
+        'photo' => 'الصورة',
+        'gender' => 'الجنس',
+        'birth_date' => 'تاريخ الميلاد',
+
+        'phone_1' => 'هاتف 1',
+        'phone_2' => 'هاتف 2',
+        'whatsapp' => 'واتساب',
+        'email' => 'البريد الإلكتروني',
+
+        'specialization' => 'التخصص',
+        'years_experience' => 'سنوات الخبرة',
+        'bio' => 'نبذة',
+
+        'compensation_type' => 'نوع التعويض',
+        'base_salary' => 'الراتب الأساسي',
+        'commission_percent' => 'نسبة العمولة',
+        'commission_fixed' => 'عمولة ثابتة',
+
+        'salary_transfer_method' => 'طريقة تحويل الراتب',
+        'salary_transfer_details' => 'بيانات التحويل',
+
+        'branches' => 'الفروع',
+        'branches.*' => 'فرع',
+        'primary_branch_id' => 'الفرع الأساسي',
+
+        'status' => 'الحالة',
+    ],
+
+
+
+
+
+
+
+   
 
 ];
