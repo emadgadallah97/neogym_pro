@@ -89,7 +89,17 @@ return [
     'massagedelete_d' => 'هل أنت متأكد',
     'massagedelete_p' => 'سيتم حذف هذا السجل: ',
     'massagedelete' => 'تأكيد الحذف',
+'jobs' => 'الوظائف',
 
+'Go_to_jobs_now' => 'الذهاب الي اعدادات الوظائف',
+'jobs_settings' => 'إعدادات الوظائف',
+'add_new_job' => 'إضافة وظيفة جديدة',
+'update_job' => 'تعديل الوظيفة',
+'job_code' => 'كود الوظيفة',
+'job_code_enter' => 'أدخل كود الوظيفة (اختياري)',
+'job_description' => 'وصف الوظيفة',
+'job_description_enter' => 'أدخل وصف الوظيفة (اختياري)',
+'job_exists' => 'هذه الوظيفة موجودة بالفعل (نفس الاسم عربي أو إنجليزي).',
 
 
 

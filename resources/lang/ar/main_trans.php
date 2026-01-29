@@ -12,7 +12,7 @@ return [
     | you want to customize your views to better match your application.
     |
     */
-    'title' => 'نظام ادارة العيادات',
+    'title' => 'نظام ادارة الجيم',
 
     // Patient management
     'patients' => 'المرضي',
@@ -24,7 +24,7 @@ return [
     'reservations' => 'الحجوزات',
     'reservations_management' => 'ادارة الحجوزات',
 
-    // doctors 
+    // doctors
 
     'doctors' => 'الاطباء',
     'doctors_management' => 'تطبيقات الاطباء',
@@ -48,7 +48,7 @@ return [
         'user_management' => 'ادارة المستخدمين',
         'user_add' => 'انشاء مستخدم',
         'users' => 'مستخدمين',
-    //reports 
+    //reports
     'reports' => 'التقارير',
 
 

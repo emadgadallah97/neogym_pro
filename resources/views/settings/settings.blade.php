@@ -27,6 +27,7 @@
     <div class="row">
         <div class="col-12">
             <div class="row">
+                {{-- اعدادات الجنسيات --}}
                 <div class="col-xxl-4 col-lg-6">
                     <div class="card card-body text-center">
                         <div class="avatar-md mx-auto mb-3">
@@ -42,6 +43,7 @@
                             class="btn btn-info">{{ trans('settings_trans.Go_to_settings_now') }}</a>
                     </div>
                 </div><!-- end col -->
+                {{-- اعدادات الاماكن --}}
                 <div class="col-xxl-4 col-lg-6">
                     <div class="card card-body text-center">
                         <div class="avatar-md mx-auto mb-3">
@@ -57,6 +59,7 @@
                             class="btn btn-info">{{ trans('settings_trans.Go_to_settings_now') }}</a>
                     </div>
                 </div><!-- end col -->
+                {{-- اعدادات العملات --}}
                 <div class="col-xxl-4 col-lg-6">
                     <div class="card card-body text-center">
                         <div class="avatar-md mx-auto mb-3">
@@ -73,6 +76,7 @@
                     </div>
                 </div>
 
+                {{-- الاعدادات العامة --}}
                 <div class="col-xxl-4 col-lg-6">
                     <div class="card card-body text-center">
                         <div class="avatar-md mx-auto mb-3">
@@ -88,6 +92,7 @@
                             class="btn btn-info">{{ trans('settings_trans.Go_to_settings_now') }}</a>
                     </div>
                 </div>
+                {{-- اعدادات الفروع --}}
                 <div class="col-xxl-4 col-lg-6">
                     <div class="card card-body text-center">
                         <div class="avatar-md mx-auto mb-3">
@@ -106,6 +111,28 @@
 
                         <a href="{{ route('branches.index') }}" class="btn btn-info">
                             {{ trans('settings_trans.Go_to_branches_now') }}
+                        </a>
+                    </div>
+                </div>
+                {{-- اعدادت الوظائف --}}
+                <div class="col-xxl-4 col-lg-6">
+                    <div class="card card-body text-center">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-soft-light border border-info p-2 text-success rounded">
+
+                              <lord-icon src="{{URL::asset('assets/images/icon/oaflahpk.json')}}" trigger="loop"
+                                    delay="500" colors="primary:#4bb3fd" style="width:250px;height:250px">
+                                </lord-icon>
+
+                            </div>
+                        </div>
+
+                        <h4 class="card-title font">
+                            {{ trans('settings_trans.jobs_settings') }}
+                        </h4>
+
+                        <a href="{{ route('jobs.index') }}" class="btn btn-info">
+                            {{ trans('settings_trans.Go_to_jobs_now') }}
                         </a>
                     </div>
                 </div>

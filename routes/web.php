@@ -46,7 +46,7 @@ Route::group(['middleware'=>['guest']],function(){
             Route::get('/area/{id}', 'areaController@getcity');
             Route::resource('area', 'areaController');
             //settings_type settings
-            Route::resource('settings_type','settings_typeController');
+            // Route::resource('settings_type','settings_typeController');
             // application_setting
             Route::resource('settings','application_settingsController');
             //currencies settings
@@ -58,6 +58,7 @@ Route::group(['middleware'=>['guest']],function(){
             //nationalities settings
             Route::resource('branches', 'branchesController');
         });
+require base_path('routes/settings.php');
 
         Route::group(['namespace'=>'dashbord'],function()
         {
