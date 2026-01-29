@@ -1,0 +1,188 @@
+/*# sourceMappingURL=custom-rtl.min.css.map */
+
+@font-face {
+    font-family: 'Droid Arabic Kufi';
+    src: url(../fonts/ArbFONTS-Droid.Arabic.Kufi_DownloadSoftware.iR_.ttf);
+}
+
+.font {
+    font-family: 'Droid Arabic Kufi' !important;
+
+}
+
+body {
+    font-family: 'Droid Arabic Kufi' !important;
+
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Droid Arabic Kufi' !important;
+}
+
+i,
+strong {
+    font-family: 'Droid Arabic Kufi' !important;
+
+}
+
+.table_do td:last-child {
+    padding: 9px !important;
+}
+
+.table_do td:first-child {
+    padding: 9px !important;
+}
+.itme_label
+{
+    margin-right:15px ;
+}
+.icon_menu {
+    height: 35px;
+    width: 35px;
+    background-color: #f4f5fa;
+    text-align: center;
+    margin: 7px;
+    border-radius: 6px;
+    padding: 3px;
+}/* تخصيص لون أيقونة الـ Dashboard */
+.icon {
+    color: #6d6d6d;
+    display: block ruby !important;
+    /* اللون الأزرق الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ medical Record */
+.icon-medical-record {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Reception */
+.icon-reception {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Call Center */
+.icon-call-center {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Lab */
+.icon-lab {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Doctor */
+.icon-doctor {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Nursing */
+.icon-nursing {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Pricing Contracts */
+.icon-pricing-contracts {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Users */
+.icon-users {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Reports */
+.icon-reports {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تخصيص لون أيقونة الـ Settings */
+.icon-settings {
+    color: #2196f3;
+    /* نفس اللون الأساسي */
+}
+
+/* تغيير اللون عند مرور الفأرة (Hover) */
+.nav-item:hover .icon_menu {
+    color: #1373c3;
+    /* اللون البنفسجي عند المرور */
+}
+
+/* تغيير اللون عند تفعيل العنصر */
+.nav-item.active .icon_menu {
+    color: #f44336;
+    /* اللون الأحمر عند التفعيل */
+}
+
+/* تغيير اللون في النص عند التفعيل */
+.nav-item.active .nav-link {
+    color: #f44336;
+    /* نفس اللون الأحمر في النص */
+}
+
+/* تخصيص الخلفية عند التفاعل مع العنصر */
+.nav-item:hover .nav-link {
+    background-color: #f5f5f5;
+    /* الخلفية الفاتحة عند المرور */
+}
+
+/* تخصيص الخلفية عند تفعيل العنصر */
+.nav-item.active .nav-link {
+    background-color: #eeeeee;
+    /* خلفية عند التفعيل */
+}
+
+.dataTables_filter {
+    display: none;
+}
+
+.dt-buttons {
+    display: none;
+}
+
+.dataTables_processing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #333;
+    font-size: 13px;
+    z-index: 9999;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.border-def {
+    border-color: #363435 !important;
+}
+
+#alert-container {
+    position: fixed;
+    /* يجعل الحاوية ثابتة فوق الصفحة */
+    top: 10px;
+    /* يحدد المسافة من أعلى الصفحة */
+    left: 50%;
+    /* يحدد المكان من اليسار */
+    transform: translateX(-50%);
+    /* يجعل الحاوية في منتصف الشاشة */
+    z-index: 1050;
+    /* التأكد من أن الإشعار يظهر فوق المحتويات الأخرى */
+    width: auto;
+    max-width: 90%;
+    /* لتحديد عرض الرسالة في الشاشات الصغيرة */
+}

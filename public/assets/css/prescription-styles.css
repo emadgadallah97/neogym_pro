@@ -1,0 +1,842 @@
+.autocomplete-item {
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--prescription-border);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background: linear-gradient(90deg, var(--prescription-light) 0%, white 100%);
+    color: var(--prescription-primary);
+    padding-left: 1.25rem;
+}
+
+.autocomplete-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--prescription-dark);
+}
+
+.autocomplete-item small {
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+/* ========================================
+   Medication Table
+   ======================================== */
+
+.medication-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.medication-table thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border: none;
+    white-space: nowrap;
+}
+
+.medication-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.medication-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.medication-table tbody td {
+    padding: 0.875rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--prescription-border);
+    background: white;
+}
+
+.medication-table tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medication-table tbody tr:hover {
+    background: linear-gradient(90deg, #F9FAFB 0%, white 100%);
+    transform: translateX(4px);
+    box-shadow: -4px 0 0 var(--prescription-primary);
+}
+
+.medication-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ========================================
+   Form Controls
+   ======================================== */
+
+.form-control,
+.form-select {
+    border: 2px solid var(--prescription-border);
+    border-radius: 8px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--prescription-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+    background: #FEFEFE;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background: #F3F4F6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.form-control::placeholder {
+    color: #9CA3AF;
+    font-size: 0.875rem;
+}
+
+/* ========================================
+   Action Buttons
+   ======================================== */
+
+.btn-action {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-action:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action:active {
+    transform: translateY(0);
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-add:hover {
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+}
+
+.btn-save:hover {
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.btn-remove {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+}
+
+.btn-remove:hover {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================
+   Quick Select Buttons
+   ======================================== */
+
+.quick-select {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-radius: 12px;
+}
+
+.quick-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 2px solid #F59E0B;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #92400E;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.quick-btn:hover {
+    border-color: #D97706;
+    background: #FEF3C7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.quick-btn:active {
+    transform: translateY(0);
+}
+
+.quick-btn i {
+    font-size: 1rem;
+}
+
+/* ========================================
+   Table Action Icons
+   ======================================== */
+
+.table-actions {
+    display: flex;
+    gap: 0.375rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.icon-btn:hover {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* ========================================
+   Prescription History Cards
+   ======================================== */
+
+.prescription-history-card {
+    background: white;
+    border: 2px solid var(--prescription-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.prescription-history-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.prescription-history-card:hover::before {
+    transform: scaleY(1);
+}
+
+.prescription-history-card:hover {
+    border-color: var(--prescription-primary);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: 80px;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* ========================================
+   Badges & Labels
+   ======================================== */
+
+.badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+}
+
+/* ========================================
+   Loading & Overlays
+   ======================================== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    backdrop-filter: blur(4px);
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   Alerts & Notifications
+   ======================================== */
+
+.alert {
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: slideInDown 0.4s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+    color: #065F46;
+    border-left: 4px solid #10B981;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    color: #991B1B;
+    border-left: 4px solid #EF4444;
+}
+
+.alert i {
+    font-size: 1.25rem;
+    vertical-align: middle;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 1200px) {
+    .medication-table {
+        font-size: 0.85rem;
+    }
+
+    .medication-table thead th,
+    .medication-table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .custom-tabs .nav-link {
+        padding: 0.625rem 1rem;
+        margin: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .quick-select {
+        padding: 0.75rem;
+    }
+
+    .quick-btn {
+        font-size: 0.8rem;
+        padding: 0.375rem 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .medication-table {
+        font-size: 0.8rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .table-actions {
+        flex-direction: column;
+    }
+
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+
+    .prescription-history-card {
+        padding: 1rem;
+    }
+
+    .action-buttons .btn {
+        min-width: 70px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .custom-tabs {
+        padding: 1rem 0.5rem 0;
+    }
+
+    .custom-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .medication-table thead th,
+    .medication-table tbody td {
+        padding: 0.5rem 0.375rem;
+    }
+
+    .quick-select {
+        flex-direction: column;
+    }
+
+    .quick-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+
+    .custom-tabs,
+    .btn-action,
+    .action-buttons,
+    .table-actions,
+    .loading-overlay {
+        display: none !important;
+    }
+
+    .prescription-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .medication-table {
+        border-collapse: collapse;
+    }
+
+    .medication-table thead th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        border: 1px solid #000;
+    }
+
+    .medication-table tbody td {
+        border: 1px solid #000;
+    }
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease;
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.text-muted {
+    color: #6B7280 !important;
+}
+
+.text-primary {
+    color: var(--prescription-primary) !important;
+}
+
+.text-success {
+    color: var(--prescription-success) !important;
+}
+
+.text-danger {
+    color: var(--prescription-danger) !important;
+}
+
+.bg-light {
+    background-color: var(--prescription-light) !important;
+}
+
+.rounded-3 {
+    border-radius: 16px !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.shadow {
+    box-shadow: var(--prescription-shadow) !important;
+}
+
+/* ========================================
+   Dark Mode Support (Optional)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    .prescription-container {
+        --prescription-dark: #F9FAFB;
+        --prescription-light: #1F2937;
+        --prescription-border: #374151;
+    }
+
+    .prescription-card {
+        background: #1F2937;
+        color: #F9FAFB;
+    }
+
+    .form-control,
+    .form-select {
+        background: #374151;
+        color: #F9FAFB;
+        border-color: #4B5563;
+    }
+
+    .medication-table tbody td {
+        background: #1F2937;
+        color: #F9FAFB;
+    }
+
+    .autocomplete-dropdown {
+        background: #374151;
+        border-color: #4B5563;
+    }
+
+    .autocomplete-item {
+        color: #F9FAFB;
+        border-color: #4B5563;
+    }
+
+    .autocomplete-item:hover {
+        background: #4B5563;
+    }
+}
+
+/* ========================================
+   Enhanced Prescription Styles
+   ======================================== */
+
+:root {
+    --prescription-primary: #4F46E5;
+    --prescription-success: #10B981;
+    --prescription-danger: #EF4444;
+    --prescription-warning: #F59E0B;
+    --prescription-info: #3B82F6;
+    --prescription-dark: #1F2937;
+    --prescription-light: #F9FAFB;
+    --prescription-border: #E5E7EB;
+    --prescription-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Container & Card Styles
+   ======================================== */
+
+.prescription-container {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+}
+
+.prescription-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--prescription-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.prescription-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Custom Tabs
+   ======================================== */
+
+.custom-tabs {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem 1.5rem 0;
+    border: none;
+    position: relative;
+}
+
+.custom-tabs::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.custom-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    border: 2px solid transparent;
+    border-radius: 12px 12px 0 0;
+    padding: 0.875rem 1.75rem;
+    margin: 0 0.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-tabs .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.custom-tabs .nav-link:hover::before {
+    transform: translateY(0);
+}
+
+.custom-tabs .nav-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.custom-tabs .nav-link.active {
+    color: #667eea;
+    background: white;
+    border-color: white;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-tabs .nav-link i {
+    font-size: 1.1rem;
+    vertical-align: middle;
+}
+
+/* ========================================
+   Autocomplete Dropdown
+   ======================================== */
+
+.autocomplete-wrapper {
+    position: relative;
+    z-index: 100;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--prescription-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 1050;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.autocomplete-item {
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--prescription-border);
+    transition: all 0.2s ease;
+    position: relative; /* Added position relative */
+}
