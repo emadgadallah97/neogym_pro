@@ -45,14 +45,23 @@
                 {{-- الموظفين --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font
-        @if (Route::currentRouteName() == 'employees.create' || Route::currentRouteName() == 'employees.index') active @endif"
+                        @if (Route::currentRouteName() == 'employees.create' || Route::currentRouteName() == 'employees.index') active @endif"
                         href="{{ url('/' . ($page = 'employees')) }}">
 
                         <i class="mdi mdi-account-multiple"></i>
                         <span data-key="t-widgets">{{ trans('main_trans.employees') }}</span>
                     </a>
                 </li>
+                {{-- الاعضاء --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'employees.create' || Route::currentRouteName() == 'members.index') active @endif"
+                        href="{{ url('/' . ($page = 'members')) }}">
 
+                        <i class="mdi mdi-account-group"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.members') }}</span>
+                    </a>
+                </li>
                 <!--user management-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.user_management') }}</span></li>

@@ -60,6 +60,7 @@ Route::group(['middleware'=>['guest']],function(){
         });
 require base_path('routes/settings.php');
 require base_path('routes/employees.php');
+require base_path('routes/members.php');
 
 
         Route::group(['namespace'=>'dashbord'],function()

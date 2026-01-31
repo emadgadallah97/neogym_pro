@@ -57,6 +57,7 @@ return [
      //Settings
     'settings' => 'الاعدادات',
 
-    'more' => 'More',
+    'more' => 'المزيد',
+    'members' => 'الاعضاء',
 
 ];

@@ -47,6 +47,10 @@
 
                     @php
                         $isEdit = !empty($setting);
+                        $currentTemplate = old('member_card_template', $setting->member_card_template ?? \App\Models\general\GeneralSetting::defaultMemberCardTemplate());
+                        $currentTemplate = preg_replace('/\.blade(\.php)?$/i', '', (string)$currentTemplate);
+
+                        $cardTemplatesLocal = $cardTemplates ?? \App\Models\general\GeneralSetting::availableMemberCardTemplates();
                     @endphp
 
                     <form method="post"
@@ -125,6 +129,21 @@
                                 <label class="form-label">{{ trans('settings_trans.website') }}</label>
                                 <input type="text" class="form-control" name="website"
                                        value="{{ old('website', $setting->website ?? '') }}">
+                            </div>
+
+                            {{-- New: Card Template --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">شكل كارت العضو (الافتراضي)</label>
+                                <select class="form-select" name="member_card_template">
+                                    @foreach($cardTemplatesLocal as $key => $label)
+                                        <option value="{{ $key }}" {{ (string)$currentTemplate === (string)$key ? 'selected' : '' }}>
+                                            {{ $label }} ({{ $key }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">
+                                    لإضافة شكل جديد: أنشئ ملف داخل <code>resources/views/members/cards</code> وسيظهر هنا تلقائياً.
+                                </small>
                             </div>
 
                             <div class="col-md-6 mb-3">

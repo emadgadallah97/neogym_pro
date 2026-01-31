@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+
+use Illuminate\Validation\Rule;
 
 use App\Models\general\GeneralSetting;
 use App\models\countries;
@@ -25,7 +26,10 @@ class general_settingsController extends Controller
         $countries = countries::select('id', 'name')->orderBy('id', 'desc')->get();
         $currencies = currencies::select('id', 'name')->orderBy('id', 'desc')->get();
 
-        return view('settings.general_settings', compact('setting', 'countries', 'currencies'));
+        // Clean templates keys => (compact.blade) becomes (compact)
+        $cardTemplates = $this->cleanCardTemplates(GeneralSetting::availableMemberCardTemplates());
+
+        return view('settings.general_settings', compact('setting', 'countries', 'currencies', 'cardTemplates'));
     }
 
     public function create()
@@ -39,6 +43,15 @@ class general_settingsController extends Controller
         if ($setting) {
             return $this->update($request, $setting->id);
         }
+
+        // Clean templates
+        $cardTemplates = $this->cleanCardTemplates(GeneralSetting::availableMemberCardTemplates());
+        $allowedTemplates = array_keys($cardTemplates);
+
+        // Normalize incoming value before validation
+        $request->merge([
+            'member_card_template' => $this->normalizeCardTemplate($request->input('member_card_template'))
+        ]);
 
         $request->validate([
             'name_ar' => 'required|string|max:255',
@@ -56,6 +69,8 @@ class general_settingsController extends Controller
 
             'notes' => 'nullable|string',
             'status' => 'sometimes|accepted',
+
+            'member_card_template' => ['nullable', 'string', Rule::in($allowedTemplates)],
 
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
@@ -76,6 +91,7 @@ class general_settingsController extends Controller
                 'email' => $request->email,
                 'website' => $request->website,
                 'notes' => $request->notes,
+                'member_card_template' => $request->member_card_template ?: GeneralSetting::defaultMemberCardTemplate(),
                 'status' => $request->boolean('status'),
                 'user_add' => Auth::check() ? Auth::user()->id : null,
             ];
@@ -104,6 +120,15 @@ class general_settingsController extends Controller
     {
         $setting = GeneralSetting::findOrFail($id);
 
+        // Clean templates
+        $cardTemplates = $this->cleanCardTemplates(GeneralSetting::availableMemberCardTemplates());
+        $allowedTemplates = array_keys($cardTemplates);
+
+        // Normalize incoming value before validation
+        $request->merge([
+            'member_card_template' => $this->normalizeCardTemplate($request->input('member_card_template'))
+        ]);
+
         $request->validate([
             'name_ar' => 'required|string|max:255',
             'name_en' => 'required|string|max:255',
@@ -120,6 +145,8 @@ class general_settingsController extends Controller
 
             'notes' => 'nullable|string',
             'status' => 'sometimes|accepted',
+
+            'member_card_template' => ['nullable', 'string', Rule::in($allowedTemplates)],
 
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
@@ -140,12 +167,12 @@ class general_settingsController extends Controller
                 'email' => $request->email,
                 'website' => $request->website,
                 'notes' => $request->notes,
+                'member_card_template' => $request->member_card_template ?: GeneralSetting::defaultMemberCardTemplate(),
                 'status' => $request->boolean('status'),
             ];
 
             if ($request->hasFile('logo')) {
 
-                // Delete old logo from public/attachments/... (same as DB path)
                 if (!empty($setting->logo)) {
                     $oldPath = public_path($setting->logo);
                     if (file_exists($oldPath)) {
@@ -153,7 +180,6 @@ class general_settingsController extends Controller
                     }
                 }
 
-                // Store new logo using your trait (keeps same DB path format)
                 $data['logo'] = $this->file_storage($request->file('logo'), 'general_settings/logo');
             }
 
@@ -176,5 +202,40 @@ class general_settingsController extends Controller
     public function destroy($id)
     {
         return redirect()->route('general_settings.index');
+    }
+
+    private function normalizeCardTemplate($value): ?string
+    {
+        if ($value === null) return null;
+
+        $v = trim((string)$value);
+        if ($v === '') return null;
+
+        // remove ".blade" or ".blade.php" (case-insensitive)
+        $v = preg_replace('/\.blade(\.php)?$/i', '', $v);
+
+        return $v ?: null;
+    }
+
+    private function cleanCardTemplates(array $templates): array
+    {
+        $clean = [];
+
+        foreach ($templates as $key => $label) {
+            $k = $this->normalizeCardTemplate($key);
+            if (!$k) continue;
+
+            // نفس ال label كما هو
+            $clean[$k] = $label;
+        }
+
+        ksort($clean);
+
+        // تأمين وجود default
+        if (!isset($clean[GeneralSetting::defaultMemberCardTemplate()])) {
+            $clean[GeneralSetting::defaultMemberCardTemplate()] = 'Default';
+        }
+
+        return $clean;
     }
 }
