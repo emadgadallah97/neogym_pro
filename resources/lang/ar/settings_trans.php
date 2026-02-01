@@ -101,7 +101,9 @@ return [
 'job_description_enter' => 'أدخل وصف الوظيفة (اختياري)',
 'job_exists' => 'هذه الوظيفة موجودة بالفعل (نفس الاسم عربي أو إنجليزي).',
 'srno' => 'م',
+'subscriptions_types' => 'انواع الاشتراكات',
 
+'Go_to_subscriptions_types_now' => 'الذهاب الي انواع الاشتراكات ',
 
 
 
