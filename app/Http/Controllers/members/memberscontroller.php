@@ -301,7 +301,7 @@ private function qrPngBinary(string $text, int $size = 320, int $margin = 1): st
     private function generateMemberCode(Member $member): string
     {
         $time = $member->created_at ? $member->created_at->format('His') : Carbon::now()->format('His');
-        return 'BR' . intval($member->branch_id) . '-' . intval($member->id) . '-' . $time;
+        return  intval($member->branch_id) . '-' . intval($member->id) . '-' . $time;
     }
 
     private function autoUnfreezeExpiredMembers(): void
