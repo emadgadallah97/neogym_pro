@@ -55,11 +55,21 @@
                 {{-- الاعضاء --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font
-                        @if (Route::currentRouteName() == 'employees.create' || Route::currentRouteName() == 'members.index') active @endif"
+                        @if (Route::currentRouteName() == 'members.create' || Route::currentRouteName() == 'members.index') active @endif"
                         href="{{ url('/' . ($page = 'members')) }}">
 
                         <i class="mdi mdi-account-group"></i>
                         <span data-key="t-widgets">{{ trans('main_trans.members') }}</span>
+                    </a>
+                </li>
+                {{-- الاشتراكات --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'subscriptions_plans.create' || Route::currentRouteName() == 'subscriptions_plans.index') active @endif"
+                        href="{{ url('/' . ($page = 'subscriptions_plans')) }}">
+
+                        <i class="mdi mdi-calendar-check"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.subscriptions') }}</span>
                     </a>
                 </li>
                 <!--user management-->

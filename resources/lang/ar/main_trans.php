@@ -59,5 +59,8 @@ return [
 
     'more' => 'المزيد',
     'members' => 'الاعضاء',
+    'subscriptions' => 'الاشتراكات',
+
+
 
 ];

@@ -82,6 +82,9 @@ class employeescontroller extends Controller
 
             'status' => 'sometimes|accepted',
 
+            // FIX: checkbox might submit 0/1 (hidden + checkbox), so accepted would fail on 0
+            'is_coach' => 'nullable|boolean',
+
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
@@ -139,6 +142,8 @@ class employeescontroller extends Controller
                 'salary_transfer_details' => $request->salary_transfer_details,
 
                 'status' => $request->boolean('status'),
+                'is_coach' => $request->boolean('is_coach'),
+
                 'user_add' => Auth::check() ? Auth::user()->id : null,
             ];
 
@@ -219,6 +224,9 @@ class employeescontroller extends Controller
 
             'status' => 'sometimes|accepted',
 
+            // FIX: same as store
+            'is_coach' => 'nullable|boolean',
+
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
@@ -275,6 +283,7 @@ class employeescontroller extends Controller
                 'salary_transfer_details' => $request->salary_transfer_details,
 
                 'status' => $request->boolean('status'),
+                'is_coach' => $request->boolean('is_coach'),
             ];
 
             if ($request->hasFile('photo')) {
@@ -315,7 +324,7 @@ class employeescontroller extends Controller
             $Employee = Employee::findOrFail($request->id);
 
             // NOTE: نترك الصورة بدون حذف عند delete لو تحب؛ أو احذفها هنا لو تريد.
-             $this->deletePublicFileIfExists($Employee->photo);
+            $this->deletePublicFileIfExists($Employee->photo);
 
             $Employee->delete();
 

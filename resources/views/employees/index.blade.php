@@ -3,9 +3,7 @@
 {{ trans('main_trans.title') }}
 @stop
 
-
 @section('content')
-
 
 <div class="row">
     <div class="col-12">
@@ -21,11 +19,9 @@
     </div>
 </div>
 
-
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
-
 
             <div class="card-header">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -43,7 +39,6 @@
                     </div>
                 </div>
 
-
                 {{-- Message --}}
                 @if (Session::has('success'))
                     <div class="alert alert-success alert-dismissible mt-3" role="alert">
@@ -54,7 +49,6 @@
                     </div>
                 @endif
 
-
                 @if (Session::has('error'))
                     <div class="alert alert-danger alert-dismissible mt-3" role="alert">
                         <button type="button" class="close" data-dismiss="alert">
@@ -63,7 +57,6 @@
                         <strong>Error !</strong> {{ session('error') }}
                     </div>
                 @endif
-
 
                 @if ($errors->any())
                     <div class="alert alert-danger mt-3">
@@ -75,7 +68,6 @@
                     </div>
                 @endif
             </div>
-
 
             @php
                 $total = $Employees->count();
@@ -342,6 +334,7 @@
                                                 data-status="{{ $statusText }}"
                                                 data-specialization="{{ $Employee->specialization }}"
                                                 data-years="{{ $Employee->years_experience }}"
+                                                data-is-coach="{{ $Employee->is_coach }}"
                                                 data-whatsapp="{{ $Employee->whatsapp }}"
                                                 data-phone2="{{ $Employee->phone_2 }}"
                                                 data-bio="{{ $Employee->bio }}"
@@ -368,6 +361,7 @@
                                                 data-email="{{ $Employee->email }}"
                                                 data-specialization="{{ $Employee->specialization }}"
                                                 data-years="{{ $Employee->years_experience }}"
+                                                data-is-coach="{{ $Employee->is_coach }}"
                                                 data-bio="{{ $Employee->bio }}"
                                                 data-comp="{{ $Employee->compensation_type }}"
                                                 data-base="{{ $Employee->base_salary }}"
@@ -413,7 +407,6 @@
                 </div>
 
             </div>
-
 
             {{-- View Modal --}}
             <div id="viewEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -537,18 +530,28 @@
 
                                         <div class="tab-pane fade" id="tab_work" role="tabpanel">
                                             <div class="row g-2">
-                                                <div class="col-md-8">
+                                                {{-- FIX: 4 + 4 + 4 to avoid wrapping --}}
+                                                <div class="col-md-4">
                                                     <div class="p-2 border rounded bg-soft-info">
                                                         <small class="text-muted">{{ trans('employees.specialization') }}</small>
                                                         <div class="fw-semibold" id="view_specialization">-</div>
                                                     </div>
                                                 </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="p-2 border rounded bg-soft-info">
+                                                        <small class="text-muted">هل الموظف مدرب</small>
+                                                        <div class="fw-semibold" id="viewiscoach-div">-</div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="col-md-4">
                                                     <div class="p-2 border rounded bg-soft-info">
                                                         <small class="text-muted">{{ trans('employees.years_experience') }}</small>
                                                         <div class="fw-semibold" id="view_years">-</div>
                                                     </div>
                                                 </div>
+
                                                 <div class="col-md-12">
                                                     <div class="p-2 border rounded">
                                                         <small class="text-muted">{{ trans('employees.bio') }}</small>
@@ -613,7 +616,6 @@
                 </div>
             </div>
 
-
             {{-- Delete Modal --}}
             <div id="deleteEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
                 <div class="modal-dialog modal-dialog-centered">
@@ -642,7 +644,6 @@
                     </div>
                 </div>
             </div>
-
 
             {{-- Add Modal --}}
             <div id="addEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -755,6 +756,20 @@
                                                 <input type="text" class="form-control" name="specialization" value="{{ old('specialization') }}">
                                             </div>
 
+                                            <div class="w-100"></div>
+
+                                            {{-- Ensure boolean posts even when unchecked --}}
+                                            <input type="hidden" name="is_coach" value="0">
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">هل الموظف مدرب</label>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" name="is_coach" value="1" id="iscoachnew"
+                                                           {{ old('is_coach') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="iscoachnew">نعم</label>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.years_experience') }}</label>
                                                 <input type="number" class="form-control" name="years_experience" min="0" max="80" value="{{ old('years_experience') }}">
@@ -862,7 +877,6 @@
                     </div>
                 </div>
             </div>
-
 
             {{-- Edit Modal (Reusable) --}}
             <div id="editEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -977,6 +991,19 @@
                                                 <input type="text" class="form-control" name="specialization" id="edit_specialization">
                                             </div>
 
+                                            <div class="w-100"></div>
+
+                                            {{-- Ensure boolean posts even when unchecked --}}
+                                            <input type="hidden" name="is_coach" value="0">
+
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label">هل الموظف مدرب</label>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" name="is_coach" value="1" id="editiscoach">
+                                                    <label class="form-check-label" for="editiscoach">نعم</label>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.years_experience') }}</label>
                                                 <input type="number" class="form-control" name="years_experience" min="0" max="80" id="edit_years_experience">
@@ -1081,12 +1108,9 @@
                 </div>
             </div>
 
-
         </div>
     </div>
 </div>
-
-
 
 <script>
     function toggleEmployeeForm(form) {
@@ -1199,6 +1223,11 @@
 
                 document.getElementById('view_specialization').textContent = btn.getAttribute('data-specialization') || '-';
                 document.getElementById('view_years').textContent = btn.getAttribute('data-years') || '-';
+
+                const coachVal = btn.getAttribute('data-is-coach');
+                document.getElementById('viewiscoach-div').textContent =
+                    (coachVal == 1 || coachVal === 'true') ? 'مدرب' : 'غير مدرب';
+
                 document.getElementById('view_bio').textContent = btn.getAttribute('data-bio') || '-';
 
                 document.getElementById('view_type').textContent = btn.getAttribute('data-type') || '-';
@@ -1251,6 +1280,10 @@
 
                 document.getElementById('edit_specialization').value = this.getAttribute('data-specialization') || '';
                 document.getElementById('edit_years_experience').value = this.getAttribute('data-years') || '';
+
+                const coach = this.getAttribute('data-is-coach');
+                document.getElementById('editiscoach').checked = (coach == 1 || coach === 'true');
+
                 document.getElementById('edit_bio').value = this.getAttribute('data-bio') || '';
 
                 document.getElementById('edit_compensation_type').value = this.getAttribute('data-comp') || 'salary_only';
@@ -1291,6 +1324,5 @@
 
     });
 </script>
-
 
 @endsection

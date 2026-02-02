@@ -15,7 +15,8 @@ Route::group(
         Route::group(['namespace' => 'subscriptions'], function () {
             //subscriptions_types settings
             Route::resource('subscriptions_types', 'subscriptions_typescontroller');
-
+            //subscriptions program
+            Route::resource('subscriptions_plans', 'subscriptions_planscontroller');
 
         });
     },
