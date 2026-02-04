@@ -57,7 +57,9 @@ class subscriptions_planscontroller extends Controller
             ->orderByDesc('id')
             ->get();
 
+        // Exclude soft-deleted coaches
         $Coaches = DB::table('employees')
+            ->whereNull('deleted_at')
             ->where('status', 1)
             ->where('is_coach', 1)
             ->orderBy('first_name')
@@ -101,6 +103,10 @@ class subscriptions_planscontroller extends Controller
             'notify_before_end' => 'nullable',
             'notify_days_before_end' => 'nullable|integer|min:1',
 
+            // Freeze
+            'allow_freeze' => 'nullable',
+            'max_freeze_days' => 'nullable|integer|min:1|max:65535',
+
             'description' => 'nullable|string',
             'notes' => 'nullable|string',
             'status' => 'nullable',
@@ -139,6 +145,12 @@ class subscriptions_planscontroller extends Controller
             $notify = $request->has('notify_before_end');
             if ($notify && empty($request->notify_days_before_end)) {
                 $validator->errors()->add('notify_days_before_end', trans('subscriptions.notify_days_before_end_required'));
+            }
+
+            // Freeze validation: max_freeze_days required when allow_freeze is checked
+            $allow_freeze = $request->has('allow_freeze');
+            if ($allow_freeze && empty($request->max_freeze_days)) {
+                $validator->errors()->add('max_freeze_days', trans('subscriptions.max_freeze_days_required'));
             }
 
             // Unique plan name (ar/en) inside JSON
@@ -232,6 +244,10 @@ class subscriptions_planscontroller extends Controller
             $max_code = subscriptions_plan::withTrashed()->lockForUpdate()->max('code');
             $next_code = max((int)$max_code, 99) + 1;
 
+            $allow_guest = $request->has('allow_guest');
+            $notify = $request->has('notify_before_end');
+            $allow_freeze = $request->has('allow_freeze');
+
             $Plan = subscriptions_plan::create([
                 'code' => $next_code,
                 'subscriptions_type_id' => $validated['subscriptions_type_id'],
@@ -240,18 +256,21 @@ class subscriptions_planscontroller extends Controller
                     'en' => $validated['name_en'],
                 ],
                 'sessions_period_type' => $validated['sessions_period_type'],
-                'sessions_period_other_label' => $validated['sessions_period_type'] == 'other' ? $validated['sessions_period_other_label'] : null,
+                'sessions_period_other_label' => $validated['sessions_period_type'] == 'other' ? ($validated['sessions_period_other_label'] ?? null) : null,
                 'sessions_count' => $validated['sessions_count'],
                 'duration_days' => $validated['duration_days'],
                 'allowed_training_days' => $validated['allowed_training_days'],
 
-                'allow_guest' => $request->has('allow_guest') ? 1 : 0,
-                'guest_people_count' => $request->has('allow_guest') ? $validated['guest_people_count'] : null,
-                'guest_times_count' => $request->has('allow_guest') ? $validated['guest_times_count'] : null,
-                'guest_allowed_days' => $request->has('allow_guest') ? ($validated['guest_allowed_days'] ?? []) : null,
+                'allow_guest' => $allow_guest ? 1 : 0,
+                'guest_people_count' => $allow_guest ? ($validated['guest_people_count'] ?? null) : null,
+                'guest_times_count' => $allow_guest ? ($validated['guest_times_count'] ?? null) : null,
+                'guest_allowed_days' => $allow_guest ? ($validated['guest_allowed_days'] ?? []) : null,
 
-                'notify_before_end' => $request->has('notify_before_end') ? 1 : 0,
-                'notify_days_before_end' => $request->has('notify_before_end') ? $validated['notify_days_before_end'] : null,
+                'notify_before_end' => $notify ? 1 : 0,
+                'notify_days_before_end' => $notify ? ($validated['notify_days_before_end'] ?? null) : null,
+
+                'allow_freeze' => $allow_freeze ? 1 : 0,
+                'max_freeze_days' => $allow_freeze ? ($validated['max_freeze_days'] ?? null) : null,
 
                 'description' => $validated['description'] ?? null,
                 'notes' => $validated['notes'] ?? null,
@@ -366,7 +385,9 @@ class subscriptions_planscontroller extends Controller
             ->get()
             ->keyBy('branch_id');
 
+        // Exclude soft-deleted coaches
         $coaches = DB::table('employees')
+            ->whereNull('deleted_at')
             ->where('status', 1)
             ->where('is_coach', 1)
             ->orderBy('first_name')
@@ -425,7 +446,10 @@ class subscriptions_planscontroller extends Controller
 
         $SubscriptionsTypes = subscriptions_type::where('status', 1)->orderByDesc('id')->get();
         $Branches = DB::table('branches')->where('status', 1)->orderByDesc('id')->get();
+
+        // Exclude soft-deleted coaches
         $Coaches = DB::table('employees')
+            ->whereNull('deleted_at')
             ->where('status', 1)
             ->where('is_coach', 1)
             ->orderBy('first_name')
@@ -499,6 +523,10 @@ class subscriptions_planscontroller extends Controller
             'notify_before_end' => 'nullable',
             'notify_days_before_end' => 'nullable|integer|min:1',
 
+            // Freeze
+            'allow_freeze' => 'nullable',
+            'max_freeze_days' => 'nullable|integer|min:1|max:65535',
+
             'description' => 'nullable|string',
             'notes' => 'nullable|string',
             'status' => 'nullable',
@@ -537,6 +565,12 @@ class subscriptions_planscontroller extends Controller
             $notify = $request->has('notify_before_end');
             if ($notify && empty($request->notify_days_before_end)) {
                 $validator->errors()->add('notify_days_before_end', trans('subscriptions.notify_days_before_end_required'));
+            }
+
+            // Freeze validation: max_freeze_days required when allow_freeze is checked
+            $allow_freeze = $request->has('allow_freeze');
+            if ($allow_freeze && empty($request->max_freeze_days)) {
+                $validator->errors()->add('max_freeze_days', trans('subscriptions.max_freeze_days_required'));
             }
 
             // Unique plan name (ar/en) inside JSON (ignore current)
@@ -617,6 +651,10 @@ class subscriptions_planscontroller extends Controller
 
         DB::transaction(function () use ($request, $validated, $Plan) {
 
+            $allow_guest = $request->has('allow_guest');
+            $notify = $request->has('notify_before_end');
+            $allow_freeze = $request->has('allow_freeze');
+
             $Plan->update([
                 'subscriptions_type_id' => $validated['subscriptions_type_id'],
                 'name' => [
@@ -624,18 +662,21 @@ class subscriptions_planscontroller extends Controller
                     'en' => $validated['name_en'],
                 ],
                 'sessions_period_type' => $validated['sessions_period_type'],
-                'sessions_period_other_label' => $validated['sessions_period_type'] == 'other' ? $validated['sessions_period_other_label'] : null,
+                'sessions_period_other_label' => $validated['sessions_period_type'] == 'other' ? ($validated['sessions_period_other_label'] ?? null) : null,
                 'sessions_count' => $validated['sessions_count'],
                 'duration_days' => $validated['duration_days'],
                 'allowed_training_days' => $validated['allowed_training_days'],
 
-                'allow_guest' => $request->has('allow_guest') ? 1 : 0,
-                'guest_people_count' => $request->has('allow_guest') ? $validated['guest_people_count'] : null,
-                'guest_times_count' => $request->has('allow_guest') ? $validated['guest_times_count'] : null,
-                'guest_allowed_days' => $request->has('allow_guest') ? ($validated['guest_allowed_days'] ?? []) : null,
+                'allow_guest' => $allow_guest ? 1 : 0,
+                'guest_people_count' => $allow_guest ? ($validated['guest_people_count'] ?? null) : null,
+                'guest_times_count' => $allow_guest ? ($validated['guest_times_count'] ?? null) : null,
+                'guest_allowed_days' => $allow_guest ? ($validated['guest_allowed_days'] ?? []) : null,
 
-                'notify_before_end' => $request->has('notify_before_end') ? 1 : 0,
-                'notify_days_before_end' => $request->has('notify_before_end') ? $validated['notify_days_before_end'] : null,
+                'notify_before_end' => $notify ? 1 : 0,
+                'notify_days_before_end' => $notify ? ($validated['notify_days_before_end'] ?? null) : null,
+
+                'allow_freeze' => $allow_freeze ? 1 : 0,
+                'max_freeze_days' => $allow_freeze ? ($validated['max_freeze_days'] ?? null) : null,
 
                 'description' => $validated['description'] ?? null,
                 'notes' => $validated['notes'] ?? null,

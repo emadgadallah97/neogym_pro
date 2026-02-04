@@ -1,11 +1,14 @@
 <?php
 
+
 namespace App\Models\subscriptions;
+
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Translatable\HasTranslations;
+
 
 class subscriptions_plan extends Model
 {
@@ -13,9 +16,12 @@ class subscriptions_plan extends Model
     use SoftDeletes;
     use HasTranslations;
 
+
     protected $table = 'subscriptions_plans';
 
+
     public $translatable = ['name'];
+
 
     protected $fillable = [
         'code',
@@ -32,6 +38,8 @@ class subscriptions_plan extends Model
         'guest_allowed_days',
         'notify_before_end',
         'notify_days_before_end',
+        'allow_freeze',
+        'max_freeze_days',
         'description',
         'notes',
         'status',
@@ -39,14 +47,18 @@ class subscriptions_plan extends Model
         'updated_by',
     ];
 
+
     protected $casts = [
         'name' => 'array',
         'allowed_training_days' => 'array',
         'guest_allowed_days' => 'array',
         'allow_guest' => 'boolean',
         'notify_before_end' => 'boolean',
+        'allow_freeze' => 'boolean',
+        'max_freeze_days' => 'integer',
         'status' => 'boolean',
     ];
+
 
     public function type()
     {

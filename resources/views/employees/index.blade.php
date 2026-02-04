@@ -3,7 +3,9 @@
 {{ trans('main_trans.title') }}
 @stop
 
+
 @section('content')
+
 
 <div class="row">
     <div class="col-12">
@@ -19,9 +21,11 @@
     </div>
 </div>
 
+
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
+
 
             <div class="card-header">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -39,6 +43,7 @@
                     </div>
                 </div>
 
+
                 {{-- Message --}}
                 @if (Session::has('success'))
                     <div class="alert alert-success alert-dismissible mt-3" role="alert">
@@ -49,6 +54,7 @@
                     </div>
                 @endif
 
+
                 @if (Session::has('error'))
                     <div class="alert alert-danger alert-dismissible mt-3" role="alert">
                         <button type="button" class="close" data-dismiss="alert">
@@ -57,6 +63,7 @@
                         <strong>Error !</strong> {{ session('error') }}
                     </div>
                 @endif
+
 
                 @if ($errors->any())
                     <div class="alert alert-danger mt-3">
@@ -68,6 +75,7 @@
                     </div>
                 @endif
             </div>
+
 
             @php
                 $total = $Employees->count();
@@ -92,6 +100,7 @@
                 $activeText = trans('settings_trans.active');
                 $inactiveText = trans('settings_trans.inactive');
             @endphp
+
 
             <div class="card-body">
 
@@ -146,6 +155,7 @@
                         </div>
                     @endforeach
                 </div>
+
 
                 {{-- Search + Filters Bar --}}
                 <div class="card border shadow-none mb-3">
@@ -221,6 +231,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 {{-- Table --}}
                 <div class="table-responsive">
@@ -303,7 +314,7 @@
                                     </td>
                                     <td>{{$Employee->created_at}}</td>
 
-                                    {{-- Actions (Improved) --}}
+                                    {{-- Actions --}}
                                     <td>
                                         <div class="d-flex align-items-center gap-1 justify-content-end">
 
@@ -377,7 +388,7 @@
                                                 <i class="mdi mdi-pencil-outline"></i>
                                             </button>
 
-                                            {{-- More (Delete only to reduce mistakes) --}}
+                                            {{-- More (Delete) --}}
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-soft-secondary btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ trans('employees.more') ?? 'المزيد' }}">
                                                     <i class="ri-more-2-fill"></i>
@@ -390,6 +401,7 @@
                                                             data-bs-target="#deleteEmployeeModal"
                                                             data-id="{{ $Employee->id }}"
                                                             data-name="{{ $Employee->full_name }}"
+                                                            type="button"
                                                         >
                                                             <i class="ri-delete-bin-6-line me-2"></i> {{ trans('employees.delete') ?? 'حذف' }}
                                                         </button>
@@ -407,6 +419,7 @@
                 </div>
 
             </div>
+
 
             {{-- View Modal --}}
             <div id="viewEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -426,6 +439,7 @@
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
+
 
                         <div class="modal-body">
                             <div class="row g-3">
@@ -452,6 +466,7 @@
                                     </div>
                                 </div>
 
+
                                 <div class="col-md-8">
                                     <ul class="nav nav-tabs nav-tabs-custom mb-3" role="tablist">
                                         <li class="nav-item" role="presentation">
@@ -470,6 +485,7 @@
                                             </button>
                                         </li>
                                     </ul>
+
 
                                     <div class="tab-content">
                                         <div class="tab-pane fade show active" id="tab_contact" role="tabpanel">
@@ -500,6 +516,7 @@
                                                 </div>
                                             </div>
 
+
                                             <div class="row g-2 mt-2">
                                                 <div class="col-md-6">
                                                     <div class="p-2 border rounded">
@@ -515,6 +532,7 @@
                                                 </div>
                                             </div>
 
+
                                             <div class="row g-2 mt-2">
                                                 <div class="col-md-12">
                                                     <div class="p-2 border rounded">
@@ -528,9 +546,9 @@
                                             </div>
                                         </div>
 
+
                                         <div class="tab-pane fade" id="tab_work" role="tabpanel">
                                             <div class="row g-2">
-                                                {{-- FIX: 4 + 4 + 4 to avoid wrapping --}}
                                                 <div class="col-md-4">
                                                     <div class="p-2 border rounded bg-soft-info">
                                                         <small class="text-muted">{{ trans('employees.specialization') }}</small>
@@ -552,6 +570,7 @@
                                                     </div>
                                                 </div>
 
+
                                                 <div class="col-md-12">
                                                     <div class="p-2 border rounded">
                                                         <small class="text-muted">{{ trans('employees.bio') }}</small>
@@ -560,6 +579,7 @@
                                                 </div>
                                             </div>
                                         </div>
+
 
                                         <div class="tab-pane fade" id="tab_finance" role="tabpanel">
                                             <div class="row g-2">
@@ -588,6 +608,7 @@
                                                     </div>
                                                 </div>
 
+
                                                 <div class="col-md-6">
                                                     <div class="p-2 border rounded">
                                                         <small class="text-muted">{{ trans('employees.salary_transfer_method') }}</small>
@@ -604,10 +625,13 @@
                                         </div>
                                     </div>
 
+
                                 </div>
                             </div>
 
+
                         </div>
+
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
@@ -615,6 +639,7 @@
                     </div>
                 </div>
             </div>
+
 
             {{-- Delete Modal --}}
             <div id="deleteEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -625,14 +650,17 @@
                                 colors="primary:#f7b84b,secondary:#405189" style="width:130px;height:130px">
                             </lord-icon>
 
+
                             <div class="mt-4 pt-4">
                                 <h4>{{ trans('employees.delete_confirm_title') }}!</h4>
                                 <p class="text-muted">{{ trans('employees.delete_confirm_text') }} <span id="delete_emp_name"></span></p>
+
 
                                 <form action="{{ route('employees.destroy','test') }}" method="post">
                                     {{ method_field('delete') }}
                                     {{ csrf_field() }}
                                     <input class="form-control" name="id" id="delete_emp_id" value="" type="hidden">
+
 
                                     <button class="btn btn-warning" data-bs-target="#secondmodal" data-bs-toggle="modal" data-bs-dismiss="modal">
                                         {{ trans('employees.confirm_delete') }}
@@ -640,10 +668,12 @@
                                 </form>
                             </div>
 
+
                         </div>
                     </div>
                 </div>
             </div>
+
 
             {{-- Add Modal --}}
             <div id="addEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -656,9 +686,11 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
+
                         <div class="modal-body">
                             <form action="{{route('employees.store')}}" method="post" enctype="multipart/form-data" class="employee-form">
                                 {{ csrf_field() }}
+
 
                                 <ul class="nav nav-pills nav-pills-custom mb-3" role="tablist">
                                     <li class="nav-item" role="presentation">
@@ -683,7 +715,9 @@
                                     </li>
                                 </ul>
 
+
                                 <div class="tab-content">
+
 
                                     <div class="tab-pane fade show active" id="add_tab_basic" role="tabpanel">
                                         <div class="row">
@@ -693,11 +727,13 @@
                                                 <small class="text-muted">Required</small>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.last_name') }} <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="last_name" value="{{ old('last_name') }}" placeholder="مثال: Ali">
                                                 <small class="text-muted">Required</small>
                                             </div>
+
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.gender') }}</label>
@@ -708,10 +744,12 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.birth_date') }}</label>
                                                 <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date') }}">
                                             </div>
+
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.photo') }}</label>
@@ -719,10 +757,12 @@
                                                 <small class="text-muted">jpg / png / webp</small>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.email') }}</label>
                                                 <input type="text" class="form-control" name="email" value="{{ old('email') }}" placeholder="example@email.com">
                                             </div>
+
 
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.phone_1') }}</label>
@@ -739,6 +779,7 @@
                                         </div>
                                     </div>
 
+
                                     <div class="tab-pane fade" id="add_tab_work" role="tabpanel">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
@@ -751,10 +792,12 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.specialization') }}</label>
                                                 <input type="text" class="form-control" name="specialization" value="{{ old('specialization') }}">
                                             </div>
+
 
                                             <div class="w-100"></div>
 
@@ -770,10 +813,12 @@
                                                 </div>
                                             </div>
 
+
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.years_experience') }}</label>
                                                 <input type="number" class="form-control" name="years_experience" min="0" max="80" value="{{ old('years_experience') }}">
                                             </div>
+
 
                                             <div class="col-md-12 mb-3">
                                                 <label class="form-label">{{ trans('employees.bio') }}</label>
@@ -781,6 +826,7 @@
                                             </div>
                                         </div>
                                     </div>
+
 
                                     <div class="tab-pane fade" id="add_tab_finance" role="tabpanel">
                                         <div class="row">
@@ -793,6 +839,7 @@
                                                 </select>
                                                 <small class="text-muted">{{ trans('employees.compensation_hint') }}</small>
                                             </div>
+
 
                                             <div class="col-md-6 mb-3 transfer-box">
                                                 <label class="form-label">{{ trans('employees.salary_transfer_method') }} <span class="text-danger">*</span></label>
@@ -808,10 +855,12 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-4 mb-3 salary-box">
                                                 <label class="form-label">{{ trans('employees.base_salary') }} <span class="text-danger">*</span></label>
                                                 <input type="number" step="0.01" class="form-control" name="base_salary" value="{{ old('base_salary') }}">
                                             </div>
+
 
                                             <div class="col-md-4 mb-3 commission-box">
                                                 <label class="form-label">{{ trans('employees.commission_percent') }}</label>
@@ -819,10 +868,12 @@
                                                 <small class="text-muted">0 - 100</small>
                                             </div>
 
+
                                             <div class="col-md-4 mb-3 commission-box">
                                                 <label class="form-label">{{ trans('employees.commission_fixed') }}</label>
                                                 <input type="number" step="0.01" class="form-control" name="commission_fixed" value="{{ old('commission_fixed') }}">
                                             </div>
+
 
                                             <div class="col-md-12 mb-3 transfer-box">
                                                 <label class="form-label">{{ trans('employees.salary_transfer_details') }}</label>
@@ -830,6 +881,7 @@
                                             </div>
                                         </div>
                                     </div>
+
 
                                     <div class="tab-pane fade" id="add_tab_branches" role="tabpanel">
                                         <div class="row">
@@ -843,6 +895,7 @@
                                                 <small class="text-muted">{{ trans('employees.branches_hint') }}</small>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.primary_branch') }} <span class="text-danger">*</span></label>
                                                 <select class="form-select" name="primary_branch_id">
@@ -854,6 +907,7 @@
                                                 <small class="text-muted">{{ trans('employees.primary_branch_hint') }}</small>
                                             </div>
 
+
                                             <div class="col-md-12 mb-2">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="status" value="1" id="status_new" checked>
@@ -863,7 +917,9 @@
                                         </div>
                                     </div>
 
+
                                 </div>
+
 
                                 <div class="text-end pt-2">
                                     <button type="submit" class="btn btn-primary">
@@ -871,12 +927,15 @@
                                     </button>
                                 </div>
 
+
                             </form>
                         </div>
+
 
                     </div>
                 </div>
             </div>
+
 
             {{-- Edit Modal (Reusable) --}}
             <div id="editEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -889,11 +948,13 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
+
                         <div class="modal-body">
                             <form action="{{ route('employees.update','test') }}" method="post" enctype="multipart/form-data" class="employee-form" id="editForm">
                                 {{ method_field('patch') }}
                                 @csrf
                                 <input class="form-control" name="id" id="edit_id" value="" type="hidden">
+
 
                                 <ul class="nav nav-pills nav-pills-custom mb-3" role="tablist">
                                     <li class="nav-item" role="presentation">
@@ -918,7 +979,9 @@
                                     </li>
                                 </ul>
 
+
                                 <div class="tab-content">
+
 
                                     <div class="tab-pane fade show active" id="edit_tab_basic" role="tabpanel">
                                         <div class="row">
@@ -927,10 +990,12 @@
                                                 <input type="text" class="form-control" name="first_name" id="edit_first_name">
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.last_name') }} <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="last_name" id="edit_last_name">
                                             </div>
+
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.gender') }}</label>
@@ -941,10 +1006,12 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.birth_date') }}</label>
                                                 <input type="date" class="form-control" name="birth_date" id="edit_birth_date">
                                             </div>
+
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.photo') }}</label>
@@ -954,10 +1021,12 @@
                                                 </div>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.email') }}</label>
                                                 <input type="text" class="form-control" name="email" id="edit_email">
                                             </div>
+
 
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.phone_1') }}</label>
@@ -974,6 +1043,7 @@
                                         </div>
                                     </div>
 
+
                                     <div class="tab-pane fade" id="edit_tab_work" role="tabpanel">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
@@ -986,15 +1056,19 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.specialization') }}</label>
                                                 <input type="text" class="form-control" name="specialization" id="edit_specialization">
                                             </div>
 
+
                                             <div class="w-100"></div>
+
 
                                             {{-- Ensure boolean posts even when unchecked --}}
                                             <input type="hidden" name="is_coach" value="0">
+
 
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">هل الموظف مدرب</label>
@@ -1004,10 +1078,12 @@
                                                 </div>
                                             </div>
 
+
                                             <div class="col-md-4 mb-3">
                                                 <label class="form-label">{{ trans('employees.years_experience') }}</label>
                                                 <input type="number" class="form-control" name="years_experience" min="0" max="80" id="edit_years_experience">
                                             </div>
+
 
                                             <div class="col-md-12 mb-3">
                                                 <label class="form-label">{{ trans('employees.bio') }}</label>
@@ -1015,6 +1091,7 @@
                                             </div>
                                         </div>
                                     </div>
+
 
                                     <div class="tab-pane fade" id="edit_tab_finance" role="tabpanel">
                                         <div class="row">
@@ -1026,6 +1103,7 @@
                                                     <option value="salary_and_commission">{{ trans('employees.salary_and_commission') }}</option>
                                                 </select>
                                             </div>
+
 
                                             <div class="col-md-6 mb-3 transfer-box">
                                                 <label class="form-label">{{ trans('employees.salary_transfer_method') }} <span class="text-danger">*</span></label>
@@ -1041,20 +1119,24 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-4 mb-3 salary-box">
                                                 <label class="form-label">{{ trans('employees.base_salary') }} <span class="text-danger">*</span></label>
                                                 <input type="number" step="0.01" class="form-control" name="base_salary" id="edit_base_salary">
                                             </div>
+
 
                                             <div class="col-md-4 mb-3 commission-box">
                                                 <label class="form-label">{{ trans('employees.commission_percent') }}</label>
                                                 <input type="number" step="0.01" class="form-control" name="commission_percent" id="edit_commission_percent">
                                             </div>
 
+
                                             <div class="col-md-4 mb-3 commission-box">
                                                 <label class="form-label">{{ trans('employees.commission_fixed') }}</label>
                                                 <input type="number" step="0.01" class="form-control" name="commission_fixed" id="edit_commission_fixed">
                                             </div>
+
 
                                             <div class="col-md-12 mb-3 transfer-box">
                                                 <label class="form-label">{{ trans('employees.salary_transfer_details') }}</label>
@@ -1062,6 +1144,7 @@
                                             </div>
                                         </div>
                                     </div>
+
 
                                     <div class="tab-pane fade" id="edit_tab_branches" role="tabpanel">
                                         <div class="row">
@@ -1074,6 +1157,7 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">{{ trans('employees.primary_branch') }} <span class="text-danger">*</span></label>
                                                 <select class="form-select" name="primary_branch_id" id="edit_primary_branch_id">
@@ -1084,6 +1168,7 @@
                                                 </select>
                                             </div>
 
+
                                             <div class="col-md-12 mb-2">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="status" value="1" id="edit_status">
@@ -1093,7 +1178,9 @@
                                         </div>
                                     </div>
 
+
                                 </div>
+
 
                                 <div class="text-end pt-2">
                                     <button type="submit" class="btn btn-primary">
@@ -1101,16 +1188,22 @@
                                     </button>
                                 </div>
 
+
                             </form>
                         </div>
+
 
                     </div>
                 </div>
             </div>
 
+
         </div>
     </div>
 </div>
+
+
+
 
 <script>
     function toggleEmployeeForm(form) {
@@ -1156,7 +1249,7 @@
                      "<'row align-items-center'<'col-md-5'i><'col-md-7'p>>"
             });
 
-            // Global search (name/phone/code...)
+            // Global search
             $('#employee_global_search').on('keyup change', function () {
                 dt.search(this.value).draw();
             });
@@ -1225,8 +1318,10 @@
                 document.getElementById('view_years').textContent = btn.getAttribute('data-years') || '-';
 
                 const coachVal = btn.getAttribute('data-is-coach');
-                document.getElementById('viewiscoach-div').textContent =
-                    (coachVal == 1 || coachVal === 'true') ? 'مدرب' : 'غير مدرب';
+                const coachDiv = document.getElementById('viewiscoach-div');
+                if (coachDiv) {
+                    coachDiv.textContent = (coachVal === '1' || coachVal === 'true' || coachVal == 1) ? 'مدرب' : 'غير مدرب';
+                }
 
                 document.getElementById('view_bio').textContent = btn.getAttribute('data-bio') || '-';
 
@@ -1253,51 +1348,67 @@
             });
         }
 
-        // Delete modal fill
-        document.querySelectorAll('.btn-delete-employee').forEach(btn => {
-            btn.addEventListener('click', function () {
-                document.getElementById('delete_emp_id').value = this.getAttribute('data-id') || '';
-                document.getElementById('delete_emp_name').textContent = this.getAttribute('data-name') || '';
+        // Delete modal fill (FIX: works with DataTables paging/redraw)
+        const deleteModal = document.getElementById('deleteEmployeeModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                document.getElementById('delete_emp_id').value = btn.getAttribute('data-id') || '';
+                document.getElementById('delete_emp_name').textContent = btn.getAttribute('data-name') || '';
             });
-        });
+        }
 
-        // Edit modal fill
-        document.querySelectorAll('.btn-edit-employee').forEach(btn => {
-            btn.addEventListener('click', function () {
-                document.getElementById('edit_id').value = this.getAttribute('data-id') || '';
+        // Edit modal fill (FIX: works with DataTables paging/redraw)
+        const editModal = document.getElementById('editEmployeeModal');
+        if (editModal) {
 
-                document.getElementById('edit_first_name').value = this.getAttribute('data-first') || '';
-                document.getElementById('edit_last_name').value = this.getAttribute('data-last') || '';
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
 
-                document.getElementById('edit_job_id').value = this.getAttribute('data-job-id') || '';
-                document.getElementById('edit_gender').value = this.getAttribute('data-gender') || '';
-                document.getElementById('edit_birth_date').value = this.getAttribute('data-birth') || '';
+                // Basic
+                document.getElementById('edit_id').value = btn.getAttribute('data-id') || '';
 
-                document.getElementById('edit_phone_1').value = this.getAttribute('data-phone1') || '';
-                document.getElementById('edit_phone_2').value = this.getAttribute('data-phone2') || '';
-                document.getElementById('edit_whatsapp').value = this.getAttribute('data-whatsapp') || '';
-                document.getElementById('edit_email').value = this.getAttribute('data-email') || '';
+                document.getElementById('edit_first_name').value = btn.getAttribute('data-first') || '';
+                document.getElementById('edit_last_name').value = btn.getAttribute('data-last') || '';
 
-                document.getElementById('edit_specialization').value = this.getAttribute('data-specialization') || '';
-                document.getElementById('edit_years_experience').value = this.getAttribute('data-years') || '';
+                document.getElementById('edit_job_id').value = btn.getAttribute('data-job-id') || '';
+                document.getElementById('edit_gender').value = btn.getAttribute('data-gender') || '';
+                document.getElementById('edit_birth_date').value = btn.getAttribute('data-birth') || '';
 
-                const coach = this.getAttribute('data-is-coach');
-                document.getElementById('editiscoach').checked = (coach == 1 || coach === 'true');
+                document.getElementById('edit_phone_1').value = btn.getAttribute('data-phone1') || '';
+                document.getElementById('edit_phone_2').value = btn.getAttribute('data-phone2') || '';
+                document.getElementById('edit_whatsapp').value = btn.getAttribute('data-whatsapp') || '';
+                document.getElementById('edit_email').value = btn.getAttribute('data-email') || '';
 
-                document.getElementById('edit_bio').value = this.getAttribute('data-bio') || '';
+                document.getElementById('edit_specialization').value = btn.getAttribute('data-specialization') || '';
+                document.getElementById('edit_years_experience').value = btn.getAttribute('data-years') || '';
 
-                document.getElementById('edit_compensation_type').value = this.getAttribute('data-comp') || 'salary_only';
-                document.getElementById('edit_base_salary').value = this.getAttribute('data-base') || '';
-                document.getElementById('edit_commission_percent').value = this.getAttribute('data-cp') || '';
-                document.getElementById('edit_commission_fixed').value = this.getAttribute('data-cf') || '';
+                const coach = btn.getAttribute('data-is-coach');
+                const coachCheckbox = document.getElementById('editiscoach');
+                if (coachCheckbox) {
+                    coachCheckbox.checked = (coach === '1' || coach === 'true' || coach == 1);
+                }
 
-                document.getElementById('edit_salary_transfer_method').value = this.getAttribute('data-tm') || '';
-                document.getElementById('edit_salary_transfer_details').value = this.getAttribute('data-td') || '';
+                document.getElementById('edit_bio').value = btn.getAttribute('data-bio') || '';
 
-                const st = this.getAttribute('data-status');
-                document.getElementById('edit_status').checked = (st === '1' || st === 'true');
+                // Finance
+                document.getElementById('edit_compensation_type').value = btn.getAttribute('data-comp') || 'salary_only';
+                document.getElementById('edit_base_salary').value = btn.getAttribute('data-base') || '';
+                document.getElementById('edit_commission_percent').value = btn.getAttribute('data-cp') || '';
+                document.getElementById('edit_commission_fixed').value = btn.getAttribute('data-cf') || '';
 
-                const photoUrl = this.getAttribute('data-photo-url') || '';
+                document.getElementById('edit_salary_transfer_method').value = btn.getAttribute('data-tm') || '';
+                document.getElementById('edit_salary_transfer_details').value = btn.getAttribute('data-td') || '';
+
+                // Status
+                const st = btn.getAttribute('data-status');
+                document.getElementById('edit_status').checked = (st === '1' || st === 'true' || st == 1);
+
+                // Photo link
+                const photoUrl = btn.getAttribute('data-photo-url') || '';
                 const wrap = document.getElementById('edit_photo_link_wrap');
                 const link = document.getElementById('edit_photo_link');
 
@@ -1309,20 +1420,50 @@
                     wrap.style.display = 'none';
                 }
 
-                // branches multi select + primary branch
-                try {
-                    const branches = JSON.parse(this.getAttribute('data-branches') || '[]');
-                    const multi = document.getElementById('edit_branches');
-                    Array.from(multi.options).forEach(opt => opt.selected = branches.includes(parseInt(opt.value)));
-                } catch (e) {}
+                // branches multi select + primary branch (IMPORTANT: clear first)
+                const multi = document.getElementById('edit_branches');
+                if (multi) {
+                    Array.from(multi.options).forEach(opt => opt.selected = false);
 
-                document.getElementById('edit_primary_branch_id').value = this.getAttribute('data-primary') || '';
+                    try {
+                        const branches = JSON.parse(btn.getAttribute('data-branches') || '[]');
+                        Array.from(multi.options).forEach(opt => {
+                            opt.selected = branches.includes(parseInt(opt.value));
+                        });
+                    } catch (e) {}
+                }
+
+                document.getElementById('edit_primary_branch_id').value = btn.getAttribute('data-primary') || '';
 
                 toggleEmployeeForm(document.getElementById('editForm'));
             });
-        });
+
+            // Optional: clear on close to avoid any stale values
+            editModal.addEventListener('hidden.bs.modal', function () {
+                const form = document.getElementById('editForm');
+                if (!form) return;
+
+                form.reset();
+
+                const multi = document.getElementById('edit_branches');
+                if (multi) Array.from(multi.options).forEach(opt => opt.selected = false);
+
+                const wrap = document.getElementById('edit_photo_link_wrap');
+                const link = document.getElementById('edit_photo_link');
+                if (wrap && link) {
+                    link.href = '#';
+                    wrap.style.display = 'none';
+                }
+
+                const coachCheckbox = document.getElementById('editiscoach');
+                if (coachCheckbox) coachCheckbox.checked = false;
+
+                toggleEmployeeForm(form);
+            });
+        }
 
     });
 </script>
+
 
 @endsection

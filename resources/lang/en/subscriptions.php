@@ -155,4 +155,13 @@ return [
 'choose' => 'Choose',
 
 'filter_branches' => 'Branches',
+    'allow_freeze' => 'Allow freezing',
+    'max_freeze_days' => 'Maximum freeze days',
+    'max_freeze_days_required' => 'Maximum freeze days is required when freezing is allowed',
+    'section_freeze' => 'Freezing',
+    'freeze_hint' => 'Set the maximum number of days this plan can be frozen.',
+    'no' => 'NO',
+    'per_page' => 'Per page',
+    'no_results' => 'No results',
+
 ];
