@@ -77,4 +77,6 @@ return [
     'coupon_usage_limit_reached' => 'Coupon usage limit reached',
     'coupon_member_usage_limit_reached' => 'Member usage limit reached for this coupon',
     'coupon_valid' => 'Coupon is valid',
+    'branches' => 'Branches',
+
 ];

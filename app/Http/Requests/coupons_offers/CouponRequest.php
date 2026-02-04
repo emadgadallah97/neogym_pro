@@ -13,7 +13,8 @@ class CouponRequest extends FormRequest
 
     public function rules(): array
     {
-        $couponId = $this->route('coupon') ? $this->route('coupon') : null;
+        $couponParam = $this->route('coupon');
+        $couponId = is_object($couponParam) ? ($couponParam->id ?? null) : $couponParam;
 
         return [
             'code' => 'required|string|max:60|unique:coupons,code,' . $couponId,
@@ -46,6 +47,9 @@ class CouponRequest extends FormRequest
 
             'subscriptions_type_ids' => 'nullable|array',
             'subscriptions_type_ids.*' => 'integer',
+
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'integer',
 
             'duration_values' => 'nullable|array',
             'duration_values.*' => 'integer|min:1',

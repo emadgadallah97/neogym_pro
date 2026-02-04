@@ -22,10 +22,19 @@
 
     $selectedPlanIds = old('subscriptions_plan_ids', $Offer && $Offer->relationLoaded('plans') ? $Offer->plans->pluck('id')->toArray() : []);
     $selectedTypeIds = old('subscriptions_type_ids', $Offer && $Offer->relationLoaded('types') ? $Offer->types->pluck('id')->toArray() : []);
+    $selectedBranchIds = old('branch_ids', $Offer && $Offer->relationLoaded('branches') ? $Offer->branches->pluck('id')->toArray() : []);
 
     $existingDurations = $Offer && $Offer->relationLoaded('durations') ? $Offer->durations : collect([]);
     $selectedDurationUnit = old('duration_unit', $existingDurations->first()->duration_unit ?? 'month');
     $selectedDurationValues = old('duration_values', $existingDurations->pluck('duration_value')->toArray());
+
+    $jsonName = function ($nameJsonOrText) {
+        $decoded = json_decode($nameJsonOrText, true);
+        if (is_array($decoded)) {
+            return $decoded[app()->getLocale()] ?? ($decoded['ar'] ?? ($decoded['en'] ?? ''));
+        }
+        return $nameJsonOrText;
+    };
 @endphp
 
 <div class="row g-3">
@@ -109,48 +118,40 @@
     <div class="col-12">
         <div class="alert alert-info mb-0">
             <strong>{{ trans('coupons_offers.constraints') }}</strong>
-            <div class="text-muted mt-1">
-                {{ trans('subscriptions.multi_select_hint') }}
-            </div>
+            <div class="text-muted mt-1">{{ trans('subscriptions.multi_select_hint') }}</div>
         </div>
     </div>
 
-    <div class="col-lg-6">
+    <div class="col-lg-4">
+        <label class="form-label mb-1">{{ trans('coupons_offers.branches') }}</label>
+        <select name="branch_ids[]" id="offerBranches" class="form-select" multiple>
+            @foreach($Branches as $b)
+                <option value="{{ $b->id }}" {{ in_array($b->id, $selectedBranchIds) ? 'selected' : '' }}>
+                    {{ $jsonName($b->name) }}
+                </option>
+            @endforeach
+        </select>
+        <small class="text-muted d-block mt-1">{{ trans('coupons_offers.branches') }} (اختياري)</small>
+    </div>
+
+    <div class="col-lg-4">
         <label class="form-label mb-1">{{ trans('coupons_offers.plans') }}</label>
         <select name="subscriptions_plan_ids[]" id="offerPlans" class="form-select" multiple>
             @foreach($Plans as $p)
-                @php
-                    $pName = '';
-                    $decoded = json_decode($p->name, true);
-                    if (is_array($decoded)) {
-                        $pName = $decoded[app()->getLocale()] ?? ($decoded['ar'] ?? ($decoded['en'] ?? ''));
-                    } else {
-                        $pName = $p->name;
-                    }
-                @endphp
                 <option value="{{ $p->id }}" {{ in_array($p->id, $selectedPlanIds) ? 'selected' : '' }}>
-                    {{ $p->code ? ('['.$p->code.'] ') : '' }}{{ $pName }}
+                    {{ $p->code ? ('['.$p->code.'] ') : '' }}{{ $jsonName($p->name) }}
                 </option>
             @endforeach
         </select>
         <small class="text-muted d-block mt-1">{{ trans('coupons_offers.plans') }} (اختياري)</small>
     </div>
 
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <label class="form-label mb-1">{{ trans('coupons_offers.types') }}</label>
         <select name="subscriptions_type_ids[]" id="offerTypes" class="form-select" multiple>
             @foreach($Types as $t)
-                @php
-                    $tName = '';
-                    $decoded = json_decode($t->name, true);
-                    if (is_array($decoded)) {
-                        $tName = $decoded[app()->getLocale()] ?? ($decoded['ar'] ?? ($decoded['en'] ?? ''));
-                    } else {
-                        $tName = $t->name;
-                    }
-                @endphp
                 <option value="{{ $t->id }}" {{ in_array($t->id, $selectedTypeIds) ? 'selected' : '' }}>
-                    {{ $tName }}
+                    {{ $jsonName($t->name) }}
                 </option>
             @endforeach
         </select>
@@ -185,6 +186,14 @@
 
         var isRtl = $('html').attr('dir') === 'rtl';
 
+        $('#offerBranches').select2({
+            width: '100%',
+            placeholder: '{{ trans('coupons_offers.branches') }}',
+            allowClear: true,
+            closeOnSelect: false,
+            dir: isRtl ? 'rtl' : 'ltr'
+        });
+
         $('#offerPlans').select2({
             width: '100%',
             placeholder: '{{ trans('coupons_offers.plans') }}',
@@ -201,7 +210,6 @@
             dir: isRtl ? 'rtl' : 'ltr'
         });
 
-        // durations: allow tags (optional)
         $('#offerDurations').select2({
             width: '100%',
             placeholder: '{{ trans('coupons_offers.durations') }}',

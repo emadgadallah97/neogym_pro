@@ -16,11 +16,7 @@ class offerscontroller extends Controller
 {
     public function __construct()
     {
-        // If you are using Spatie permissions, uncomment:
-        // $this->middleware('permission:offers.view')->only(['index','show']);
-        // $this->middleware('permission:offers.create')->only(['create','store']);
-        // $this->middleware('permission:offers.edit')->only(['edit','update']);
-        // $this->middleware('permission:offers.delete')->only(['destroy']);
+        // permissions...
     }
 
     public function index()
@@ -36,12 +32,10 @@ class offerscontroller extends Controller
     {
         $q = DB::table('subscriptions_plans')->select(['id', 'name', 'code'])->orderByDesc('id');
 
-        // Exclude soft deleted rows if the table supports soft deletes.
         if (Schema::hasColumn('subscriptions_plans', 'deleted_at')) {
             $q->whereNull('deleted_at');
         }
 
-        // Filter only active rows if status column exists.
         if (Schema::hasColumn('subscriptions_plans', 'status')) {
             $q->where('status', 1);
         }
@@ -64,12 +58,28 @@ class offerscontroller extends Controller
         return $q->get();
     }
 
+    private function activeBranchesList()
+    {
+        $q = DB::table('branches')->select(['id', 'name'])->orderByDesc('id');
+
+        if (Schema::hasColumn('branches', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+
+        if (Schema::hasColumn('branches', 'status')) {
+            $q->where('status', 1);
+        }
+
+        return $q->get();
+    }
+
     public function create()
     {
         $Plans = $this->activePlansList();
         $Types = $this->activeTypesList();
+        $Branches = $this->activeBranchesList();
 
-        return view('coupons_offers.offers.create', compact('Plans', 'Types'));
+        return view('coupons_offers.offers.create', compact('Plans', 'Types', 'Branches'));
     }
 
     public function store(OfferRequest $request)
@@ -107,14 +117,14 @@ class offerscontroller extends Controller
 
             $offer->save();
 
-            // Sync plans/types constraints
             $planIds = $request->subscriptions_plan_ids ?? [];
             $typeIds = $request->subscriptions_type_ids ?? [];
+            $branchIds = $request->branch_ids ?? [];
 
             $offer->plans()->sync($planIds);
             $offer->types()->sync($typeIds);
+            $offer->branches()->sync($branchIds);
 
-            // Durations constraints (optional)
             $durationValues = $request->duration_values ?? [];
             $durationUnit = $request->duration_unit ?? null;
 
@@ -141,18 +151,19 @@ class offerscontroller extends Controller
 
     public function show($id)
     {
-        $Offer = Offer::with(['plans', 'types', 'durations'])->findOrFail($id);
+        $Offer = Offer::with(['plans', 'types', 'branches', 'durations'])->findOrFail($id);
         return view('coupons_offers.offers.show', compact('Offer'));
     }
 
     public function edit($id)
     {
-        $Offer = Offer::with(['plans', 'types', 'durations'])->findOrFail($id);
+        $Offer = Offer::with(['plans', 'types', 'branches', 'durations'])->findOrFail($id);
 
         $Plans = $this->activePlansList();
         $Types = $this->activeTypesList();
+        $Branches = $this->activeBranchesList();
 
-        return view('coupons_offers.offers.edit', compact('Offer', 'Plans', 'Types'));
+        return view('coupons_offers.offers.edit', compact('Offer', 'Plans', 'Types', 'Branches'));
     }
 
     public function update(OfferRequest $request, $id)
@@ -190,9 +201,11 @@ class offerscontroller extends Controller
 
             $planIds = $request->subscriptions_plan_ids ?? [];
             $typeIds = $request->subscriptions_type_ids ?? [];
+            $branchIds = $request->branch_ids ?? [];
 
             $offer->plans()->sync($planIds);
             $offer->types()->sync($typeIds);
+            $offer->branches()->sync($branchIds);
 
             $durationValues = $request->duration_values ?? [];
             $durationUnit = $request->duration_unit ?? null;
@@ -230,13 +243,13 @@ class offerscontroller extends Controller
         }
     }
 
-    // Optional: API endpoint for future checkout to get best offer
     public function best(Request $request, OfferEngine $engine)
     {
         $data = $engine->getBestOffer([
             'applies_to' => $request->get('applies_to', 'subscription'),
             'subscriptions_plan_id' => $request->get('subscriptions_plan_id'),
             'subscriptions_type_id' => $request->get('subscriptions_type_id'),
+            'branch_id' => $request->get('branch_id'),
             'duration_value' => $request->get('duration_value'),
             'duration_unit' => $request->get('duration_unit'),
             'amount' => (float)$request->get('amount', 0),

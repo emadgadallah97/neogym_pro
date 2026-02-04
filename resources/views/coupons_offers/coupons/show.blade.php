@@ -25,6 +25,18 @@
             $typeNames[] = $t->name;
         }
     }
+
+    $branchNames = [];
+    if (isset($Coupon->branches)) {
+        foreach($Coupon->branches as $b) {
+            $decoded = json_decode($b->name, true);
+            if (is_array($decoded)) {
+                $branchNames[] = ($decoded[app()->getLocale()] ?? ($decoded['ar'] ?? ($decoded['en'] ?? '')));
+            } else {
+                $branchNames[] = $b->name;
+            }
+        }
+    }
 @endphp
 
 <div class="row">
@@ -134,6 +146,17 @@
                             <div class="text-muted">{{ trans('coupons_offers.constraints') }}</div>
 
                             <div class="mt-2">
+                                <div class="mb-2">
+                                    <strong>{{ trans('coupons_offers.branches') }}:</strong>
+                                    @if(count($branchNames))
+                                        @foreach($branchNames as $bn)
+                                            <span class="badge bg-soft-info text-info me-1 mb-1">{{ $bn }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </div>
+
                                 <div class="mb-2">
                                     <strong>{{ trans('coupons_offers.plans') }}:</strong>
                                     @if(count($planNames))

@@ -51,6 +51,15 @@ class Offer extends Model
             'subscriptions_plan_id'
         )->withTimestamps();
     }
+  public function branches()
+    {
+        return $this->belongsToMany(
+            \App\Models\general\Branch::class,
+            'offer_branches',
+            'offer_id',
+            'branch_id'
+        )->withTimestamps();
+    }
 
     public function types()
     {

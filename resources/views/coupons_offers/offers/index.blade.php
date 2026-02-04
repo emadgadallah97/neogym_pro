@@ -11,6 +11,22 @@
     $disabledOffers = $Offers->where('status', 'disabled')->count();
     $expiredOffers = $Offers->filter(function($o){ return isset($o->is_expired) && $o->is_expired; })->count();
     $lastCreatedAt = $Offers->max('created_at');
+
+    // Branches list (for filter + column)
+    $BranchesList = DB::table('branches')
+        ->select(['id','name'])
+        ->whereNull('deleted_at')
+        ->where('status', 1)
+        ->orderByDesc('id')
+        ->get();
+
+    $branchName = function ($nameJsonOrText) {
+        $decoded = json_decode($nameJsonOrText, true);
+        if (is_array($decoded)) {
+            return $decoded[app()->getLocale()] ?? ($decoded['ar'] ?? ($decoded['en'] ?? ''));
+        }
+        return $nameJsonOrText;
+    };
 @endphp
 
 <div class="row">
@@ -154,13 +170,24 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6 col-lg-3 text-end">
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label mb-1">{{ trans('coupons_offers.branches') }}</label>
+                        <select id="filterBranches" class="form-select" multiple>
+                            @foreach($BranchesList as $b)
+                                <option value="{{ $b->id }}">{{ $branchName($b->name) }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">{{ trans('subscriptions.multi_select_hint') }}</small>
+                    </div>
+
+                    <div class="col-12 text-end">
                         <button type="button" id="clearFilters" class="btn btn-soft-secondary">
                             <i class="ri-refresh-line align-bottom me-1"></i> {{ trans('coupons_offers.clear_filters') }}
                         </button>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -203,6 +230,7 @@
                             <th data-ordering="false">{{ trans('coupons_offers.name_ar') }}</th>
                             <th data-ordering="false">{{ trans('coupons_offers.name_en') }}</th>
                             <th data-ordering="false">{{ trans('coupons_offers.applies_to') }}</th>
+                            <th data-ordering="false">{{ trans('coupons_offers.branches') }}</th>
                             <th data-ordering="false">{{ trans('coupons_offers.discount_type') }}</th>
                             <th data-ordering="false">{{ trans('coupons_offers.discount_value') }}</th>
                             <th data-ordering="false">{{ trans('coupons_offers.status') }}</th>
@@ -215,6 +243,27 @@
                         <?php $i=0; ?>
                         @foreach($Offers as $Offer)
                             <?php $i++; ?>
+
+                            @php
+                                $offerBranchIds = DB::table('offer_branches')
+                                    ->where('offer_id', $Offer->id)
+                                    ->pluck('branch_id')
+                                    ->toArray();
+
+                                $offerBranchNames = [];
+
+                                if (count($offerBranchIds)) {
+                                    $offerBranchesDb = DB::table('branches')
+                                        ->whereIn('id', $offerBranchIds)
+                                        ->orderBy('id')
+                                        ->get();
+
+                                    foreach ($offerBranchesDb as $ob) {
+                                        $offerBranchNames[] = $branchName($ob->name);
+                                    }
+                                }
+                            @endphp
+
                             <tr>
                                 <td>{{ $i }}</td>
 
@@ -229,6 +278,23 @@
                                 <td>
                                     <span class="d-none">__APPLIES__{{ $Offer->applies_to }}__</span>
                                     <span class="badge bg-soft-info text-info">{{ trans('coupons_offers.' . $Offer->applies_to) }}</span>
+                                </td>
+
+                                <td>
+                                    {{-- Hidden tokens for filtering branches --}}
+                                    <span class="d-none">
+                                        @foreach($offerBranchIds as $bid)
+                                            __BRANCH__{{ (int)$bid }}__
+                                        @endforeach
+                                    </span>
+
+                                    @if(count($offerBranchNames))
+                                        @foreach($offerBranchNames as $bn)
+                                            <span class="badge bg-soft-info text-info me-1 mb-1">{{ $bn }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
 
                                 <td>
@@ -312,14 +378,28 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         if (typeof $ === 'undefined') return;
+
+        // Select2 for branches (multi)
+        if ($.fn && $.fn.select2) {
+            var isRtl = $('html').attr('dir') === 'rtl';
+            $('#filterBranches').select2({
+                width: '100%',
+                placeholder: '{{ trans('coupons_offers.branches') }}',
+                allowClear: true,
+                closeOnSelect: false,
+                dir: isRtl ? 'rtl' : 'ltr'
+            });
+        }
+
         if (!$.fn || !$.fn.DataTable) return;
 
         var table = $('#example').DataTable();
 
         // columns:
-        // 0 #, 1 ar, 2 en, 3 applies_to, 4 type, 5 value, 6 status, 7 created_at, 8 actions
+        // 0 #, 1 ar, 2 en, 3 applies_to, 4 branches, 5 type, 6 value, 7 status, 8 created_at, 9 actions
         var appliesColIndex = 3;
-        var statusColIndex = 6;
+        var branchesColIndex = 4;
+        var statusColIndex = 7;
 
         $('#offerSearch').on('keyup change', function () {
             table.search(this.value).draw();
@@ -343,13 +423,32 @@
             table.column(appliesColIndex).search('__APPLIES__' + v + '__', false, false).draw();
         });
 
+        $('#filterBranches').on('change', function () {
+            var selected = $(this).val() || [];
+
+            if (selected.length === 0) {
+                table.column(branchesColIndex).search('').draw();
+                return;
+            }
+
+            var tokens = selected.map(function(id){
+                return '__BRANCH__' + id + '__';
+            });
+
+            var regex = '(?:' + tokens.join('|') + ')';
+            table.column(branchesColIndex).search(regex, true, false).draw();
+        });
+
         $('#clearFilters').on('click', function () {
             $('#offerSearch').val('');
             $('#filterStatus').val('');
             $('#filterAppliesTo').val('');
 
+            $('#filterBranches').val(null).trigger('change');
+
             table.search('');
             table.column(appliesColIndex).search('');
+            table.column(branchesColIndex).search('');
             table.column(statusColIndex).search('');
             table.draw();
         });

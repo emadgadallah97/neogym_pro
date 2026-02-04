@@ -16,6 +16,7 @@ class CouponEngine
      * - applies_to: any|subscription|sale|service
      * - subscriptions_plan_id: int|null
      * - subscriptions_type_id: int|null
+     * - branch_id: int|null
      * - duration_value: int|null
      * - duration_unit: day|month|year|null
      * - amount: float
@@ -35,6 +36,7 @@ class CouponEngine
 
         $planId = $context['subscriptions_plan_id'] ?? null;
         $typeId = $context['subscriptions_type_id'] ?? null;
+        $branchId = $context['branch_id'] ?? null;
 
         $durationValue = $context['duration_value'] ?? null;
         $durationUnit = $context['duration_unit'] ?? null;
@@ -59,7 +61,6 @@ class CouponEngine
             return ['ok' => false, 'message' => trans('coupons_offers.coupon_min_amount_not_met')];
         }
 
-        // Plan constraint
         $planIds = $coupon->plans()->pluck('subscriptions_plans.id')->toArray();
         if (!empty($planIds)) {
             if (!$planId || !in_array((int)$planId, array_map('intval', $planIds), true)) {
@@ -67,7 +68,6 @@ class CouponEngine
             }
         }
 
-        // Type constraint
         $typeIds = $coupon->types()->pluck('subscriptions_types.id')->toArray();
         if (!empty($typeIds)) {
             if (!$typeId || !in_array((int)$typeId, array_map('intval', $typeIds), true)) {
@@ -75,7 +75,13 @@ class CouponEngine
             }
         }
 
-        // Duration constraint
+        $branchIds = $coupon->branches()->pluck('branches.id')->toArray();
+        if (!empty($branchIds)) {
+            if (!$branchId || !in_array((int)$branchId, array_map('intval', $branchIds), true)) {
+                return ['ok' => false, 'message' => trans('coupons_offers.coupon_not_applicable')];
+            }
+        }
+
         $durations = $coupon->durations()->get();
         if ($durations->count() > 0) {
             if (!$durationValue || !$durationUnit) {
@@ -91,7 +97,6 @@ class CouponEngine
             }
         }
 
-        // Usage limits
         if (!is_null($coupon->max_uses_total)) {
             $used = $coupon->usages()->count();
             if ($used >= (int)$coupon->max_uses_total) {

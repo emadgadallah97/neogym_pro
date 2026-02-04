@@ -39,6 +39,9 @@ class OfferRequest extends FormRequest
             'subscriptions_type_ids' => 'nullable|array',
             'subscriptions_type_ids.*' => 'integer',
 
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'integer',
+
             'duration_values' => 'nullable|array',
             'duration_values.*' => 'integer|min:1',
 

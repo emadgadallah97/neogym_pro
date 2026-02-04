@@ -53,7 +53,15 @@ class Coupon extends Model
             'subscriptions_plan_id'
         )->withTimestamps();
     }
-
+ public function branches()
+    {
+        return $this->belongsToMany(
+            \App\Models\general\Branch::class,
+            'coupon_branches',
+            'coupon_id',
+            'branch_id'
+        )->withTimestamps();
+    }
     public function types()
     {
         return $this->belongsToMany(

@@ -82,5 +82,6 @@ return [
     'create_coupons' => 'انشاء كوبون جديد',
     'edit_coupon' => 'تعديل كوبون',
     'show' => 'عرض',
+'branches' => 'الفروع',
 
 ];

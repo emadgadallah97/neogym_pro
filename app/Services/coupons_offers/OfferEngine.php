@@ -15,6 +15,7 @@ class OfferEngine
      * - applies_to: any|subscription|sale|service
      * - subscriptions_plan_id: int|null
      * - subscriptions_type_id: int|null
+     * - branch_id: int|null
      * - duration_value: int|null
      * - duration_unit: day|month|year|null
      * - amount: float
@@ -26,6 +27,7 @@ class OfferEngine
 
         $planId = $context['subscriptions_plan_id'] ?? null;
         $typeId = $context['subscriptions_type_id'] ?? null;
+        $branchId = $context['branch_id'] ?? null;
 
         $durationValue = $context['duration_value'] ?? null;
         $durationUnit = $context['duration_unit'] ?? null;
@@ -40,7 +42,7 @@ class OfferEngine
         $best = null;
 
         foreach ($offers as $offer) {
-            if (!$this->matchesConstraints($offer, $planId, $typeId, $durationValue, $durationUnit)) {
+            if (!$this->matchesConstraints($offer, $planId, $typeId, $branchId, $durationValue, $durationUnit)) {
                 continue;
             }
 
@@ -60,7 +62,6 @@ class OfferEngine
                 continue;
             }
 
-            // Choose highest discount; if tie choose higher priority then latest id
             if ($discount > $best['discount_amount']) {
                 $best = ['offer' => $offer, 'discount_amount' => $discount];
             } elseif ($discount == $best['discount_amount']) {
@@ -87,9 +88,8 @@ class OfferEngine
         ];
     }
 
-    private function matchesConstraints(Offer $offer, $planId, $typeId, $durationValue, $durationUnit): bool
+    private function matchesConstraints(Offer $offer, $planId, $typeId, $branchId, $durationValue, $durationUnit): bool
     {
-        // Plan constraint
         $planIds = $offer->plans()->pluck('subscriptions_plans.id')->toArray();
         if (!empty($planIds)) {
             if (!$planId || !in_array((int)$planId, array_map('intval', $planIds), true)) {
@@ -97,7 +97,6 @@ class OfferEngine
             }
         }
 
-        // Type constraint
         $typeIds = $offer->types()->pluck('subscriptions_types.id')->toArray();
         if (!empty($typeIds)) {
             if (!$typeId || !in_array((int)$typeId, array_map('intval', $typeIds), true)) {
@@ -105,7 +104,13 @@ class OfferEngine
             }
         }
 
-        // Duration constraint
+        $branchIds = $offer->branches()->pluck('branches.id')->toArray();
+        if (!empty($branchIds)) {
+            if (!$branchId || !in_array((int)$branchId, array_map('intval', $branchIds), true)) {
+                return false;
+            }
+        }
+
         $durations = $offer->durations()->get();
         if ($durations->count() > 0) {
             if (!$durationValue || !$durationUnit) {
