@@ -60,6 +60,8 @@ return [
     'more' => 'المزيد',
     'members' => 'الاعضاء',
     'subscriptions' => 'الاشتراكات',
+    'offers' => 'العروض',
+    'coupons' => 'الكوبونات',
 
 
 

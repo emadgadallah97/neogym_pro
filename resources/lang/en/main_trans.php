@@ -24,7 +24,7 @@ return [
     'reservations' => 'Reservations',
     'reservations_management' => 'Reservations management',
 
-    // doctors 
+    // doctors
 
     'doctors' => 'Doctors App',
     'doctors_management' => 'Doctors management',
@@ -48,14 +48,15 @@ return [
         'user_management' => 'User management',
         'user_add' => 'Create User',
         'users' => 'Users',
-    //reports 
+    //reports
     'reports' => 'Reports',
-    'user_add' => 'Create User',
-    'users' => 'Users',
+
 
      //Settings
     'settings' => 'Settings',
 
        //Settings
     'dashboards' => 'Dashboards',
+        'offers' => 'Offers',
+    'coupons' => 'Coupons',
 ];

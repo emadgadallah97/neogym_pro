@@ -72,6 +72,27 @@
                         <span data-key="t-widgets">{{ trans('main_trans.subscriptions') }}</span>
                     </a>
                 </li>
+                {{-- الكبونات --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'coupons_offers.create' || Route::currentRouteName() == 'coupons_offers.index') active @endif"
+                        href="{{ url('/' . ($page = 'coupons')) }}">
+
+                        <i class="mdi mdi-ticket-percent"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.coupons') }}</span>
+                    </a>
+                </li>
+                {{-- العروض --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'coupons_offers.create' || Route::currentRouteName() == 'coupons_offers.index') active @endif"
+                        href="{{ url('/' . ($page = 'offers')) }}">
+
+                        <i class="mdi mdi-sale"></i>
+
+                        <span data-key="t-widgets">{{ trans('main_trans.offers') }}</span>
+                    </a>
+                </li>
                 <!--user management-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.user_management') }}</span></li>
