@@ -81,4 +81,8 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'more' => 'More',
+
+
+    'commission_value_type' => 'Commission type',
+    'commission_value_type_hint' => 'Choose whether the commission is a percentage or a fixed amount.',
 ];

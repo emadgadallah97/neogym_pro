@@ -70,6 +70,9 @@ class employeescontroller extends Controller
             'compensation_type' => 'required|in:salary_only,commission_only,salary_and_commission',
             'base_salary' => 'nullable|numeric|min:0',
 
+            // NEW: commission value type
+            'commission_value_type' => 'nullable|in:percent,fixed',
+
             'commission_percent' => 'nullable|numeric|min:0|max:100',
             'commission_fixed' => 'nullable|numeric|min:0',
 
@@ -100,16 +103,48 @@ class employeescontroller extends Controller
             return redirect()->back()->withInput()->with('error', trans('employees.base_salary_required'));
         }
 
+        // NEW commission logic: require commission_value_type + the correct field
+        $commissionValueType = $request->commission_value_type;
         if (in_array($type, ['commission_only', 'salary_and_commission'])) {
-            $hasPercent = ($request->commission_percent !== null && $request->commission_percent !== '');
-            $hasFixed = ($request->commission_fixed !== null && $request->commission_fixed !== '');
-            if (!$hasPercent && !$hasFixed) {
+
+            if (empty($commissionValueType) || !in_array($commissionValueType, ['percent', 'fixed'])) {
                 return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+            }
+
+            if ($commissionValueType === 'percent') {
+                $hasPercent = ($request->commission_percent !== null && $request->commission_percent !== '');
+                if (!$hasPercent) {
+                    return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+                }
+            }
+
+            if ($commissionValueType === 'fixed') {
+                $hasFixed = ($request->commission_fixed !== null && $request->commission_fixed !== '');
+                if (!$hasFixed) {
+                    return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+                }
             }
         }
 
         if (in_array($type, ['salary_only', 'salary_and_commission']) && empty($request->salary_transfer_method)) {
             return redirect()->back()->withInput()->with('error', trans('employees.transfer_method_required'));
+        }
+
+        // Normalize commission fields based on type + commission_value_type
+        $commissionPercent = $request->commission_percent;
+        $commissionFixed = $request->commission_fixed;
+
+        if (in_array($type, ['commission_only', 'salary_and_commission'])) {
+            if ($commissionValueType === 'percent') {
+                $commissionFixed = null;
+            } elseif ($commissionValueType === 'fixed') {
+                $commissionPercent = null;
+            }
+        } else {
+            // salary_only => no commission at all
+            $commissionValueType = null;
+            $commissionPercent = null;
+            $commissionFixed = null;
         }
 
         DB::beginTransaction();
@@ -135,8 +170,11 @@ class employeescontroller extends Controller
 
                 'compensation_type' => $request->compensation_type,
                 'base_salary' => $request->base_salary,
-                'commission_percent' => $request->commission_percent,
-                'commission_fixed' => $request->commission_fixed,
+
+                // NEW
+                'commission_value_type' => $commissionValueType,
+                'commission_percent' => $commissionPercent,
+                'commission_fixed' => $commissionFixed,
 
                 'salary_transfer_method' => $request->salary_transfer_method,
                 'salary_transfer_details' => $request->salary_transfer_details,
@@ -212,6 +250,9 @@ class employeescontroller extends Controller
             'compensation_type' => 'required|in:salary_only,commission_only,salary_and_commission',
             'base_salary' => 'nullable|numeric|min:0',
 
+            // NEW
+            'commission_value_type' => 'nullable|in:percent,fixed',
+
             'commission_percent' => 'nullable|numeric|min:0|max:100',
             'commission_fixed' => 'nullable|numeric|min:0',
 
@@ -240,16 +281,47 @@ class employeescontroller extends Controller
             return redirect()->back()->withInput()->with('error', trans('employees.base_salary_required'));
         }
 
+        // NEW commission logic
+        $commissionValueType = $request->commission_value_type;
         if (in_array($type, ['commission_only', 'salary_and_commission'])) {
-            $hasPercent = ($request->commission_percent !== null && $request->commission_percent !== '');
-            $hasFixed = ($request->commission_fixed !== null && $request->commission_fixed !== '');
-            if (!$hasPercent && !$hasFixed) {
+
+            if (empty($commissionValueType) || !in_array($commissionValueType, ['percent', 'fixed'])) {
                 return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+            }
+
+            if ($commissionValueType === 'percent') {
+                $hasPercent = ($request->commission_percent !== null && $request->commission_percent !== '');
+                if (!$hasPercent) {
+                    return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+                }
+            }
+
+            if ($commissionValueType === 'fixed') {
+                $hasFixed = ($request->commission_fixed !== null && $request->commission_fixed !== '');
+                if (!$hasFixed) {
+                    return redirect()->back()->withInput()->with('error', trans('employees.commission_required'));
+                }
             }
         }
 
         if (in_array($type, ['salary_only', 'salary_and_commission']) && empty($request->salary_transfer_method)) {
             return redirect()->back()->withInput()->with('error', trans('employees.transfer_method_required'));
+        }
+
+        // Normalize commission fields
+        $commissionPercent = $request->commission_percent;
+        $commissionFixed = $request->commission_fixed;
+
+        if (in_array($type, ['commission_only', 'salary_and_commission'])) {
+            if ($commissionValueType === 'percent') {
+                $commissionFixed = null;
+            } elseif ($commissionValueType === 'fixed') {
+                $commissionPercent = null;
+            }
+        } else {
+            $commissionValueType = null;
+            $commissionPercent = null;
+            $commissionFixed = null;
         }
 
         DB::beginTransaction();
@@ -276,8 +348,11 @@ class employeescontroller extends Controller
 
                 'compensation_type' => $request->compensation_type,
                 'base_salary' => $request->base_salary,
-                'commission_percent' => $request->commission_percent,
-                'commission_fixed' => $request->commission_fixed,
+
+                // NEW
+                'commission_value_type' => $commissionValueType,
+                'commission_percent' => $commissionPercent,
+                'commission_fixed' => $commissionFixed,
 
                 'salary_transfer_method' => $request->salary_transfer_method,
                 'salary_transfer_details' => $request->salary_transfer_details,
@@ -323,7 +398,6 @@ class employeescontroller extends Controller
         try {
             $Employee = Employee::findOrFail($request->id);
 
-            // NOTE: نترك الصورة بدون حذف عند delete لو تحب؛ أو احذفها هنا لو تريد.
             $this->deletePublicFileIfExists($Employee->photo);
 
             $Employee->delete();

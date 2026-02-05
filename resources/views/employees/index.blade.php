@@ -22,6 +22,7 @@
 </div>
 
 
+
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
@@ -31,10 +32,9 @@
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div>
                         <h5 class="card-title mb-0">{{ trans('employees.employees_list') }}</h5>
-                        <small class="text-muted">
-                            {{ trans('employees.compensation_hint') }}
-                        </small>
+                        <small class="text-muted">{{ trans('employees.compensation_hint') }}</small>
                     </div>
+
 
                     <div class="d-flex gap-2">
                         <button data-bs-toggle="modal" data-bs-target="#addEmployeeModal" class="btn btn-primary waves-effect waves-light" type="button">
@@ -77,13 +77,16 @@
             </div>
 
 
+
             @php
                 $total = $Employees->count();
+
 
                 // KPIs per Job (only jobs having employees)
                 $jobCounts = $Employees->whereNotNull('job_id')->groupBy('job_id')->map(function ($items) {
                     return $items->count();
                 });
+
 
                 $kpiColors = ['primary','success','warning','info','secondary','danger','dark'];
                 $kpiIconByColor = [
@@ -97,12 +100,15 @@
                 ];
                 $kpiIndex = 0;
 
+
                 $activeText = trans('settings_trans.active');
                 $inactiveText = trans('settings_trans.inactive');
             @endphp
 
 
+
             <div class="card-body">
+
 
                 {{-- KPIs --}}
                 <div class="row g-3 mb-3">
@@ -125,16 +131,19 @@
                         </div>
                     </div>
 
+
                     {{-- Per Job (only if count > 0) --}}
                     @foreach($Jobs as $Job)
                         @php
                             $count = (int)($jobCounts[$Job->id] ?? 0);
                             if ($count <= 0) continue;
 
+
                             $color = $kpiColors[$kpiIndex % count($kpiColors)];
                             $icon = $kpiIconByColor[$color] ?? 'mdi-briefcase-outline';
                             $kpiIndex++;
                         @endphp
+
 
                         <div class="col-md-4 col-xl-2">
                             <div class="card border border-{{ $color }} bg-soft-{{ $color }} mb-0">
@@ -157,6 +166,7 @@
                 </div>
 
 
+
                 {{-- Search + Filters Bar --}}
                 <div class="card border shadow-none mb-3">
                     <div class="card-body">
@@ -173,6 +183,7 @@
                                 <small class="text-muted">{{ trans('employees.search_note') ?? 'يبحث داخل الاسم/الكود/الهاتف وباقي الأعمدة.' }}</small>
                             </div>
 
+
                             <div class="col-md-2">
                                 <label class="form-label mb-1">{{ trans('employees.job') }}</label>
                                 <select class="form-select" id="filter_job">
@@ -182,6 +193,7 @@
                                     @endforeach
                                 </select>
                             </div>
+
 
                             <div class="col-md-2">
                                 <label class="form-label mb-1">{{ trans('employees.branches') }}</label>
@@ -193,6 +205,7 @@
                                 </select>
                             </div>
 
+
                             <div class="col-md-2">
                                 <label class="form-label mb-1">{{ trans('employees.compensation_type') }}</label>
                                 <select class="form-select" id="filter_compensation">
@@ -203,6 +216,7 @@
                                 </select>
                             </div>
 
+
                             <div class="col-md-2">
                                 <label class="form-label mb-1">{{ trans('settings_trans.status') }}</label>
                                 <select class="form-select" id="filter_status">
@@ -212,6 +226,7 @@
                                 </select>
                             </div>
 
+
                             <div class="col-12">
                                 <div class="d-flex justify-content-between flex-wrap gap-2 mt-2">
                                     <div class="alert alert-info mb-0 py-2 px-3">
@@ -219,6 +234,7 @@
                                         <strong>*</strong>
                                         {{ trans('employees.required_fields_note') ?? 'الحقول المطلوبة: الاسم الأول، الاسم الأخير، الفروع، الفرع الأساسي، نوع التعويض.' }}
                                     </div>
+
 
                                     <div class="d-flex gap-2">
                                         <button type="button" class="btn btn-soft-secondary" id="btn_reset_filters">
@@ -228,9 +244,11 @@
                                 </div>
                             </div>
 
+
                         </div>
                     </div>
                 </div>
+
 
 
                 {{-- Table --}}
@@ -251,6 +269,7 @@
                             </tr>
                         </thead>
 
+
                         <tbody>
                             <?php $i=0; ?>
                             @foreach($Employees as $Employee)
@@ -263,14 +282,18 @@
 
                                     $photoUrl = !empty($Employee->photo) ? url($Employee->photo) : '';
                                     $statusText = $Employee->status ? $activeText : $inactiveText;
+
+                                    // NEW: commission value type
+                                    $commissionValueType = $Employee->commission_value_type ?? '';
                                 @endphp
+
 
                                 <tr>
                                     <?php $i++; ?>
                                     <td>{{$i}}</td>
-                                    <td>
-                                        <span class="badge bg-dark-subtle text-dark">{{$Employee->code}}</span>
-                                    </td>
+                                    <td><span class="badge bg-dark-subtle text-dark">{{$Employee->code}}</span></td>
+
+
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="avatar-xs">
@@ -288,9 +311,11 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-soft-info text-info">{{ $jobName }}</span>
-                                    </td>
+
+
+                                    <td><span class="badge bg-soft-info text-info">{{ $jobName }}</span></td>
+
+
                                     <td>
                                         @if($primary)
                                             <span class="badge bg-primary">{{ $primary->getTranslation('name','ar') }}</span>
@@ -299,12 +324,18 @@
                                         @endif
                                         <small class="text-muted">({{ $branchesCount }})</small>
                                     </td>
+
+
                                     <td>{{$Employee->phone_1 ?: '-'}}</td>
+
+
                                     <td>
                                         <span class="badge bg-soft-warning text-warning">
                                             {{ trans('employees.'.$Employee->compensation_type) }}
                                         </span>
                                     </td>
+
+
                                     <td>
                                         @if($Employee->status)
                                             <span class="badge bg-success">{{ $activeText }}</span>
@@ -312,11 +343,14 @@
                                             <span class="badge bg-danger">{{ $inactiveText }}</span>
                                         @endif
                                     </td>
+
+
                                     <td>{{$Employee->created_at}}</td>
 
-                                    {{-- Actions --}}
+
                                     <td>
                                         <div class="d-flex align-items-center gap-1 justify-content-end">
+
 
                                             {{-- View --}}
                                             <button
@@ -337,6 +371,7 @@
                                                 data-birth="{{ $Employee->birth_date }}"
                                                 data-type="{{ trans('employees.'.$Employee->compensation_type) }}"
                                                 data-base-salary="{{ $Employee->base_salary }}"
+                                                data-commission-value-type="{{ $commissionValueType }}" {{-- NEW --}}
                                                 data-commission-percent="{{ $Employee->commission_percent }}"
                                                 data-commission-fixed="{{ $Employee->commission_fixed }}"
                                                 data-transfer-method="{{ $Employee->salary_transfer_method }}"
@@ -353,10 +388,11 @@
                                                 <i class="mdi mdi-eye-outline"></i>
                                             </button>
 
+
                                             {{-- Edit --}}
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-soft-warning btn-icon btn-edit-employee"
+                                                class="btn btn-sm btn-soft-warning btn-icon"
                                                 title="{{ trans('employees.edit') ?? 'تعديل' }}"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editEmployeeModal"
@@ -376,6 +412,7 @@
                                                 data-bio="{{ $Employee->bio }}"
                                                 data-comp="{{ $Employee->compensation_type }}"
                                                 data-base="{{ $Employee->base_salary }}"
+                                                data-cvt="{{ $commissionValueType }}" {{-- NEW --}}
                                                 data-cp="{{ $Employee->commission_percent }}"
                                                 data-cf="{{ $Employee->commission_fixed }}"
                                                 data-tm="{{ $Employee->salary_transfer_method }}"
@@ -388,7 +425,8 @@
                                                 <i class="mdi mdi-pencil-outline"></i>
                                             </button>
 
-                                            {{-- More (Delete) --}}
+
+                                            {{-- More (Delete only) --}}
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-soft-secondary btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ trans('employees.more') ?? 'المزيد' }}">
                                                     <i class="ri-more-2-fill"></i>
@@ -396,7 +434,7 @@
                                                 <ul class="dropdown-menu dropdown-menu-end shadow">
                                                     <li>
                                                         <button
-                                                            class="dropdown-item text-danger btn-delete-employee"
+                                                            class="dropdown-item text-danger"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#deleteEmployeeModal"
                                                             data-id="{{ $Employee->id }}"
@@ -409,236 +447,25 @@
                                                 </ul>
                                             </div>
 
+
                                         </div>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
 
+
                     </table>
                 </div>
 
+
             </div>
 
 
-            {{-- View Modal --}}
-            <div id="viewEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0 overflow-hidden">
-                        <div class="modal-header p-3 bg-soft-primary">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title rounded bg-primary">
-                                        <i class="mdi mdi-account-details-outline"></i>
-                                    </span>
-                                </div>
-                                <div>
-                                    <h4 class="card-title mb-0" id="view_title">{{ trans('employees.employees') }}</h4>
-                                    <small class="text-muted" id="view_subtitle"></small>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="card border mb-0">
-                                        <div class="card-body text-center">
-                                            <div class="mb-2">
-                                                <img id="view_photo" src="" class="rounded" style="width:120px;height:120px;object-fit:cover;display:none;">
-                                                <div id="view_photo_placeholder" class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded bg-soft-primary text-primary">
-                                                        <i class="mdi mdi-account-outline fs-2"></i>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="fw-semibold" id="view_name">-</div>
-                                            <div class="text-muted small" id="view_code">-</div>
-                                            <div class="mt-2">
-                                                <span class="badge bg-soft-info text-info" id="view_job">-</span>
-                                            </div>
-                                            <div class="mt-2">
-                                                <span class="badge bg-soft-success text-success" id="view_status">-</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div class="col-md-8">
-                                    <ul class="nav nav-tabs nav-tabs-custom mb-3" role="tablist">
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab_contact" type="button" role="tab">
-                                                <i class="mdi mdi-phone-outline"></i> {{ trans('employees.phone') }}
-                                            </button>
-                                        </li>
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab_work" type="button" role="tab">
-                                                <i class="mdi mdi-briefcase-outline"></i> {{ trans('employees.specialization') }}
-                                            </button>
-                                        </li>
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab_finance" type="button" role="tab">
-                                                <i class="mdi mdi-cash-multiple"></i> {{ trans('employees.compensation_type') }}
-                                            </button>
-                                        </li>
-                                    </ul>
-
-
-                                    <div class="tab-content">
-                                        <div class="tab-pane fade show active" id="tab_contact" role="tabpanel">
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded bg-light">
-                                                        <small class="text-muted">{{ trans('employees.phone_1') }}</small>
-                                                        <div class="fw-semibold" id="view_phone1">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded bg-light">
-                                                        <small class="text-muted">{{ trans('employees.phone_2') }}</small>
-                                                        <div class="fw-semibold" id="view_phone2">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded bg-light">
-                                                        <small class="text-muted">{{ trans('employees.whatsapp') }}</small>
-                                                        <div class="fw-semibold" id="view_whatsapp">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded bg-light">
-                                                        <small class="text-muted">{{ trans('employees.email') }}</small>
-                                                        <div class="fw-semibold" id="view_email">-</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row g-2 mt-2">
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.gender') }}</small>
-                                                        <div class="fw-semibold" id="view_gender">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.birth_date') }}</small>
-                                                        <div class="fw-semibold" id="view_birth">-</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-
-                                            <div class="row g-2 mt-2">
-                                                <div class="col-md-12">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.branches') }}</small>
-                                                        <div class="fw-semibold">
-                                                            <span id="view_branches">-</span>
-                                                            <small class="text-muted">(<span id="view_branches_count">0</span>)</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="tab-pane fade" id="tab_work" role="tabpanel">
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded bg-soft-info">
-                                                        <small class="text-muted">{{ trans('employees.specialization') }}</small>
-                                                        <div class="fw-semibold" id="view_specialization">-</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded bg-soft-info">
-                                                        <small class="text-muted">هل الموظف مدرب</small>
-                                                        <div class="fw-semibold" id="viewiscoach-div">-</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded bg-soft-info">
-                                                        <small class="text-muted">{{ trans('employees.years_experience') }}</small>
-                                                        <div class="fw-semibold" id="view_years">-</div>
-                                                    </div>
-                                                </div>
-
-
-                                                <div class="col-md-12">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.bio') }}</small>
-                                                        <div id="view_bio" class="fw-semibold">-</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="tab-pane fade" id="tab_finance" role="tabpanel">
-                                            <div class="row g-2">
-                                                <div class="col-md-12">
-                                                    <div class="p-2 border rounded bg-soft-warning">
-                                                        <small class="text-muted">{{ trans('employees.compensation_type') }}</small>
-                                                        <div class="fw-semibold" id="view_type">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.base_salary') }}</small>
-                                                        <div class="fw-semibold" id="view_base_salary">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.commission_percent') }}</small>
-                                                        <div class="fw-semibold" id="view_cp">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.commission_fixed') }}</small>
-                                                        <div class="fw-semibold" id="view_cf">-</div>
-                                                    </div>
-                                                </div>
-
-
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.salary_transfer_method') }}</small>
-                                                        <div class="fw-semibold" id="view_tm">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="p-2 border rounded">
-                                                        <small class="text-muted">{{ trans('employees.salary_transfer_details') }}</small>
-                                                        <div class="fw-semibold" id="view_td">-</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                            </div>
-
-
-                        </div>
-
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">OK</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- Modals --}}
+            @include('employees.show')
+            @include('employees.create')
+            @include('employees.edit')
 
 
             {{-- Delete Modal --}}
@@ -675,533 +502,9 @@
             </div>
 
 
-            {{-- Add Modal --}}
-            <div id="addEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0 overflow-hidden">
-                        <div class="modal-header p-3 bg-soft-success">
-                            <h4 class="card-title mb-0">
-                                <i class="mdi mdi-account-plus-outline"></i> {{ trans('employees.add_new_employee') }}
-                            </h4>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-
-                        <div class="modal-body">
-                            <form action="{{route('employees.store')}}" method="post" enctype="multipart/form-data" class="employee-form">
-                                {{ csrf_field() }}
-
-
-                                <ul class="nav nav-pills nav-pills-custom mb-3" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#add_tab_basic" type="button" role="tab">
-                                            <i class="mdi mdi-card-account-details-outline"></i> {{ trans('employees.full_name') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#add_tab_work" type="button" role="tab">
-                                            <i class="mdi mdi-briefcase-outline"></i> {{ trans('employees.job') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#add_tab_finance" type="button" role="tab">
-                                            <i class="mdi mdi-cash-multiple"></i> {{ trans('employees.compensation_type') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#add_tab_branches" type="button" role="tab">
-                                            <i class="mdi mdi-source-branch"></i> {{ trans('employees.branches') }}
-                                        </button>
-                                    </li>
-                                </ul>
-
-
-                                <div class="tab-content">
-
-
-                                    <div class="tab-pane fade show active" id="add_tab_basic" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.first_name') }} <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="first_name" value="{{ old('first_name') }}" placeholder="مثال: Ahmed">
-                                                <small class="text-muted">Required</small>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.last_name') }} <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="last_name" value="{{ old('last_name') }}" placeholder="مثال: Ali">
-                                                <small class="text-muted">Required</small>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.gender') }}</label>
-                                                <select class="form-select" name="gender">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    <option value="male">{{ trans('employees.male') }}</option>
-                                                    <option value="female">{{ trans('employees.female') }}</option>
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.birth_date') }}</label>
-                                                <input type="date" class="form-control" name="birth_date" value="{{ old('birth_date') }}">
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.photo') }}</label>
-                                                <input type="file" class="form-control" name="photo" accept="image/*">
-                                                <small class="text-muted">jpg / png / webp</small>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.email') }}</label>
-                                                <input type="text" class="form-control" name="email" value="{{ old('email') }}" placeholder="example@email.com">
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.phone_1') }}</label>
-                                                <input type="text" class="form-control" name="phone_1" value="{{ old('phone_1') }}">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.phone_2') }}</label>
-                                                <input type="text" class="form-control" name="phone_2" value="{{ old('phone_2') }}">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.whatsapp') }}</label>
-                                                <input type="text" class="form-control" name="whatsapp" value="{{ old('whatsapp') }}">
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="add_tab_work" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.job') }}</label>
-                                                <select class="form-select" name="job_id">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    @foreach($Jobs as $Job)
-                                                        <option value="{{$Job->id}}">{{$Job->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.specialization') }}</label>
-                                                <input type="text" class="form-control" name="specialization" value="{{ old('specialization') }}">
-                                            </div>
-
-
-                                            <div class="w-100"></div>
-
-                                            {{-- Ensure boolean posts even when unchecked --}}
-                                            <input type="hidden" name="is_coach" value="0">
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">هل الموظف مدرب</label>
-                                                <div class="form-check mt-2">
-                                                    <input class="form-check-input" type="checkbox" name="is_coach" value="1" id="iscoachnew"
-                                                           {{ old('is_coach') ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="iscoachnew">نعم</label>
-                                                </div>
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.years_experience') }}</label>
-                                                <input type="number" class="form-control" name="years_experience" min="0" max="80" value="{{ old('years_experience') }}">
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-3">
-                                                <label class="form-label">{{ trans('employees.bio') }}</label>
-                                                <textarea class="form-control" name="bio" rows="3">{{ old('bio') }}</textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="add_tab_finance" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.compensation_type') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select compensation-type" name="compensation_type">
-                                                    <option value="salary_only">{{ trans('employees.salary_only') }}</option>
-                                                    <option value="commission_only">{{ trans('employees.commission_only') }}</option>
-                                                    <option value="salary_and_commission">{{ trans('employees.salary_and_commission') }}</option>
-                                                </select>
-                                                <small class="text-muted">{{ trans('employees.compensation_hint') }}</small>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3 transfer-box">
-                                                <label class="form-label">{{ trans('employees.salary_transfer_method') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="salary_transfer_method">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    <option value="cash">{{ trans('employees.cash') }}</option>
-                                                    <option value="ewallet">{{ trans('employees.ewallet') }}</option>
-                                                    <option value="bank_transfer">{{ trans('employees.bank_transfer') }}</option>
-                                                    <option value="instapay">{{ trans('employees.instapay') }}</option>
-                                                    <option value="credit_card">{{ trans('employees.credit_card') }}</option>
-                                                    <option value="cheque">{{ trans('employees.cheque') }}</option>
-                                                    <option value="other">{{ trans('employees.other') }}</option>
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 salary-box">
-                                                <label class="form-label">{{ trans('employees.base_salary') }} <span class="text-danger">*</span></label>
-                                                <input type="number" step="0.01" class="form-control" name="base_salary" value="{{ old('base_salary') }}">
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 commission-box">
-                                                <label class="form-label">{{ trans('employees.commission_percent') }}</label>
-                                                <input type="number" step="0.01" class="form-control" name="commission_percent" value="{{ old('commission_percent') }}">
-                                                <small class="text-muted">0 - 100</small>
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 commission-box">
-                                                <label class="form-label">{{ trans('employees.commission_fixed') }}</label>
-                                                <input type="number" step="0.01" class="form-control" name="commission_fixed" value="{{ old('commission_fixed') }}">
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-3 transfer-box">
-                                                <label class="form-label">{{ trans('employees.salary_transfer_details') }}</label>
-                                                <input type="text" class="form-control" name="salary_transfer_details" value="{{ old('salary_transfer_details') }}" placeholder="مثال: رقم المحفظة / رقم الحساب / اسم البنك ...">
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="add_tab_branches" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.branches') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="branches[]" multiple>
-                                                    @foreach($Branches as $Branch)
-                                                        <option value="{{$Branch->id}}">{{$Branch->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                                <small class="text-muted">{{ trans('employees.branches_hint') }}</small>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.primary_branch') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="primary_branch_id">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    @foreach($Branches as $Branch)
-                                                        <option value="{{$Branch->id}}">{{$Branch->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                                <small class="text-muted">{{ trans('employees.primary_branch_hint') }}</small>
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="status" value="1" id="status_new" checked>
-                                                    <label class="form-check-label" for="status_new">{{ trans('settings_trans.status_active') }}</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-
-
-                                <div class="text-end pt-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-content-save-outline"></i> {{ trans('settings_trans.submit') }}
-                                    </button>
-                                </div>
-
-
-                            </form>
-                        </div>
-
-
-                    </div>
-                </div>
-            </div>
-
-
-            {{-- Edit Modal (Reusable) --}}
-            <div id="editEmployeeModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0 overflow-hidden">
-                        <div class="modal-header p-3 bg-soft-warning">
-                            <h4 class="card-title mb-0">
-                                <i class="mdi mdi-account-edit-outline"></i> {{ trans('employees.update_employee') }}
-                            </h4>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-
-                        <div class="modal-body">
-                            <form action="{{ route('employees.update','test') }}" method="post" enctype="multipart/form-data" class="employee-form" id="editForm">
-                                {{ method_field('patch') }}
-                                @csrf
-                                <input class="form-control" name="id" id="edit_id" value="" type="hidden">
-
-
-                                <ul class="nav nav-pills nav-pills-custom mb-3" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#edit_tab_basic" type="button" role="tab">
-                                            <i class="mdi mdi-card-account-details-outline"></i> {{ trans('employees.full_name') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit_tab_work" type="button" role="tab">
-                                            <i class="mdi mdi-briefcase-outline"></i> {{ trans('employees.job') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit_tab_finance" type="button" role="tab">
-                                            <i class="mdi mdi-cash-multiple"></i> {{ trans('employees.compensation_type') }}
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit_tab_branches" type="button" role="tab">
-                                            <i class="mdi mdi-source-branch"></i> {{ trans('employees.branches') }}
-                                        </button>
-                                    </li>
-                                </ul>
-
-
-                                <div class="tab-content">
-
-
-                                    <div class="tab-pane fade show active" id="edit_tab_basic" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.first_name') }} <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="first_name" id="edit_first_name">
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.last_name') }} <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="last_name" id="edit_last_name">
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.gender') }}</label>
-                                                <select class="form-select" name="gender" id="edit_gender">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    <option value="male">{{ trans('employees.male') }}</option>
-                                                    <option value="female">{{ trans('employees.female') }}</option>
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.birth_date') }}</label>
-                                                <input type="date" class="form-control" name="birth_date" id="edit_birth_date">
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.photo') }}</label>
-                                                <input type="file" class="form-control" name="photo" accept="image/*">
-                                                <div class="mt-2" id="edit_photo_link_wrap" style="display:none;">
-                                                    <a href="#" target="_blank" id="edit_photo_link">{{ trans('employees.view_photo') }}</a>
-                                                </div>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.email') }}</label>
-                                                <input type="text" class="form-control" name="email" id="edit_email">
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.phone_1') }}</label>
-                                                <input type="text" class="form-control" name="phone_1" id="edit_phone_1">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.phone_2') }}</label>
-                                                <input type="text" class="form-control" name="phone_2" id="edit_phone_2">
-                                            </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.whatsapp') }}</label>
-                                                <input type="text" class="form-control" name="whatsapp" id="edit_whatsapp">
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="edit_tab_work" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.job') }}</label>
-                                                <select class="form-select" name="job_id" id="edit_job_id">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    @foreach($Jobs as $Job)
-                                                        <option value="{{$Job->id}}">{{$Job->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.specialization') }}</label>
-                                                <input type="text" class="form-control" name="specialization" id="edit_specialization">
-                                            </div>
-
-
-                                            <div class="w-100"></div>
-
-
-                                            {{-- Ensure boolean posts even when unchecked --}}
-                                            <input type="hidden" name="is_coach" value="0">
-
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">هل الموظف مدرب</label>
-                                                <div class="form-check mt-2">
-                                                    <input class="form-check-input" type="checkbox" name="is_coach" value="1" id="editiscoach">
-                                                    <label class="form-check-label" for="editiscoach">نعم</label>
-                                                </div>
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3">
-                                                <label class="form-label">{{ trans('employees.years_experience') }}</label>
-                                                <input type="number" class="form-control" name="years_experience" min="0" max="80" id="edit_years_experience">
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-3">
-                                                <label class="form-label">{{ trans('employees.bio') }}</label>
-                                                <textarea class="form-control" name="bio" rows="3" id="edit_bio"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="edit_tab_finance" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.compensation_type') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select compensation-type" name="compensation_type" id="edit_compensation_type">
-                                                    <option value="salary_only">{{ trans('employees.salary_only') }}</option>
-                                                    <option value="commission_only">{{ trans('employees.commission_only') }}</option>
-                                                    <option value="salary_and_commission">{{ trans('employees.salary_and_commission') }}</option>
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3 transfer-box">
-                                                <label class="form-label">{{ trans('employees.salary_transfer_method') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="salary_transfer_method" id="edit_salary_transfer_method">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    <option value="cash">{{ trans('employees.cash') }}</option>
-                                                    <option value="ewallet">{{ trans('employees.ewallet') }}</option>
-                                                    <option value="bank_transfer">{{ trans('employees.bank_transfer') }}</option>
-                                                    <option value="instapay">{{ trans('employees.instapay') }}</option>
-                                                    <option value="credit_card">{{ trans('employees.credit_card') }}</option>
-                                                    <option value="cheque">{{ trans('employees.cheque') }}</option>
-                                                    <option value="other">{{ trans('employees.other') }}</option>
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 salary-box">
-                                                <label class="form-label">{{ trans('employees.base_salary') }} <span class="text-danger">*</span></label>
-                                                <input type="number" step="0.01" class="form-control" name="base_salary" id="edit_base_salary">
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 commission-box">
-                                                <label class="form-label">{{ trans('employees.commission_percent') }}</label>
-                                                <input type="number" step="0.01" class="form-control" name="commission_percent" id="edit_commission_percent">
-                                            </div>
-
-
-                                            <div class="col-md-4 mb-3 commission-box">
-                                                <label class="form-label">{{ trans('employees.commission_fixed') }}</label>
-                                                <input type="number" step="0.01" class="form-control" name="commission_fixed" id="edit_commission_fixed">
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-3 transfer-box">
-                                                <label class="form-label">{{ trans('employees.salary_transfer_details') }}</label>
-                                                <input type="text" class="form-control" name="salary_transfer_details" id="edit_salary_transfer_details">
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="tab-pane fade" id="edit_tab_branches" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.branches') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="branches[]" multiple id="edit_branches">
-                                                    @foreach($Branches as $Branch)
-                                                        <option value="{{$Branch->id}}">{{$Branch->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">{{ trans('employees.primary_branch') }} <span class="text-danger">*</span></label>
-                                                <select class="form-select" name="primary_branch_id" id="edit_primary_branch_id">
-                                                    <option value="">{{ trans('settings_trans.choose') }}</option>
-                                                    @foreach($Branches as $Branch)
-                                                        <option value="{{$Branch->id}}">{{$Branch->getTranslation('name','ar')}}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-
-                                            <div class="col-md-12 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="status" value="1" id="edit_status">
-                                                    <label class="form-check-label" for="edit_status">{{ trans('settings_trans.status_active') }}</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-
-
-                                <div class="text-end pt-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-content-save-outline"></i> {{ trans('settings_trans.submit') }}
-                                    </button>
-                                </div>
-
-
-                            </form>
-                        </div>
-
-
-                    </div>
-                </div>
-            </div>
-
-
         </div>
     </div>
 </div>
-
 
 
 
@@ -1222,54 +525,103 @@
         salaryBoxes.forEach(el => el.style.display = showSalary ? '' : 'none');
         transferBoxes.forEach(el => el.style.display = showSalary ? '' : 'none');
         commissionBoxes.forEach(el => el.style.display = showCommission ? '' : 'none');
+
+        // NEW: commission sub-type (percent/fixed) support (safe if elements not present yet)
+        toggleCommissionValueType(form);
     }
 
+    // NEW
+    function toggleCommissionValueType(form) {
+        const compensationSelect = form.querySelector('.compensation-type');
+        const commissionTypeSelect = form.querySelector('.commission-value-type');
+
+        const percentBoxes = form.querySelectorAll('.commission-percent-box');
+        const fixedBoxes = form.querySelectorAll('.commission-fixed-box');
+
+        if (!compensationSelect) return;
+
+        const comp = compensationSelect.value;
+        const showCommission = (comp === 'commission_only' || comp === 'salary_and_commission');
+
+        // If commission not applicable, hide both and clear select (if exists)
+        if (!showCommission) {
+            percentBoxes.forEach(el => el.style.display = 'none');
+            fixedBoxes.forEach(el => el.style.display = 'none');
+            if (commissionTypeSelect) commissionTypeSelect.value = '';
+            return;
+        }
+
+        // Commission applicable but select not added yet => do nothing
+        if (!commissionTypeSelect) return;
+
+        const v = commissionTypeSelect.value;
+
+        percentBoxes.forEach(el => el.style.display = (v === 'percent') ? '' : 'none');
+        fixedBoxes.forEach(el => el.style.display = (v === 'fixed') ? '' : 'none');
+    }
+
+
     document.addEventListener('DOMContentLoaded', function () {
+
 
         // Dynamic form sections (Add/Edit)
         document.querySelectorAll('.employee-form').forEach(form => {
             toggleEmployeeForm(form);
+
             const typeSelect = form.querySelector('.compensation-type');
             if (typeSelect) {
                 typeSelect.addEventListener('change', () => toggleEmployeeForm(form));
             }
+
+            // NEW: listen commission value type
+            const commissionTypeSelect = form.querySelector('.commission-value-type');
+            if (commissionTypeSelect) {
+                commissionTypeSelect.addEventListener('change', () => toggleEmployeeForm(form));
+            }
         });
+
 
         // DataTable
         let dt = null;
         if (window.jQuery && $.fn.DataTable) {
 
+
             dt = $('#employeesTable').DataTable({
                 responsive: true,
                 pageLength: 10,
                 order: [[8, 'desc']],
-                // Remove built-in search box (we use custom)
                 dom: "<'row align-items-center'<'col-md-6'l><'col-md-6 text-end'>>" +
                      "<'row'<'col-12'tr>>" +
                      "<'row align-items-center'<'col-md-5'i><'col-md-7'p>>"
             });
+
 
             // Global search
             $('#employee_global_search').on('keyup change', function () {
                 dt.search(this.value).draw();
             });
 
+
             // Column filters
             $('#filter_job').on('change', function () {
                 dt.column(3).search(this.value).draw();
             });
 
+
             $('#filter_branch').on('change', function () {
                 dt.column(4).search(this.value).draw();
             });
+
 
             $('#filter_compensation').on('change', function () {
                 dt.column(6).search(this.value).draw();
             });
 
+
             $('#filter_status').on('change', function () {
                 dt.column(7).search(this.value).draw();
             });
+
 
             // Reset filters
             $('#btn_reset_filters').on('click', function () {
@@ -1279,11 +631,13 @@
                 $('#filter_compensation').val('');
                 $('#filter_status').val('');
 
+
                 dt.search('');
                 dt.columns().search('');
                 dt.draw();
             });
         }
+
 
         // View modal fill
         const viewModal = document.getElementById('viewEmployeeModal');
@@ -1292,30 +646,38 @@
                 const btn = event.relatedTarget;
                 if (!btn) return;
 
+
                 const photo = btn.getAttribute('data-photo') || '';
                 const gender = btn.getAttribute('data-gender') || '-';
 
+
                 document.getElementById('view_title').textContent = btn.getAttribute('data-name') || '-';
                 document.getElementById('view_subtitle').textContent = (btn.getAttribute('data-code') || '') + ' • ' + (btn.getAttribute('data-job') || '-');
+
 
                 document.getElementById('view_name').textContent = btn.getAttribute('data-name') || '-';
                 document.getElementById('view_code').textContent = btn.getAttribute('data-code') || '-';
                 document.getElementById('view_job').textContent = btn.getAttribute('data-job') || '-';
                 document.getElementById('view_status').textContent = btn.getAttribute('data-status') || '-';
 
+
                 document.getElementById('view_phone1').textContent = btn.getAttribute('data-phone') || '-';
                 document.getElementById('view_phone2').textContent = btn.getAttribute('data-phone2') || '-';
                 document.getElementById('view_whatsapp').textContent = btn.getAttribute('data-whatsapp') || '-';
                 document.getElementById('view_email').textContent = btn.getAttribute('data-email') || '-';
 
+
                 document.getElementById('view_gender').textContent = (gender === 'male' ? '{{ trans("employees.male") }}' : (gender === 'female' ? '{{ trans("employees.female") }}' : '-'));
                 document.getElementById('view_birth').textContent = btn.getAttribute('data-birth') || '-';
+
 
                 document.getElementById('view_branches').textContent = btn.getAttribute('data-branches') || '-';
                 document.getElementById('view_branches_count').textContent = btn.getAttribute('data-branches-count') || '0';
 
+
                 document.getElementById('view_specialization').textContent = btn.getAttribute('data-specialization') || '-';
                 document.getElementById('view_years').textContent = btn.getAttribute('data-years') || '-';
+
 
                 const coachVal = btn.getAttribute('data-is-coach');
                 const coachDiv = document.getElementById('viewiscoach-div');
@@ -1323,18 +685,30 @@
                     coachDiv.textContent = (coachVal === '1' || coachVal === 'true' || coachVal == 1) ? 'مدرب' : 'غير مدرب';
                 }
 
+
                 document.getElementById('view_bio').textContent = btn.getAttribute('data-bio') || '-';
+
 
                 document.getElementById('view_type').textContent = btn.getAttribute('data-type') || '-';
                 document.getElementById('view_base_salary').textContent = btn.getAttribute('data-base-salary') || '-';
                 document.getElementById('view_cp').textContent = btn.getAttribute('data-commission-percent') || '-';
                 document.getElementById('view_cf').textContent = btn.getAttribute('data-commission-fixed') || '-';
 
+                // NEW (safe): if you add an element later in show.blade.php
+                const cvt = btn.getAttribute('data-commission-value-type') || '';
+                const viewCvtEl = document.getElementById('view_commission_value_type');
+                if (viewCvtEl) {
+                    viewCvtEl.textContent = (cvt === 'percent') ? 'Percent' : (cvt === 'fixed' ? 'Fixed' : '-');
+                }
+
+
                 document.getElementById('view_tm').textContent = btn.getAttribute('data-transfer-method') || '-';
                 document.getElementById('view_td').textContent = btn.getAttribute('data-transfer-details') || '-';
 
+
                 const img = document.getElementById('view_photo');
                 const placeholder = document.getElementById('view_photo_placeholder');
+
 
                 if (photo) {
                     img.src = photo;
@@ -1348,6 +722,7 @@
             });
         }
 
+
         // Delete modal fill (FIX: works with DataTables paging/redraw)
         const deleteModal = document.getElementById('deleteEmployeeModal');
         if (deleteModal) {
@@ -1355,36 +730,44 @@
                 const btn = event.relatedTarget;
                 if (!btn) return;
 
+
                 document.getElementById('delete_emp_id').value = btn.getAttribute('data-id') || '';
                 document.getElementById('delete_emp_name').textContent = btn.getAttribute('data-name') || '';
             });
         }
 
+
         // Edit modal fill (FIX: works with DataTables paging/redraw)
         const editModal = document.getElementById('editEmployeeModal');
         if (editModal) {
+
 
             editModal.addEventListener('show.bs.modal', function (event) {
                 const btn = event.relatedTarget;
                 if (!btn) return;
 
-                // Basic
+
                 document.getElementById('edit_id').value = btn.getAttribute('data-id') || '';
+
 
                 document.getElementById('edit_first_name').value = btn.getAttribute('data-first') || '';
                 document.getElementById('edit_last_name').value = btn.getAttribute('data-last') || '';
 
+
                 document.getElementById('edit_job_id').value = btn.getAttribute('data-job-id') || '';
                 document.getElementById('edit_gender').value = btn.getAttribute('data-gender') || '';
                 document.getElementById('edit_birth_date').value = btn.getAttribute('data-birth') || '';
+
 
                 document.getElementById('edit_phone_1').value = btn.getAttribute('data-phone1') || '';
                 document.getElementById('edit_phone_2').value = btn.getAttribute('data-phone2') || '';
                 document.getElementById('edit_whatsapp').value = btn.getAttribute('data-whatsapp') || '';
                 document.getElementById('edit_email').value = btn.getAttribute('data-email') || '';
 
+
                 document.getElementById('edit_specialization').value = btn.getAttribute('data-specialization') || '';
                 document.getElementById('edit_years_experience').value = btn.getAttribute('data-years') || '';
+
 
                 const coach = btn.getAttribute('data-is-coach');
                 const coachCheckbox = document.getElementById('editiscoach');
@@ -1392,25 +775,36 @@
                     coachCheckbox.checked = (coach === '1' || coach === 'true' || coach == 1);
                 }
 
+
                 document.getElementById('edit_bio').value = btn.getAttribute('data-bio') || '';
 
-                // Finance
+
                 document.getElementById('edit_compensation_type').value = btn.getAttribute('data-comp') || 'salary_only';
                 document.getElementById('edit_base_salary').value = btn.getAttribute('data-base') || '';
+
+                // NEW: commission value type (safe if select not added yet)
+                const editCvt = btn.getAttribute('data-cvt') || '';
+                const editCvtSelect = document.getElementById('edit_commission_value_type');
+                if (editCvtSelect) {
+                    editCvtSelect.value = editCvt;
+                }
+
                 document.getElementById('edit_commission_percent').value = btn.getAttribute('data-cp') || '';
                 document.getElementById('edit_commission_fixed').value = btn.getAttribute('data-cf') || '';
+
 
                 document.getElementById('edit_salary_transfer_method').value = btn.getAttribute('data-tm') || '';
                 document.getElementById('edit_salary_transfer_details').value = btn.getAttribute('data-td') || '';
 
-                // Status
+
                 const st = btn.getAttribute('data-status');
                 document.getElementById('edit_status').checked = (st === '1' || st === 'true' || st == 1);
 
-                // Photo link
+
                 const photoUrl = btn.getAttribute('data-photo-url') || '';
                 const wrap = document.getElementById('edit_photo_link_wrap');
                 const link = document.getElementById('edit_photo_link');
+
 
                 if (photoUrl) {
                     link.href = photoUrl;
@@ -1420,10 +814,12 @@
                     wrap.style.display = 'none';
                 }
 
+
                 // branches multi select + primary branch (IMPORTANT: clear first)
                 const multi = document.getElementById('edit_branches');
                 if (multi) {
                     Array.from(multi.options).forEach(opt => opt.selected = false);
+
 
                     try {
                         const branches = JSON.parse(btn.getAttribute('data-branches') || '[]');
@@ -1433,20 +829,25 @@
                     } catch (e) {}
                 }
 
+
                 document.getElementById('edit_primary_branch_id').value = btn.getAttribute('data-primary') || '';
+
 
                 toggleEmployeeForm(document.getElementById('editForm'));
             });
 
-            // Optional: clear on close to avoid any stale values
+
             editModal.addEventListener('hidden.bs.modal', function () {
                 const form = document.getElementById('editForm');
                 if (!form) return;
 
+
                 form.reset();
+
 
                 const multi = document.getElementById('edit_branches');
                 if (multi) Array.from(multi.options).forEach(opt => opt.selected = false);
+
 
                 const wrap = document.getElementById('edit_photo_link_wrap');
                 const link = document.getElementById('edit_photo_link');
@@ -1455,12 +856,15 @@
                     wrap.style.display = 'none';
                 }
 
+
                 const coachCheckbox = document.getElementById('editiscoach');
                 if (coachCheckbox) coachCheckbox.checked = false;
+
 
                 toggleEmployeeForm(form);
             });
         }
+
 
     });
 </script>

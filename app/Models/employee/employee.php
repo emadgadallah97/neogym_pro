@@ -29,6 +29,7 @@ class employee extends Model
         'bio',
         'compensation_type',
         'base_salary',
+        'commission_value_type',
         'commission_percent',
         'commission_fixed',
         'salary_transfer_method',

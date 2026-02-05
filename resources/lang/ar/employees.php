@@ -74,7 +74,7 @@ return [
     'delete_confirm_title' => 'تأكيد الحذف',
     'delete_confirm_text' => 'سيتم حذف الموظف: ',
     'confirm_delete' => 'تأكيد الحذف',
- 
+
 
     // New keys (for the improved UI)
     'search' => 'بحث',
@@ -88,4 +88,6 @@ return [
     'delete' => 'حذف',
     'more' => 'المزيد',
 
+    'commission_value_type' => 'نوع العمولة',
+    'commission_value_type_hint' => 'اختر هل العمولة نسبة مئوية أم مبلغ ثابت.',
 ];
