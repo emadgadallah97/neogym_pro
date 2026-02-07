@@ -163,5 +163,7 @@ return [
     'no' => 'NO',
     'per_page' => 'Per page',
     'no_results' => 'No results',
+ 'private_coach' => 'Private coach',
+    'private_coach_yes' => 'Is this subscription with a private coach?',
 
 ];

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('price_without_trainer', 10, 2)->default(0);
 
             // uniform | per_trainer | exceptions
-            $table->string('trainer_pricing_mode');
+            $table->string('trainer_pricing_mode')->nullable();
 
             $table->decimal('trainer_uniform_price', 10, 2)->nullable();
             $table->decimal('trainer_default_price', 10, 2)->nullable();

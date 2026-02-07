@@ -20,5 +20,7 @@ class subscriptions_plan_branch_price extends Model
         'trainer_pricing_mode',
         'trainer_uniform_price',
         'trainer_default_price',
+        'is_private_coach',
+
     ];
 }

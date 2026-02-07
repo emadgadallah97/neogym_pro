@@ -165,4 +165,6 @@ return [
     'per_page' => 'لكل صفحة',
     'no_results' => 'لا توجد نتائج',
 
+    'private_coach' => 'مدرب خاص',
+    'private_coach_yes' => 'هل الاشتراك بمدرب خاص؟',
 ];

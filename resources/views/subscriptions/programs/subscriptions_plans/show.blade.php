@@ -3,15 +3,7 @@
 {{ trans('main_trans.title') }}
 @stop
 
-
-
-
-
 @section('content')
-
-
-
-
 
 <div class="row">
     <div class="col-12">
@@ -27,17 +19,10 @@
     </div>
 </div>
 
-
-
-
-
 @php
     $locale = app()->getLocale();
 
-
-
     $branchDisplayName = function ($branch) use ($locale) {
-        // $branch can be array with name as array
         if (is_array($branch) && isset($branch['name'])) {
             if (is_array($branch['name'])) {
                 return $branch['name'][$locale] ?? ($branch['name']['ar'] ?? ($branch['name']['en'] ?? ''));
@@ -52,20 +37,12 @@
         return '';
     };
 
-
-
     $branchesCount = is_countable($Branches) ? count($Branches) : 0;
 @endphp
-
-
-
-
 
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
-
-
 
             <div class="card-header">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -78,25 +55,17 @@
                                 <span class="badge bg-danger">{{ trans('subscriptions.inactive') }}</span>
                             @endif
 
-
-
                             @if($Plan->type)
                                 <span class="badge bg-soft-info text-info">{{ $Plan->type->getTranslation('name', $locale) }}</span>
                             @endif
-
-
 
                             @if($Plan->allow_freeze)
                                 <span class="badge bg-soft-dark text-dark">{{ trans('subscriptions.allow_freeze') }}</span>
                             @endif
 
-
-
                             <span class="badge bg-soft-secondary text-secondary">{{ trans('subscriptions.branches') }}: {{ $branchesCount }}</span>
                         </div>
                     </div>
-
-
 
                     <div class="d-flex gap-2">
                         <a href="{{ route('subscriptions_plans.index') }}" class="btn btn-soft-secondary btn-sm">
@@ -109,13 +78,7 @@
                 </div>
             </div>
 
-
-
-
-
             <div class="card-body">
-
-
 
                 {{-- Basic information --}}
                 <div class="card border mb-3">
@@ -131,16 +94,12 @@
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.name_en') }}</label>
                                     <input class="form-control" value="{{ $Plan->getTranslation('name','en') }}" disabled>
                                 </div>
                             </div>
-
-
 
                             <div class="col-md-4">
                                 <div class="mb-3">
@@ -149,16 +108,12 @@
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.description') }}</label>
                                     <textarea class="form-control" rows="2" disabled>{{ $Plan->description }}</textarea>
                                 </div>
                             </div>
-
-
 
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -169,10 +124,6 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
 
                 {{-- Sessions & duration --}}
                 <div class="card border mb-3">
@@ -188,8 +139,6 @@
                                 </div>
                             </div>
 
-
-
                             @if($Plan->sessions_period_type == 'other')
                                 <div class="col-md-3">
                                     <div class="mb-3">
@@ -199,8 +148,6 @@
                                 </div>
                             @endif
 
-
-
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.sessions_count') }}</label>
@@ -208,16 +155,12 @@
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.duration_days') }}</label>
                                     <input class="form-control" value="{{ $Plan->duration_days }}" disabled>
                                 </div>
                             </div>
-
-
 
                             <div class="col-md-12">
                                 <div class="mb-0">
@@ -236,10 +179,6 @@
                     </div>
                 </div>
 
-
-
-
-
                 {{-- Status & notifications --}}
                 <div class="card border mb-3">
                     <div class="card-header bg-soft-success">
@@ -254,16 +193,12 @@
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.notify_before_end') }}</label>
                                     <input class="form-control" value="{{ $Plan->notify_before_end ? trans('subscriptions.yes') : trans('subscriptions.no') }}" disabled>
                                 </div>
                             </div>
-
-
 
                             @if($Plan->notify_before_end)
                                 <div class="col-md-3">
@@ -276,10 +211,6 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
 
                 {{-- Freeze --}}
                 <div class="card border mb-3">
@@ -295,8 +226,6 @@
                                 </div>
                             </div>
 
-
-
                             @if($Plan->allow_freeze)
                                 <div class="col-md-3">
                                     <div class="mb-3">
@@ -308,10 +237,6 @@
                         </div>
                     </div>
                 </div>
-
-
-
-
 
                 {{-- Guests --}}
                 <div class="card border mb-3">
@@ -327,8 +252,6 @@
                                 </div>
                             </div>
 
-
-
                             @if($Plan->allow_guest)
                                 <div class="col-md-3">
                                     <div class="mb-3">
@@ -342,8 +265,6 @@
                                         <input class="form-control" value="{{ $Plan->guest_times_count }}" disabled>
                                     </div>
                                 </div>
-
-
 
                                 <div class="col-md-12">
                                     <div class="mb-0">
@@ -363,10 +284,6 @@
                     </div>
                 </div>
 
-
-
-
-
                 {{-- Branches & pricing --}}
                 <div class="card border mb-0">
                     <div class="card-header bg-soft-secondary">
@@ -377,11 +294,10 @@
                             <div class="alert alert-info mb-0">{{ trans('subscriptions.pricing_select_branch_first') }}</div>
                         @endif
 
-
-
                         @foreach($Branches as $Branch)
                             @php
                                 $branchKey = $Branch['id'] ?? ($Branch['branch_id'] ?? $loop->index);
+                                $is_private_coach = (int)($Branch['is_private_coach'] ?? 0);
                             @endphp
 
                             <div class="card mb-3">
@@ -389,10 +305,8 @@
                                     <h6 class="mb-0">{{ $branchDisplayName($Branch) }}</h6>
                                     <span class="badge bg-soft-primary text-primary">{{ trans('subscriptions.pricing') }}</span>
                                 </div>
+
                                 <div class="card-body">
-
-
-
                                     <div class="row">
                                         <div class="col-md-4">
                                             <div class="mb-3">
@@ -401,152 +315,133 @@
                                             </div>
                                         </div>
 
-
-
                                         <div class="col-md-4">
                                             <div class="mb-3">
-                                                <label class="form-label">{{ trans('subscriptions.trainer_pricing_mode') }}</label>
-                                                <input class="form-control" value="{{ trans('subscriptions.trainer_mode_' . $Branch['trainer_pricing_mode']) }}" disabled>
+                                                <label class="form-label">{{ trans('subscriptions.private_coach') }}</label>
+                                                <input class="form-control" value="{{ $is_private_coach ? trans('subscriptions.yes') : trans('subscriptions.no') }}" disabled>
                                             </div>
                                         </div>
 
-
-
-                                        @if($Branch['trainer_pricing_mode'] == 'uniform')
+                                        @if($is_private_coach)
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label class="form-label">{{ trans('subscriptions.trainer_uniform_price') }}</label>
-                                                    <input class="form-control" value="{{ $Branch['trainer_uniform_price'] }}" disabled>
+                                                    <label class="form-label">{{ trans('subscriptions.trainer_pricing_mode') }}</label>
+                                                    <input class="form-control" value="{{ trans('subscriptions.trainer_mode_' . ($Branch['trainer_pricing_mode'] ?? 'uniform')) }}" disabled>
                                                 </div>
                                             </div>
-                                        @endif
 
-
-
-                                        @if($Branch['trainer_pricing_mode'] == 'exceptions')
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label">{{ trans('subscriptions.trainer_default_price') }}</label>
-                                                    <input class="form-control" value="{{ $Branch['trainer_default_price'] }}" disabled>
+                                            @if(($Branch['trainer_pricing_mode'] ?? null) == 'uniform')
+                                                <div class="col-md-4">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">{{ trans('subscriptions.trainer_uniform_price') }}</label>
+                                                        <input class="form-control" value="{{ $Branch['trainer_uniform_price'] }}" disabled>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endif
+
+                                            @if(($Branch['trainer_pricing_mode'] ?? null) == 'exceptions')
+                                                <div class="col-md-4">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">{{ trans('subscriptions.trainer_default_price') }}</label>
+                                                        <input class="form-control" value="{{ $Branch['trainer_default_price'] }}" disabled>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         @endif
                                     </div>
 
+                                    @if($is_private_coach)
+                                        {{-- Coaches table search + pagination (client side) --}}
+                                        <div class="coach-table-wrapper" data-branch="{{ $branchKey }}" data-per-page="5">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <label class="form-label mb-0">{{ trans('subscriptions.coach') }}</label>
+                                                    <div class="search-box">
+                                                        <input type="text" class="form-control form-control-sm coach-search" placeholder="{{ trans('subscriptions.search') }}">
+                                                    </div>
+                                                </div>
 
-
-                                    {{-- Coaches table search + pagination (client side) --}}
-                                    <div class="coach-table-wrapper" data-branch="{{ $branchKey }}" data-per-page="5">
-                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <label class="form-label mb-0">{{ trans('subscriptions.coach') }}</label>
-                                                <div class="search-box">
-                                                    <input type="text" class="form-control form-control-sm coach-search" placeholder="{{ trans('subscriptions.search') }}">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn btn-soft-secondary btn-sm coach-prev">
+                                                        <i class="ri-arrow-left-s-line align-bottom"></i>
+                                                    </button>
+                                                    <span class="text-muted small coach-page-info">1 / 1</span>
+                                                    <button type="button" class="btn btn-soft-secondary btn-sm coach-next">
+                                                        <i class="ri-arrow-right-s-line align-bottom"></i>
+                                                    </button>
+                                                    <span class="badge bg-soft-info text-info">{{ trans('subscriptions.per_page') }}: 5</span>
                                                 </div>
                                             </div>
 
-
-
-                                            <div class="d-flex align-items-center gap-2">
-                                                <button type="button" class="btn btn-soft-secondary btn-sm coach-prev">
-                                                    <i class="ri-arrow-left-s-line align-bottom"></i>
-                                                </button>
-                                                <span class="text-muted small coach-page-info">1 / 1</span>
-                                                <button type="button" class="btn btn-soft-secondary btn-sm coach-next">
-                                                    <i class="ri-arrow-right-s-line align-bottom"></i>
-                                                </button>
-                                                <span class="badge bg-soft-info text-info">{{ trans('subscriptions.per_page') }}: 5</span>
-                                            </div>
-                                        </div>
-
-
-
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered align-middle coach-table" data-branch="{{ $branchKey }}">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>{{ trans('subscriptions.coach') }}</th>
-                                                        <th style="width:150px;">{{ trans('subscriptions.is_included') }}</th>
-                                                        <th style="width:200px;">{{ trans('subscriptions.final_coach_price') }}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($Branch['coaches'] as $c)
-                                                        <tr class="coach-row" data-coach-name="{{ $c['name'] }}">
-                                                            <td>{{ $c['name'] }}</td>
-                                                            <td>
-                                                                @if($c['is_included'])
-                                                                    <span class="badge bg-success">{{ trans('subscriptions.yes') }}</span>
-                                                                @else
-                                                                    <span class="badge bg-danger">{{ trans('subscriptions.no') }}</span>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                @if(!$c['is_included'])
-                                                                    <span class="text-muted">-</span>
-                                                                @else
-                                                                    @php
-                                                                        $final_price = null;
-                                                                        if ($Branch['trainer_pricing_mode'] == 'uniform') {
-                                                                            $final_price = $Branch['trainer_uniform_price'];
-                                                                        } elseif ($Branch['trainer_pricing_mode'] == 'exceptions') {
-                                                                            $final_price = $c['price'] !== null ? $c['price'] : $Branch['trainer_default_price'];
-                                                                        } else {
-                                                                            $final_price = $c['price'];
-                                                                        }
-                                                                    @endphp
-
-
-
-                                                                    {{ $final_price }}
-                                                                @endif
-                                                            </td>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered align-middle coach-table" data-branch="{{ $branchKey }}">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>{{ trans('subscriptions.coach') }}</th>
+                                                            <th style="width:150px;">{{ trans('subscriptions.is_included') }}</th>
+                                                            <th style="width:200px;">{{ trans('subscriptions.final_coach_price') }}</th>
                                                         </tr>
-                                                    @endforeach
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach(($Branch['coaches'] ?? []) as $c)
+                                                            <tr class="coach-row" data-coach-name="{{ $c['name'] }}">
+                                                                <td>{{ $c['name'] }}</td>
+                                                                <td>
+                                                                    @if($c['is_included'])
+                                                                        <span class="badge bg-success">{{ trans('subscriptions.yes') }}</span>
+                                                                    @else
+                                                                        <span class="badge bg-danger">{{ trans('subscriptions.no') }}</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    @if(!$c['is_included'])
+                                                                        <span class="text-muted">-</span>
+                                                                    @else
+                                                                        @php
+                                                                            $final_price = null;
+                                                                            $mode = $Branch['trainer_pricing_mode'] ?? 'uniform';
 
+                                                                            if ($mode == 'uniform') {
+                                                                                $final_price = $Branch['trainer_uniform_price'];
+                                                                            } elseif ($mode == 'exceptions') {
+                                                                                $final_price = $c['price'] !== null ? $c['price'] : $Branch['trainer_default_price'];
+                                                                            } else {
+                                                                                $final_price = $c['price'];
+                                                                            }
+                                                                        @endphp
+                                                                        {{ $final_price }}
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
 
-
-                                                    <tr class="coach-no-results d-none">
-                                                        <td colspan="3" class="text-center text-muted">{{ trans('subscriptions.no_results') }}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                                        <tr class="coach-no-results d-none">
+                                                            <td colspan="3" class="text-center text-muted">{{ trans('subscriptions.no_results') }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
-                                    </div>
-
-
+                                    @endif
 
                                 </div>
                             </div>
                         @endforeach
 
-
-
                     </div>
                 </div>
 
-
-
             </div>
-
-
-
-
 
         </div>
     </div>
 </div>
-
-
-
-
 
 <script>
     (function(){
         function normalizeStr(s){
             return String(s ?? '').toLowerCase().trim();
         }
-
 
         function render(wrapper){
             const perPage = parseInt(wrapper.getAttribute('data-per-page') || '5');
@@ -588,7 +483,6 @@
             if (nextBtn) nextBtn.disabled = (safePage >= pages);
         }
 
-
         function bind(wrapper){
             wrapper.__q = wrapper.__q || '';
             wrapper.__page = wrapper.__page || 1;
@@ -622,7 +516,6 @@
             render(wrapper);
         }
 
-
         document.addEventListener('DOMContentLoaded', function(){
             document.querySelectorAll('.coach-table-wrapper').forEach(function(wrapper){
                 bind(wrapper);
@@ -630,9 +523,5 @@
         });
     })();
 </script>
-
-
-
-
 
 @endsection

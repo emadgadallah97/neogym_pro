@@ -1,14 +1,8 @@
 @php
     $is_edit = isset($Plan);
     $selected_branches = $is_edit ? ($SelectedBranches ?? []) : (old('branches', []) ?? []);
-
-
     $locale = app()->getLocale();
 @endphp
-
-
-
-
 
 {{-- Section: Basic information --}}
 <div class="card border mb-3">
@@ -31,8 +25,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-4">
                 <div class="mb-3">
                     <label for="name_en" class="form-label">{{ trans('subscriptions.name_en') }} <span class="text-danger">*</span></label>
@@ -42,8 +34,6 @@
                     @enderror
                 </div>
             </div>
-
-
 
             <div class="col-md-4">
                 <div class="mb-3">
@@ -62,8 +52,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label">{{ trans('subscriptions.description') }}</label>
@@ -73,8 +61,6 @@
                     @enderror
                 </div>
             </div>
-
-
 
             <div class="col-md-6">
                 <div class="mb-3">
@@ -88,10 +74,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 {{-- Section: Sessions & duration --}}
 <div class="card border mb-3">
@@ -118,8 +100,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-4" id="period_other_wrap" style="display:none;">
                 <div class="mb-3">
                     <label class="form-label">{{ trans('subscriptions.sessions_period_other_label') }}</label>
@@ -129,8 +109,6 @@
                     @enderror
                 </div>
             </div>
-
-
 
             <div class="col-md-2">
                 <div class="mb-3">
@@ -142,8 +120,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-2">
                 <div class="mb-3">
                     <label class="form-label">{{ trans('subscriptions.duration_days') }}</label>
@@ -153,8 +129,6 @@
                     @enderror
                 </div>
             </div>
-
-
 
             <div class="col-md-12">
                 <div class="mb-0">
@@ -176,10 +150,6 @@
     </div>
 </div>
 
-
-
-
-
 {{-- Section: Status & notifications --}}
 <div class="card border mb-3">
     <div class="card-header bg-soft-success">
@@ -197,8 +167,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-4">
                 <div class="form-check mt-1">
                     @php $nb = $is_edit ? $Plan->notify_before_end : old('notify_before_end', 0); @endphp
@@ -206,8 +174,6 @@
                     <label class="form-check-label" for="notify_before_end">{{ trans('subscriptions.notify_before_end') }}</label>
                 </div>
             </div>
-
-
 
             <div class="col-md-4" id="notify_days_wrap" style="display:none;">
                 <div class="mb-0">
@@ -221,10 +187,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 {{-- Section: Freeze --}}
 <div class="card border mb-3">
@@ -243,8 +205,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-4" id="freeze_days_wrap" style="display:none;">
                 <div class="mb-0">
                     <label class="form-label">{{ trans('subscriptions.max_freeze_days') }} <span class="text-danger">*</span></label>
@@ -257,10 +217,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 {{-- Section: Guests --}}
 <div class="card border mb-3">
@@ -279,8 +235,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-3 guest_wrap" style="display:none;">
                 <div class="mb-3 mt-2">
                     <label class="form-label">{{ trans('subscriptions.guest_people_count') }}</label>
@@ -291,8 +245,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-md-3 guest_wrap" style="display:none;">
                 <div class="mb-3 mt-2">
                     <label class="form-label">{{ trans('subscriptions.guest_times_count') }}</label>
@@ -302,8 +254,6 @@
                     @enderror
                 </div>
             </div>
-
-
 
             <div class="col-md-6 guest_wrap" style="display:none;">
                 <div class="mb-0 mt-2">
@@ -324,10 +274,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 {{-- Section: Branches & pricing --}}
 <div class="card border mb-3">
@@ -369,43 +315,31 @@
     </div>
 </div>
 
-
-
-
 <div id="pricing_container"></div>
-
-
-
-
 
 <script>
     const ALL_BRANCHES = @json($Branches);
-    const ALL_COACHES = @json($Coaches);
 
+    // Per-branch coaches only
+    const BRANCH_COACHES_MAP = @json(isset($BranchCoachesMap) ? $BranchCoachesMap : []);
 
     const BRANCH_PRICES = @json(isset($BranchPrices) ? $BranchPrices : []);
     const COACH_PRICES_MAP = @json(isset($CoachPricesMap) ? $CoachPricesMap : []);
 
-
     const OLD_PRICING = @json(old('pricing', []));
     const OLD_COACHES = @json(old('coaches', []));
 
-
-    // Coaches UX
     const COACHES_PER_PAGE = 5;
     const COACH_STATE = window.__COACH_STATE__ || (window.__COACH_STATE__ = {}); // [branchId][coachId] => {is_included:0|1, price:''}
     const COACH_UI = window.__COACH_UI__ || (window.__COACH_UI__ = {});         // [branchId] => {q:'', page:1}
-
 
     function coachName(c){
         return ((c.first_name ?? '') + ' ' + (c.last_name ?? '')).trim();
     }
 
-
     function normalizeStr(s){
         return String(s ?? '').toLowerCase().trim();
     }
-
 
     function parseJsonMaybe(v){
         if (v === null || v === undefined) return null;
@@ -416,7 +350,6 @@
         return null;
     }
 
-
     function getBranchName(b){
         if (!b) return '';
         const obj = parseJsonMaybe(b.name);
@@ -426,13 +359,11 @@
         return 'Branch #' + b.id;
     }
 
-
     function getSavedBranchPrice(branchId){
         if (OLD_PRICING && OLD_PRICING[branchId]) return OLD_PRICING[branchId];
         if (BRANCH_PRICES && BRANCH_PRICES[branchId]) return BRANCH_PRICES[branchId];
         return null;
     }
-
 
     function getSavedCoach(branchId, coachId){
         if (OLD_COACHES && OLD_COACHES[branchId] && OLD_COACHES[branchId][coachId]) return OLD_COACHES[branchId][coachId];
@@ -440,12 +371,18 @@
         return null;
     }
 
+    function getBranchCoaches(branchId){
+        const arr = BRANCH_COACHES_MAP?.[branchId] || BRANCH_COACHES_MAP?.[String(branchId)] || [];
+        return Array.isArray(arr) ? arr : [];
+    }
 
     function initBranchCoachState(branchId){
         if (!COACH_STATE[branchId]) COACH_STATE[branchId] = {};
         if (!COACH_UI[branchId]) COACH_UI[branchId] = { q: '', page: 1 };
 
-        ALL_COACHES.forEach(function(c){
+        const coaches = getBranchCoaches(branchId);
+
+        coaches.forEach(function(c){
             const coachId = c.id;
             if (COACH_STATE[branchId][coachId] !== undefined) return;
 
@@ -460,13 +397,14 @@
         });
     }
 
-
     function buildHiddenInputs(branchId){
         const wrap = document.getElementById(`coach_hidden_inputs_${branchId}`);
         if (!wrap) return;
 
+        const coaches = getBranchCoaches(branchId);
+
         let html = '';
-        ALL_COACHES.forEach(function(c){
+        coaches.forEach(function(c){
             const coachId = c.id;
             const st = COACH_STATE[branchId]?.[coachId] || {is_included: 1, price: ''};
 
@@ -479,7 +417,6 @@
         wrap.innerHTML = html;
     }
 
-
     function syncHiddenInput(branchId, coachId){
         const st = COACH_STATE[branchId]?.[coachId];
         if (!st) return;
@@ -491,6 +428,14 @@
         if (price) price.value = String(st.price ?? '');
     }
 
+    function setCoachInputsEnabled(branchId, enabled){
+        const wrap = document.getElementById(`coach_hidden_inputs_${branchId}`);
+        if (!wrap) return;
+
+        wrap.querySelectorAll('input').forEach(function(inp){
+            inp.disabled = !enabled;
+        });
+    }
 
     function renderCoachesTable(branchId){
         const tbody = document.getElementById(`coach_tbody_${branchId}`);
@@ -504,7 +449,8 @@
         const ui = COACH_UI[branchId] || { q: '', page: 1 };
         const q = normalizeStr(ui.q);
 
-        const filtered = ALL_COACHES.filter(function(c){
+        const coaches = getBranchCoaches(branchId);
+        const filtered = coaches.filter(function(c){
             if (!q) return true;
             return normalizeStr(coachName(c)).includes(q);
         });
@@ -554,7 +500,10 @@
         if (prevBtn) prevBtn.disabled = (page <= 1);
         if (nextBtn) nextBtn.disabled = (page >= pages);
 
-        // Bind events for current page only
+        if (searchInp) {
+            searchInp.value = ui.q || '';
+        }
+
         tbody.querySelectorAll('.coach_inc').forEach(function(el){
             el.addEventListener('change', function(){
                 const b = this.getAttribute('data-branch');
@@ -578,12 +527,7 @@
                 syncHiddenInput(b, coach);
             });
         });
-
-        if (searchInp) {
-            searchInp.value = ui.q || '';
-        }
     }
-
 
     function bindCoachControls(branchId){
         const prevBtn = document.getElementById(`coach_prev_${branchId}`);
@@ -613,12 +557,32 @@
         }
     }
 
+    function toggleMode(branchId){
+        const mode = document.querySelector(`select.trainer_mode[data-branch="${branchId}"]`)?.value;
+        document.querySelectorAll(`.uniform_wrap[data-branch="${branchId}"]`).forEach(el => el.style.display = (mode === 'uniform') ? 'block' : 'none');
+        document.querySelectorAll(`.exceptions_wrap[data-branch="${branchId}"]`).forEach(el => el.style.display = (mode === 'exceptions') ? 'block' : 'none');
+    }
+
+    function togglePrivateCoach(branchId){
+        const cb = document.getElementById(`is_private_coach_${branchId}`);
+        const wrap = document.getElementById(`coach_section_${branchId}`);
+        const enabled = cb ? cb.checked : false;
+
+        if (wrap) wrap.style.display = enabled ? 'block' : 'none';
+
+        // disable hidden inputs when section is hidden (so backend doesn't receive coaches)
+        setCoachInputsEnabled(branchId, enabled);
+
+        if (enabled) {
+            // ensure mode fields are visible correctly
+            toggleMode(branchId);
+        }
+    }
 
     function renderPricing(){
         const container = document.getElementById('pricing_container');
         const selected = $('#branches').val() || [];
         container.innerHTML = '';
-
 
         if (!selected.length) {
             container.innerHTML = `
@@ -630,17 +594,18 @@
             return;
         }
 
-
         selected.forEach(function(branchId){
             const b = ALL_BRANCHES.find(x => String(x.id) === String(branchId));
             const priceRow = getSavedBranchPrice(branchId);
-
 
             const pwt = priceRow ? (priceRow.price_without_trainer ?? '') : '';
             const mode = priceRow ? (priceRow.trainer_pricing_mode ?? 'uniform') : 'uniform';
             const uni = priceRow ? (priceRow.trainer_uniform_price ?? '') : '';
             const def = priceRow ? (priceRow.trainer_default_price ?? '') : '';
 
+            // default OFF: if editing and saved row has is_private_coach=1 or old input => ON
+            const oldP = (OLD_PRICING && OLD_PRICING[branchId]) ? OLD_PRICING[branchId] : null;
+            const isPrivateSaved = oldP ? (parseInt(oldP.is_private_coach || 0) === 1) : (priceRow ? (parseInt(priceRow.is_private_coach || 0) === 1) : false);
 
             let html = `
                 <div class="card mb-3">
@@ -658,7 +623,23 @@
                                     <input type="number" step="0.01" class="form-control" name="pricing[${branchId}][price_without_trainer]" value="${pwt}">
                                 </div>
                             </div>
+
                             <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ trans('subscriptions.private_coach') }}</label>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input private_coach_cb" type="checkbox"
+                                               id="is_private_coach_${branchId}"
+                                               name="pricing[${branchId}][is_private_coach]"
+                                               value="1" ${isPrivateSaved ? 'checked' : ''}>
+                                        <label class="form-check-label" for="is_private_coach_${branchId}">
+                                            {{ trans('subscriptions.private_coach_yes') }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 private_coach_deps" data-branch="${branchId}" style="display:none;">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.trainer_pricing_mode') }}</label>
                                     <select class="form-select trainer_mode" data-branch="${branchId}" name="pricing[${branchId}][trainer_pricing_mode]">
@@ -669,16 +650,14 @@
                                 </div>
                             </div>
 
-
-                            <div class="col-md-4 uniform_wrap" data-branch="${branchId}" style="display:none;">
+                            <div class="col-md-4 uniform_wrap private_coach_deps" data-branch="${branchId}" style="display:none;">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.trainer_uniform_price') }}</label>
                                     <input type="number" step="0.01" class="form-control" name="pricing[${branchId}][trainer_uniform_price]" value="${uni}">
                                 </div>
                             </div>
 
-
-                            <div class="col-md-4 exceptions_wrap" data-branch="${branchId}" style="display:none;">
+                            <div class="col-md-4 exceptions_wrap private_coach_deps" data-branch="${branchId}" style="display:none;">
                                 <div class="mb-3">
                                     <label class="form-label">{{ trans('subscriptions.trainer_default_price') }}</label>
                                     <input type="number" step="0.01" class="form-control" name="pricing[${branchId}][trainer_default_price]" value="${def}">
@@ -686,99 +665,99 @@
                             </div>
                         </div>
 
+                        <div id="coach_section_${branchId}" style="display:none;">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="form-label mb-0">{{ trans('subscriptions.coach') }}</label>
+                                    <div class="search-box">
+                                        <input type="text" class="form-control form-control-sm" id="coach_search_${branchId}" placeholder="{{ trans('subscriptions.search') }}">
+                                    </div>
+                                </div>
 
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <label class="form-label mb-0">{{ trans('subscriptions.coach') }}</label>
-                                <div class="search-box">
-                                    <input type="text" class="form-control form-control-sm" id="coach_search_${branchId}" placeholder="{{ trans('subscriptions.search') }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-soft-secondary btn-sm" id="coach_prev_${branchId}">
+                                        <i class="ri-arrow-left-s-line align-bottom"></i>
+                                    </button>
+                                    <span class="text-muted small" id="coach_page_info_${branchId}">1 / 1</span>
+                                    <button type="button" class="btn btn-soft-secondary btn-sm" id="coach_next_${branchId}">
+                                        <i class="ri-arrow-right-s-line align-bottom"></i>
+                                    </button>
+                                    <span class="badge bg-soft-info text-info">{{ trans('subscriptions.per_page') }}: ${COACHES_PER_PAGE}</span>
                                 </div>
                             </div>
 
+                            <div id="coach_hidden_inputs_${branchId}" class="d-none"></div>
 
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-soft-secondary btn-sm" id="coach_prev_${branchId}">
-                                    <i class="ri-arrow-left-s-line align-bottom"></i>
-                                </button>
-                                <span class="text-muted small" id="coach_page_info_${branchId}">1 / 1</span>
-                                <button type="button" class="btn btn-soft-secondary btn-sm" id="coach_next_${branchId}">
-                                    <i class="ri-arrow-right-s-line align-bottom"></i>
-                                </button>
-                                <span class="badge bg-soft-info text-info">{{ trans('subscriptions.per_page') }}: ${COACHES_PER_PAGE}</span>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ trans('subscriptions.coach') }}</th>
+                                            <th style="width:160px;">{{ trans('subscriptions.is_included') }}</th>
+                                            <th style="width:220px;">{{ trans('subscriptions.coach_price') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="coach_tbody_${branchId}"></tbody>
+                                </table>
                             </div>
+
+                            <small class="text-muted">{{ trans('subscriptions.coach_pricing_note') }}</small>
                         </div>
-
-
-                        <div id="coach_hidden_inputs_${branchId}" class="d-none"></div>
-
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>{{ trans('subscriptions.coach') }}</th>
-                                        <th style="width:160px;">{{ trans('subscriptions.is_included') }}</th>
-                                        <th style="width:220px;">{{ trans('subscriptions.coach_price') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="coach_tbody_${branchId}">
-                                </tbody>
-                            </table>
-                        </div>
-
-
-                        <small class="text-muted">{{ trans('subscriptions.coach_pricing_note') }}</small>
                     </div>
                 </div>
             `;
 
-
             container.insertAdjacentHTML('beforeend', html);
 
-            // init + build hidden inputs + bind + render
+            // init coaches state only for branch coaches
             initBranchCoachState(branchId);
             buildHiddenInputs(branchId);
             bindCoachControls(branchId);
             renderCoachesTable(branchId);
 
-            toggleMode(branchId);
-        });
+            // Apply private coach toggle initial
+            document.querySelectorAll(`.private_coach_deps[data-branch="${branchId}"]`).forEach(el => {
+                el.style.display = isPrivateSaved ? 'block' : 'none';
+            });
+            togglePrivateCoach(branchId);
 
+            // Apply mode visibility only when enabled
+            if (isPrivateSaved) toggleMode(branchId);
+        });
 
         $('.trainer_mode').off('change').on('change', function(){
             toggleMode($(this).data('branch'));
         });
+
+        $('.private_coach_cb').off('change').on('change', function(){
+            const branchId = this.id.replace('is_private_coach_', '');
+            const enabled = this.checked;
+
+            document.querySelectorAll(`.private_coach_deps[data-branch="${branchId}"]`).forEach(el => {
+                el.style.display = enabled ? 'block' : 'none';
+            });
+
+            togglePrivateCoach(branchId);
+        });
     }
-
-
-    function toggleMode(branchId){
-        const mode = document.querySelector(`select.trainer_mode[data-branch="${branchId}"]`)?.value;
-        document.querySelectorAll(`.uniform_wrap[data-branch="${branchId}"]`).forEach(el => el.style.display = (mode === 'uniform') ? 'block' : 'none');
-        document.querySelectorAll(`.exceptions_wrap[data-branch="${branchId}"]`).forEach(el => el.style.display = (mode === 'exceptions') ? 'block' : 'none');
-    }
-
 
     function togglePeriodOther(){
         const v = document.getElementById('sessions_period_type').value;
         document.getElementById('period_other_wrap').style.display = (v === 'other') ? 'block' : 'none';
     }
 
-
     function toggleGuest(){
         const checked = document.getElementById('allow_guest').checked;
         document.querySelectorAll('.guest_wrap').forEach(el => el.style.display = checked ? 'block' : 'none');
     }
-
 
     function toggleNotify(){
         const checked = document.getElementById('notify_before_end').checked;
         document.getElementById('notify_days_wrap').style.display = checked ? 'block' : 'none';
     }
 
-
     function toggleFreeze(){
         const checked = document.getElementById('allow_freeze').checked;
-
         document.getElementById('freeze_days_wrap').style.display = checked ? 'block' : 'none';
 
         if (!checked) {
@@ -787,17 +766,14 @@
         }
     }
 
-
     document.addEventListener('DOMContentLoaded', function(){
         if (typeof $ !== 'undefined' && $.fn && $.fn.select2) {
             var isRtl = $('html').attr('dir') === 'rtl';
-
 
             $('.select2').select2({
                 width: '100%',
                 dir: isRtl ? 'rtl' : 'ltr'
             });
-
 
             $('#branches').select2({
                 width: '100%',
@@ -807,23 +783,19 @@
             });
         }
 
-
         $('#branches').on('change', function(){
             renderPricing();
         });
-
 
         document.getElementById('sessions_period_type').addEventListener('change', togglePeriodOther);
         document.getElementById('allow_guest').addEventListener('change', toggleGuest);
         document.getElementById('notify_before_end').addEventListener('change', toggleNotify);
         document.getElementById('allow_freeze').addEventListener('change', toggleFreeze);
 
-
         togglePeriodOther();
         toggleGuest();
         toggleNotify();
         toggleFreeze();
-
 
         renderPricing();
     });
