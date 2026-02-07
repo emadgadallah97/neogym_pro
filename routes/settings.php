@@ -8,7 +8,7 @@ Auth::routes(['verify' => true]);
 
 Route::group(
     [
-        
+
         'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath', 'auth', 'verified'],
     ],
     function () {

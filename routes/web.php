@@ -57,6 +57,8 @@ Route::group(['middleware'=>['guest']],function(){
             Route::resource('general_settings', 'general_settingsController');
             //nationalities settings
             Route::resource('branches', 'branchesController');
+            //commission_settings
+            Route::resource('commission_settings', 'commission_settingscontroller');
         });
 require base_path('routes/settings.php');
 require base_path('routes/employees.php');

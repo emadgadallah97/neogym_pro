@@ -158,6 +158,28 @@
                         </a>
                     </div>
                 </div>
+                     {{-- اعدادات حساب العمولات والكوميشن --}}
+                <div class="col-xxl-4 col-lg-6">
+                    <div class="card card-body text-center">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-soft-light border border-info p-2 text-success rounded">
+
+                              <lord-icon src="{{URL::asset('assets/images/icon/oaflahpk.json')}}" trigger="loop"
+                                    delay="500" colors="primary:#4bb3fd" style="width:250px;height:250px">
+                                </lord-icon>
+
+                            </div>
+                        </div>
+
+                        <h4 class="card-title font">
+                            {{ trans('settings_trans.commission_settings') }}
+                        </h4>
+
+                        <a href="{{ route('commission_settings.index') }}" class="btn btn-info">
+                            {{ trans('settings_trans.Go_to_commission_settings_now') }}
+                        </a>
+                    </div>
+                </div>
                 <!-- end col -->
             </div><!-- end row -->
         </div><!-- end col -->

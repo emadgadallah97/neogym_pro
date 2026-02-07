@@ -102,8 +102,20 @@ return [
 'job_exists' => 'هذه الوظيفة موجودة بالفعل (نفس الاسم عربي أو إنجليزي).',
 'srno' => 'م',
 'subscriptions_types' => 'انواع الاشتراكات',
+'back' => 'رجوع',
 
 'Go_to_subscriptions_types_now' => 'الذهاب الي انواع الاشتراكات ',
+'commission_settings' => 'اعدادات حساب العمولات والكوميشن',
+'Go_to_commission_settings_now' => 'الذهاب الي اعدادات العمولات ',
+
+    'commission_calc_timing' => 'توقيت حساب العمولة',
+    'commission_before_discounts' => 'حساب العمولة قبل الخصومات والعروض',
+    'commission_before_discounts_hint' => 'يتم حساب العمولة على المبلغ الإجمالي قبل تطبيق أي خصم أو عرض.',
+    'commission_after_discounts' => 'حساب العمولة بعد الخصومات والعروض (الصافي)',
+    'commission_after_discounts_hint' => 'يتم حساب العمولة على صافي المبلغ بعد تطبيق الخصومات والعروض.',
+
+    'commission_settings_saved' => 'تم حفظ إعدادات العمولة بنجاح.',
+    'commission_settings_updated' => 'تم تحديث إعدادات العمولة بنجاح.',
 
 
 
