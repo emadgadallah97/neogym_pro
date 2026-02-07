@@ -59,6 +59,8 @@ Route::group(['middleware'=>['guest']],function(){
             Route::resource('branches', 'branchesController');
             //commission_settings
             Route::resource('commission_settings', 'commission_settingscontroller');
+            //trainer_session_pricing
+            Route::resource('trainer_session_pricing', 'trainer_session_pricingcontroller');
         });
 require base_path('routes/settings.php');
 require base_path('routes/employees.php');

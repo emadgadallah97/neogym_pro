@@ -116,7 +116,21 @@ return [
 
     'commission_settings_saved' => 'تم حفظ إعدادات العمولة بنجاح.',
     'commission_settings_updated' => 'تم تحديث إعدادات العمولة بنجاح.',
+'Go_to_trainer_session_pricing_settings_now' => 'الذهاب الي تسعير حصص المدربين  ',
+'trainer_session_pricing' => 'تسعير حصص المدربين',
+    'trainer_session_pricing_hint' => 'يتم عرض المدربين فقط، ويمكن تحديد سعر السيشن لكل مدرب ثم حفظه.',
 
+    'trainer' => 'المدرب',
+    'session_price' => 'سعر الحصة / السيشن',
+    'updated_by' => 'القائم بالتعديل',
+    'updated_at' => 'وقت التعديل',
 
+    'trainer_session_pricing_saved' => 'تم حفظ تسعير المدرب بنجاح.',
+    'search_by_trainer_name' => 'بحث بالاسم',
+    'search_by_trainer_name_hint' => 'ابحث بالاسم الأول أو الأخير (وسيعمل أيضًا على رقم الهاتف والإيميل).',
+
+    'search' => 'بحث...',
+    'clear' => 'مسح',
+'phone' => 'رقم الهاتف',
 
 ];
