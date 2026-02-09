@@ -72,6 +72,16 @@
                         <span data-key="t-widgets">{{ trans('main_trans.subscriptions') }}</span>
                     </a>
                 </li>
+                {{-- المبيعات --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'sales.create' || Route::currentRouteName() == 'sales.index') active @endif"
+                        href="{{ url('/' . ($page = 'sales')) }}">
+
+                        <i class="mdi mdi-ticket-percent"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.sales') }}</span>
+                    </a>
+                </li>
                 {{-- الكبونات --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font

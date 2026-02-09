@@ -59,4 +59,6 @@ return [
     'dashboards' => 'Dashboards',
         'offers' => 'Offers',
     'coupons' => 'Coupons',
+        'sales' => 'Sales',
+
 ];

@@ -167,4 +167,6 @@ return [
 
     'private_coach' => 'مدرب خاص',
     'private_coach_yes' => 'هل الاشتراك بمدرب خاص؟',
+    'end_date' => 'تاريخ الانتهاء',
+
 ];

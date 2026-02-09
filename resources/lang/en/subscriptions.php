@@ -165,5 +165,6 @@ return [
     'no_results' => 'No results',
  'private_coach' => 'Private coach',
     'private_coach_yes' => 'Is this subscription with a private coach?',
+'end_date' => 'End date',
 
 ];

@@ -79,4 +79,6 @@ return [
     'coupon_valid' => 'Coupon is valid',
     'branches' => 'Branches',
 
+'coupon_hint' => 'Optional; coupon will be validated when saving',
+
 ];

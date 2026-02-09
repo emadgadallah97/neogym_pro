@@ -25,16 +25,16 @@ return [
     'clinic_settings' => 'Clinic settings',
     'general_settings' => 'General settings',
     'scheduling_settings' => 'Scheduling settings',
-    
+
     //Control buttons
     'add' => 'ADD',
     'update' => 'Update',
     'delete' => 'Delete',
     'submit' => 'Save',
 
-    
+
      //nationality
-    
+
      'add_new_nationality' => 'Add a new nationality',
      'name_ar' => 'Arabic Name ',
      'name_en' => 'English Name',
@@ -43,7 +43,7 @@ return [
      'name_city' => 'City Name',
 
     // Place
-    
+
          'countries' => 'Countries settings',
          'governorate' => 'Governorate settings',
          'city' => 'City settings',
@@ -100,13 +100,13 @@ return [
     'default_true' => 'Active',
     'default_false' => 'Inactive',
 
-   
+
     //specialization
     'add_new_specialization' => 'Add New specialization',
     'massagedelete_specialization'  => 'Delete specialization',
     'update_specialization' => 'update specialization',
     'specialization'=>'Specialization management',
-     
+
 
     //Nationalities
     'add_new_nationalities' => 'Add New Nationalities',
@@ -115,7 +115,7 @@ return [
     'nationalities'=>'Nationalities management',
 
 
-    
+
     //clinic
     'add_clinic' => 'Add New Clinic',
     'massagedelete_clinic'  => 'Delete clinic',
@@ -137,9 +137,9 @@ return [
      'rad' => 'Examinations(Rad)',
      'drugs' => 'Medication',
      'operations'=>'Operations',
-      
-     // lab 
-    
+
+     // lab
+
      'add_lab_test' => 'Add New Test',
      'massagedelete_lab_test'  => 'Delete Test',
      'update_lab_test' => 'Update Test',
@@ -152,8 +152,8 @@ return [
      'preparations_enter' => 'Enter data in Preparations here',
      'massagedelete_lab_test'  => 'Delete Test',
 
-       // rad 
-    
+       // rad
+
        'add_rad_test' => 'Add New Test',
        'massagedelete_rad_test'  => 'Delete Test',
        'update_rad_test' => 'Update Test',
@@ -165,10 +165,10 @@ return [
        'description_enter' => 'Enter data in Description here',
        'preparations_enter' => 'Enter data in Preparations here',
        'massagedelete_rad_test'  => 'Delete Test',
-  
-     
-       // operations 
-    
+
+
+       // operations
+
        'add_operations' => 'Add New Operations',
        'massagedelete_rad_test'  => 'Delete Test',
        'update_rad_test' => 'Update Test',
@@ -180,9 +180,9 @@ return [
        'description_enter' => 'Enter data in Description here',
        'preparations_enter' => 'Enter data in Preparations here',
        'massagedelete_operations'  => 'Delete operations',
-  
-      // drugs 
-    
+
+      // drugs
+
        'add_drugs_settings' => 'Add New Drugs',
        'drugs_settings' => 'Drugs Settings',
        'massagedelete_rad_test'  => 'Delete Test',
@@ -204,9 +204,9 @@ return [
        'default_dose_enter' => 'Enter data in Default Dose here',
        'method_taking_medications_enter' => 'Enter data in Method Taking Medications here',
        'massagedelete_drug'  => 'Delete Drug',
-  
 
-       
+
+
        'Company_settings'  => 'Company Settings',
        'services_settings'  => 'Services Settings',
        'contract_settings'  => 'Contract Settings',
@@ -231,7 +231,7 @@ return [
 
 
 
-       
+
 
        'add_services' => 'Add New Services',
        'services_settings' => 'Services Settings',
@@ -286,5 +286,16 @@ return [
        'thursday'  => 'Thursday',
        'friday'  => 'Friday',
        'doctor'  => 'Doctor',
+       'branch' => 'Branch',
+'branches' => 'Branches',
+'choose' => 'Choose',
+'notes' => 'Notes',
+'submit' => 'Submit',
+'settings' => 'Settings',
+'create_date' => 'Created at',
+'active' => 'Active',
+'inactive' => 'Inactive',
+'status' => 'Status',
+
 
 ];

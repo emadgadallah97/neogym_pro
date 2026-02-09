@@ -62,7 +62,7 @@ return [
     'subscriptions' => 'الاشتراكات',
     'offers' => 'العروض',
     'coupons' => 'الكوبونات',
-
+    'sales' => 'المبيعات',
 
 
 ];
