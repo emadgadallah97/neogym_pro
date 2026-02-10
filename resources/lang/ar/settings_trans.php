@@ -132,6 +132,7 @@ return [
     'search' => 'بحث...',
     'clear' => 'مسح',
 'branch' => 'الفرع',
+'expenses_types' => 'اعدادت انواع المصروفات',
 
 
 

@@ -12,7 +12,7 @@ return [
     | you want to customize your views to better match your application.
     |
     */
-    'title' => 'Clinic management software',
+    'title' => 'Gym management software',
 
     // Patient management
     'patients' => 'patients',

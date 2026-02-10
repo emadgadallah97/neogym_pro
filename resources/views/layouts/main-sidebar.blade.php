@@ -88,7 +88,7 @@
                         @if (Route::currentRouteName() == 'sales.create' || Route::currentRouteName() == 'sales.index') active @endif"
                         href="{{ url('/' . ($page = 'sales')) }}">
 
-                        <i class="mdi mdi-ticket-percent"></i>
+                        <i class="mdi mdi-cart"></i>
                         <span data-key="t-widgets">{{ trans('main_trans.sales') }}</span>
                     </a>
                 </li>
@@ -111,6 +111,17 @@
                         <i class="mdi mdi-sale"></i>
 
                         <span data-key="t-widgets">{{ trans('main_trans.offers') }}</span>
+                    </a>
+                </li>
+                {{-- الحسابات --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'accounting.create' || Route::currentRouteName() == 'accounting.index') active @endif"
+                        href="{{ url('/' . ($page = 'accounting')) }}">
+
+                        <i class="mdi mdi-cash-multiple"></i>
+
+                        <span data-key="t-widgets">{{ trans('main_trans.accounting') }}</span>
                     </a>
                 </li>
                 <!--user management-->

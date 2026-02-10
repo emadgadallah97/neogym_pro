@@ -64,6 +64,7 @@ return [
     'coupons' => 'الكوبونات',
     'sales' => 'المبيعات',
     'attendances' => 'الحضور',
+    'accounting' => 'الحسابات',
 
 
 ];
