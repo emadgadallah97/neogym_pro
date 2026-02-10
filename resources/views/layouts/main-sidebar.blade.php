@@ -42,6 +42,16 @@
                             {{ trans('main_trans.dashboards') }}</span>
                     </a>
                 </li>
+                {{-- الحضور --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'attendances.create' || Route::currentRouteName() == 'attendances.index') active @endif"
+                        href="{{ url('/' . ($page = 'attendances')) }}">
+
+                        <i class="mdi mdi-account-check"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.attendances') }}</span>
+                    </a>
+                </li>
                 {{-- الموظفين --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font

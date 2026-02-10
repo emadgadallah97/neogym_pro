@@ -68,6 +68,7 @@ require base_path('routes/members.php');
 require base_path('routes/subscriptions.php');
 require base_path('routes/coupons_offers.php');
 require base_path('routes/sales.php');
+require base_path('routes/attendances.php');
 
 
 

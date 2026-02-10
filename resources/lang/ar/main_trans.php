@@ -63,6 +63,7 @@ return [
     'offers' => 'العروض',
     'coupons' => 'الكوبونات',
     'sales' => 'المبيعات',
+    'attendances' => 'الحضور',
 
 
 ];
