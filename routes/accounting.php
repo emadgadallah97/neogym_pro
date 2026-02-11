@@ -17,6 +17,9 @@ Route::group(
             Route::resource('accounting', 'accountingcontroller');
             //expenses programs
             Route::resource('expenses', 'expensescontroller');
+
+Route::match(['GET','POST'], 'expenses/actions/employees-by-branch', 'expensescontroller@ajaxEmployeesByBranch')
+    ->name('expenses.actions.employees_by_branch');
             //expenses settings
             Route::resource('expenses_types', 'expenses_typescontroller');
 

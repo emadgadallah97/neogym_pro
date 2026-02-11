@@ -36,4 +36,66 @@ return [
     'updated_error' => 'Error while updating',
     'deleted_success' => 'Deleted successfully',
     'deleted_error' => 'Error while deleting',
+
+    'accounting' => 'Accounting',
+
+    'expenses' => 'Expenses',
+    'expenses_list' => 'Expenses List',
+
+    'expenses_kpis' => 'Expenses KPIs',
+    'quick_filters' => 'Quick filters',
+
+    'total_expenses' => 'Total expenses',
+    'active_expenses' => 'Active expenses',
+    'inactive_expenses' => 'Inactive expenses',
+    'total_amount' => 'Total amount',
+    'today_amount' => 'Today',
+    'this_month_amount' => 'This month',
+
+    'add_new_expense' => 'Add new expense',
+    'update_expense' => 'Update expense',
+
+    'expense_type' => 'Expense type',
+    'filter_expense_type' => 'Filter type',
+
+    'branch' => 'Branch',
+    'filter_branches' => 'Filter branches',
+
+    'expense_date' => 'Expense date',
+    'date_from' => 'Date from',
+    'date_to' => 'Date to',
+
+    'amount' => 'Amount',
+
+    'recipient' => 'Recipient',
+    'recipient_name' => 'Recipient name',
+    'recipient_phone' => 'Recipient phone',
+    'recipient_national_id' => 'National ID (optional)',
+
+    'disbursed_by' => 'Disbursed by',
+
+    'notes' => 'Notes',
+
+    'search' => 'Search',
+    'search_here' => 'Search here...',
+    'filter_status' => 'Filter status',
+    'all' => 'All',
+    'choose' => 'Choose',
+    'multi_select_hint' => 'You can select multiple branches',
+    'clear_filters' => 'Clear filters',
+
+    'employee_not_in_branch' => 'Selected employee does not belong to the selected branch.',
+    'expense_type_inactive' => 'Expense type is inactive and cannot be selected.',
+
+    'description' => 'Description / Statement',
+
+    'filter_cancelled' => 'Filter cancelled',
+    'cancelled_status' => 'Cancellation status',
+    'cancelled' => 'Cancelled',
+    'not_cancelled' => 'Not cancelled',
+    'mark_as_cancelled' => 'Mark as cancelled',
+
+    'disbursed_by_employee' => 'Disbursed by (Employee)',
+    'choose_branch_first' => 'Choose branch first',
+
 ];
