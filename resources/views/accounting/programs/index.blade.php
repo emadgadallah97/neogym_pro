@@ -60,7 +60,7 @@
                         <h4 class="card-title font">
                             {{ trans('accounting.income') }}
                         </h4>
-                        <a href="{{ route('expenses.index') }}" class="btn btn-info">
+                        <a href="{{ route('income.index') }}" class="btn btn-info">
                             {{ trans('accounting.income') }}
                         </a>
                     </div>

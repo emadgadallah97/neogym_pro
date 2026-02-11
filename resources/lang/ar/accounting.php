@@ -48,7 +48,6 @@ return [
 
     'accounting' => 'الحسابات',
 
-    'expenses' => 'المصروفات',
     'expenses_list' => 'قائمة المصروفات',
 
     'expenses_kpis' => 'مؤشرات المصروفات',
@@ -108,5 +107,42 @@ return [
     'choose_branch_first' => 'اختر الفرع أولاً',
 
 
+    'income_list' => 'قائمة الإيرادات',
+    'income_kpis' => 'ملخص الإيرادات',
+    'add_new_income' => 'إضافة إيراد جديد',
+    'update_income' => 'تعديل الإيراد',
+
+    'income_types' => 'أنواع الإيراد',
+    'income_types_list' => 'قائمة أنواع الإيراد',
+    'add_new_income_type' => 'إضافة نوع إيراد',
+    'update_income_type' => 'تعديل نوع الإيراد',
+
+    'income_type' => 'نوع الإيراد',
+    'income_date' => 'تاريخ الإيراد',
+    'paymentmethod' => 'طريقة الدفع',
+    'payer' => 'العميل/المصدر',
+    'payer_name' => 'اسم العميل/المصدر',
+    'payer_phone' => 'هاتف العميل/المصدر',
+    'received_by' => 'الموظف المستلم',
+    'cancel_reason' => 'سبب الإلغاء',
+    'cancel_reason_hint' => 'مطلوب عند تفعيل الإلغاء.',
+    'cancel_reason_required' => 'سبب الإلغاء مطلوب.',
+
+    'pm_cash' => 'نقدي',
+    'pm_card' => 'بطاقة',
+    'pm_transfer' => 'تحويل',
+    'pm_instapay' => 'InstaPay',
+    'pm_ewallet' => 'محفظة إلكترونية',
+    'pm_cheque' => 'شيك',
+    'pm_other' => 'أخرى',
+    'delete' => 'حذف',
+    'delete_confirm_title' => 'تأكيد الحذف',
+    'delete_confirm_text' => 'هل أنت متأكد من الحذف؟',
+    'filter_income_type' => 'فلترة نوع الإيراد',
+    'total_records' => 'إجمالي السجلات',
+    'saved_successfully' => 'تم الحفظ بنجاح',
+    'updated_successfully' => 'تم التحديث بنجاح',
+    'deleted_successfully' => 'تم الحذف بنجاح',
+    'ajax_error_try_again'   => 'حدث خطأ، حاول مرة أخرى.',
 
 ];
