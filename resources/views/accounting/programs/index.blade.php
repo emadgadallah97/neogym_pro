@@ -78,7 +78,7 @@
                         <h4 class="card-title font">
                             {{ trans('accounting.commissions') }}
                         </h4>
-                        <a href="{{ route('expenses.index') }}" class="btn btn-info">
+                        <a href="{{ route('commissions.index') }}" class="btn btn-info">
                             {{ trans('accounting.commissions') }}
                         </a>
                     </div>

@@ -22,15 +22,23 @@ Route::group(
                 ->name('expenses.actions.employees_by_branch');
             //expenses settings
             Route::resource('expenses_types', 'expenses_typescontroller');
-//income settings
-Route::resource('income_types', 'income_typescontroller');
+            //income settings
+            Route::resource('income_types', 'income_typescontroller');
 
-//income programs
-Route::resource('income', 'incomecontroller');
+            //income programs
+            Route::resource('income', 'incomecontroller');
 
-//income ajax
-Route::post('income/actions/employees_by_branch', 'incomecontroller@employees_by_branch')
-    ->name('income.actions.employees_by_branch');
+            //income ajax
+            Route::post('income/actions/employees_by_branch', 'incomecontroller@employees_by_branch')
+                ->name('income.actions.employees_by_branch');
+
+            //commissions
+            Route::resource('commissions', 'commissionscontroller');
+
+
+// إضافات للـ actions
+Route::post('commissions/{id}/pay', [\App\Http\Controllers\accounting\commissionscontroller::class, 'pay'])->name('commissions.pay');
+Route::post('commissions/{id}/cancel', [\App\Http\Controllers\accounting\commissionscontroller::class, 'cancel'])->name('commissions.cancel');
 
         });
     },

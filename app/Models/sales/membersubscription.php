@@ -45,6 +45,11 @@ class MemberSubscription extends Model
         'user_add',
         'user_update',
         'notes',
+        'commission_is_paid',
+        'commission_paid_at',
+        'commission_paid_by',
+        'commission_settlement_id',
+
     ];
 
     protected $casts = [
@@ -66,6 +71,11 @@ class MemberSubscription extends Model
         'commission_amount'      => 'decimal:2',
         'start_date'             => 'date',
         'end_date'               => 'date',
+        'commission_is_paid' => 'boolean',
+        'commission_paid_at' => 'datetime',
+        'commission_paid_by' => 'integer',
+        'commission_settlement_id' => 'integer',
+
     ];
 
     // علاقات
@@ -122,5 +132,14 @@ class MemberSubscription extends Model
     public function invoice()
     {
         return $this->hasOne(Invoice::class, 'member_subscription_id');
+    }
+    public function commissionSettlement()
+    {
+        return $this->belongsTo(\App\Models\accounting\CommissionSettlement::class, 'commission_settlement_id');
+    }
+
+    public function commissionPaidBy()
+    {
+        return $this->belongsTo(\App\User::class, 'commission_paid_by');
     }
 }
