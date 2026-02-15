@@ -152,28 +152,16 @@
                 <!--reports-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.reports') }}</span></li>
+                {{-- التقارير --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link font" href="#sidebarreports" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarAuth">
-                        <i class="mdi mdi-book-search-outline"></i> <span
-                            data-key="t-authentication">{{ trans('main_trans.reports') }}</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarreports">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                    aria-controls="sidebarSignIn"
-                                    data-key="t-signin">{{ trans('main_trans.collections_expenses') }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                    aria-controls="sidebarSignUp"
-                                    data-key="t-signup">{{ trans('main_trans.claims_management') }}</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'reports.create' || Route::currentRouteName() == 'reports.index') active @endif"
+                        href="{{ url('/' . ($page = 'reports')) }}">
 
+                        <i class="mdi mdi-chart-bar"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.reports') }}</span>
+                    </a>
+                </li>
                 <!--settings-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.settings') }}</span></li>

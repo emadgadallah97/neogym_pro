@@ -69,9 +69,6 @@ return [
     'government_select' => 'Select Government',
     'city_select' => 'Select city',
 
-    'governorate' => 'Governorate settings',
-    'city' => 'City settings',
-    'area' => 'Area settings',
 
 
     'update_Countries' => 'update Countries',

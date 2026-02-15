@@ -12,4 +12,4 @@ npm-debug.log
 yarn-error.log
 /storage/laravel.log
 public/attachments
-
+.vscode

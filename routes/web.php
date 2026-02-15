@@ -70,6 +70,7 @@ require base_path('routes/coupons_offers.php');
 require base_path('routes/sales.php');
 require base_path('routes/attendances.php');
 require base_path('routes/accounting.php');
+require base_path('routes/reports.php');
 
 
 
