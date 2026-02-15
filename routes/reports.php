@@ -24,6 +24,10 @@ Route::group(
 
             //members_report
             Route::resource('members_report', 'members_report\members_reportcontroller');
+
+            //subscriptions_report
+            Route::resource('subscriptions_report', 'subscriptions_report\subscriptions_reportcontroller');
+
         });
     },
 );

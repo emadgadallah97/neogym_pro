@@ -114,6 +114,34 @@
                 </div>
             </div>
         </div>
+        {{-- تقرير الخطط والاشتراكات --}}
+        <div class="col-xxl-3 col-lg-3 col-md-4 col-sm-6">
+            <div class="card report-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column text-center p-3">
+                    <div class="report-icon-wrapper mx-auto mb-2">
+                        <div class="avatar-title bg-soft-info text-info rounded-circle d-flex align-items-center justify-content-center report-icon-sm">
+                            <lord-icon
+                                src="{{ URL::asset('assets/images/icon/oaflahpk.json') }}"
+                                trigger="loop"
+                                delay="500"
+                                colors="primary:#4bb3fd"
+                                style="width:60px;height:60px">
+                            </lord-icon>
+                        </div>
+                    </div>
+
+                    <h6 class="card-title mb-2 font">
+                        {{ trans('reports.subscriptions_report_title') }}
+                    </h6>
+                    <div class="mt-auto">
+                        <a href="{{ route('subscriptions_report.index') }}" class="btn btn-soft-info w-100 btn-sm">
+                            <i class="ri-bar-chart-2-line align-bottom me-1"></i>
+                            {{ trans('reports.open_report') ?? trans('reports.report') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- الكارت 4: يمكنك تعديله لاحقاً لتقرير رابع --}}
         <div class="col-xxl-3 col-lg-3 col-md-4 col-sm-6">

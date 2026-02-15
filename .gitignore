@@ -13,3 +13,4 @@ yarn-error.log
 /storage/laravel.log
 public/attachments
 .vscode
+start.bat

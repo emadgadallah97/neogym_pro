@@ -349,7 +349,124 @@ return [
 'mem_col_notes' => 'ملاحظات',
 
 'mem_col_added_by' => 'مضاف بواسطة',
+// Subscriptions plans report
+'subscriptions_report_title' => 'تقرير خطط الاشتراكات',
 
+// Common
+'sub_all' => 'الكل',
+'sub_yes' => 'نعم',
+'sub_no' => 'لا',
+
+// Status
+'sub_status_active' => 'نشط',
+'sub_status_inactive' => 'غير نشط',
+
+// Period types
+'sub_period_day' => 'يومي',
+'sub_period_week' => 'أسبوعي',
+'sub_period_month' => 'شهري',
+'sub_period_other' => 'أخرى',
+
+// Days
+'sub_day_sat' => 'السبت',
+'sub_day_sun' => 'الأحد',
+'sub_day_mon' => 'الإثنين',
+'sub_day_tue' => 'الثلاثاء',
+'sub_day_wed' => 'الأربعاء',
+'sub_day_thu' => 'الخميس',
+'sub_day_fri' => 'الجمعة',
+
+// Filters
+'sub_filter_plan' => 'بحث الخطة',
+'sub_filter_plan_hint' => 'كود/اسم/نوع/وصف/ملاحظات',
+'sub_filter_branches' => 'الفروع',
+'sub_filter_type' => 'نوع الاشتراك',
+'sub_filter_status' => 'الحالة',
+'sub_filter_period_type' => 'نوع الفترة',
+'sub_filter_allow_guest' => 'السماح بالضيف',
+'sub_filter_allow_freeze' => 'السماح بالتجميد',
+'sub_filter_notify_before_end' => 'تنبيه قبل الانتهاء',
+'sub_filter_duration_days' => 'المدة بالأيام',
+'sub_filter_duration_from' => 'المدة من (يوم)',
+'sub_filter_duration_to' => 'المدة إلى (يوم)',
+'sub_filter_sessions_count' => 'عدد الجلسات',
+'sub_filter_sessions_from' => 'الجلسات من',
+'sub_filter_sessions_to' => 'الجلسات إلى',
+'sub_filter_price' => 'السعر الأساسي',
+'sub_filter_price_from' => 'السعر من',
+'sub_filter_price_to' => 'السعر إلى',
+'sub_filter_price_state' => 'حالة السعر',
+'sub_price_state_with' => 'بسعر',
+'sub_price_state_without' => 'بدون سعر',
+
+// KPIs
+'sub_kpi_total' => 'إجمالي الخطط',
+'sub_kpi_active' => 'نشط',
+'sub_kpi_inactive' => 'غير نشط',
+'sub_kpi_types_used' => 'أنواع مستخدمة',
+'sub_kpi_features' => 'خصائص',
+'sub_kpi_branches_used' => 'فروع مستخدمة',
+'sub_kpi_avgs' => 'متوسطات',
+'sub_kpi_avg_price' => 'متوسط السعر الأساسي',
+
+// Tips
+'sub_tip' => 'السعر المعتمد هو السعر الأساسي فقط (بدون مدرب) لكل فرع.',
+
+// Table titles/hints
+'sub_table_title' => 'تفاصيل الخطط',
+'sub_table_hint' => 'الجدول يدعم البحث، الترتيب، والتصفح.',
+
+// Columns
+'sub_col_plan' => 'الخطة',
+'sub_col_code' => 'كود الخطة',
+'sub_col_name' => 'اسم الخطة',
+'sub_col_type' => 'نوع الاشتراك',
+'sub_col_status' => 'الحالة',
+
+'sub_col_period' => 'الفترة/الأيام',
+'sub_col_period_type' => 'نوع الفترة',
+'sub_col_allowed_training_days' => 'أيام التدريب',
+'sub_col_limits' => 'الحدود',
+'sub_col_sessions_count' => 'عدد الجلسات',
+'sub_col_duration_days' => 'المدة (يوم)',
+
+'sub_col_guest' => 'الضيف',
+'sub_col_allow_guest' => 'السماح بالضيف',
+'sub_col_guest_people_count' => 'عدد الضيوف',
+'sub_col_guest_times_count' => 'عدد مرات الضيف',
+'sub_col_guest_allowed_days' => 'أيام الضيف',
+
+'sub_col_freeze' => 'التجميد',
+'sub_col_allow_freeze' => 'السماح بالتجميد',
+'sub_col_max_freeze_days' => 'أقصى أيام تجميد',
+
+'sub_col_notify' => 'التنبيه',
+'sub_col_notify_before_end' => 'تنبيه قبل الانتهاء',
+'sub_col_notify_days_before_end' => 'عدد الأيام قبل الانتهاء',
+
+'sub_col_branches_price' => 'الفروع/السعر',
+'sub_col_branches_count' => 'عدد الفروع',
+'sub_col_price_min' => 'أقل سعر',
+'sub_col_price_max' => 'أعلى سعر',
+'sub_col_price_avg' => 'متوسط السعر',
+'sub_price_minmax' => 'أقل/أعلى',
+'sub_price_selected_branch' => 'سعر الفرع المختار',
+'sub_col_description' => 'الوصف',
+'sub_col_notes' => 'ملاحظات',
+'sub_col_created_by' => 'مضاف بواسطة',
+
+
+
+// Period types (fixed)
+'sub_period_daily' => 'يومي',
+'sub_period_weekly' => 'أسبوعي',
+'sub_period_monthly' => 'شهري',
+'sub_period_quarterly' => 'ربع سنوي',
+'sub_period_semi_yearly' => 'نصف سنوي',
+'sub_period_yearly' => 'سنوي',
+'sub_col_branches_prices' => 'الفروع والأسعار والاشتراكات الفعالة',
+'sub_branch_price' => 'السعر',
+'sub_active_subs' => 'اشتراكات فعالة',
 
 
 
