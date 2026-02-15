@@ -148,6 +148,125 @@ return [
     // Labels
     'att_device_label' => 'جهاز',
     'att_gate_label' => 'بوابة',
+    'employees_report' => 'تقرير الموظفين',
+'employees_report_title' => 'تقرير بيانات الموظفين',
+
+    // Common
+    'emp_all' => 'الكل',
+    'emp_yes' => 'نعم',
+    'emp_no'  => 'لا',
+
+    // KPIs
+    'emp_kpi_total' => 'إجمالي الموظفين',
+    'emp_kpi_active' => 'نشط',
+    'emp_kpi_inactive' => 'غير نشط',
+    'emp_kpi_coaches' => 'مدربين',
+    'emp_kpi_jobs_used' => 'وظائف مستخدمة',
+    'emp_kpi_branches_used' => 'فروع مستخدمة',
+    'emp_kpi_avg_base_salary' => 'متوسط الراتب الأساسي',
+    'emp_kpi_gender' => 'النوع',
+
+    // Filters
+    'emp_filter_employee' => 'بحث الموظف',
+    'emp_filter_employee_hint' => 'كود/اسم/موبايل/واتساب/Email/تخصص',
+    'emp_filter_branches' => 'الفروع',
+    'emp_filter_job' => 'الوظيفة',
+    'emp_filter_status' => 'الحالة',
+    'emp_filter_gender' => 'النوع',
+    'emp_filter_is_coach' => 'مدرب',
+    'emp_filter_compensation_type' => 'نوع التعويض',
+    'emp_filter_commission_value_type' => 'نوع العمولة',
+    'emp_filter_salary_transfer_method' => 'طريقة تحويل الراتب',
+
+    'emp_filter_birth_date_from' => 'تاريخ الميلاد من',
+    'emp_filter_birth_date_to' => 'تاريخ الميلاد إلى',
+    'emp_filter_birth_date' => 'تاريخ الميلاد',
+
+    'emp_filter_years_exp_from' => 'خبرة من',
+    'emp_filter_years_exp_to' => 'خبرة إلى',
+    'emp_filter_years_experience' => 'سنوات الخبرة',
+
+    'emp_filter_base_salary_from' => 'راتب من',
+    'emp_filter_base_salary_to' => 'راتب إلى',
+    'emp_filter_base_salary' => 'الراتب الأساسي',
+
+    'emp_filter_specialization' => 'التخصص',
+    'emp_filter_specialization_hint' => 'بحث داخل التخصص',
+
+    'emp_tip' => 'يمكنك استخدام البحث العام داخل الجدول أيضاً.',
+
+    // Table
+    'emp_table_title' => 'تفاصيل الموظفين',
+    'emp_table_hint' => 'الجدول يدعم البحث، الترتيب، والتصفح.',
+    'emp_branches_count' => 'عدد الفروع',
+
+    // Columns (index/print/excel)
+    'emp_col_employee' => 'بيانات الموظف',
+    'emp_col_contact' => 'التواصل',
+
+    'emp_col_code' => 'كود',
+    'emp_col_name' => 'الاسم',
+    'emp_col_job' => 'الوظيفة',
+    'emp_col_primary_branch' => 'الفرع الأساسي',
+    'emp_col_branches' => 'الفروع',
+    'emp_col_gender' => 'النوع',
+    'emp_col_status' => 'الحالة',
+    'emp_col_is_coach' => 'مدرب',
+
+    'emp_col_compensation' => 'التعويض',
+    'emp_col_compensation_type' => 'نوع التعويض',
+    'emp_col_base_salary' => 'الراتب الأساسي',
+
+    'emp_col_commission_value_type' => 'نوع العمولة',
+    'emp_col_commission_percent' => 'نسبة العمولة',
+    'emp_col_commission_fixed' => 'عمولة ثابتة',
+
+    'emp_col_transfer' => 'تحويل الراتب',
+    'emp_col_salary_transfer_method' => 'طريقة التحويل',
+    'emp_col_salary_transfer_details' => 'تفاصيل التحويل',
+
+    'emp_col_experience' => 'التخصص/الخبرة',
+    'emp_col_specialization' => 'التخصص',
+    'emp_col_years_experience' => 'سنوات الخبرة',
+    'emp_col_birth_date' => 'تاريخ الميلاد',
+
+    'emp_col_phone' => 'موبايل',
+    'emp_col_email' => 'Email',
+    'emp_col_added_by' => 'مضاف بواسطة',
+    'emp_col_bio' => 'نبذة',
+
+    // Status/Gender/Comp/Commission/Transfer options
+    'emp_status_active' => 'نشط',
+    'emp_status_inactive' => 'غير نشط',
+
+    'emp_gender_male' => 'ذكر',
+    'emp_gender_female' => 'أنثى',
+
+    'emp_comp_salary' => 'راتب',
+    'emp_comp_commission' => 'عمولة',
+    'emp_comp_mixed' => 'راتب + عمولة',
+
+    'emp_comm_percent' => 'نسبة',
+    'emp_comm_fixed' => 'قيمة ثابتة',
+
+    'emp_transfer_cash' => 'نقدًا',
+    'emp_transfer_bank' => 'تحويل بنكي',
+    'emp_transfer_wallet' => 'محفظة',
+'emp_comp_salary_and_commission' => 'راتب + عمولة',
+'emp_comp_salary_only' => 'راتب فقط',
+'emp_comp_commission_only' => 'عمولة فقط',
+
+// Transfer method (DB canonical)
+'emp_transfer_ewallet' => 'محفظة إلكترونية',
+'emp_transfer_bank_transfer' => 'تحويل بنكي',
+'emp_transfer_instapay' => 'InstaPay',
+'emp_transfer_credit_card' => 'بطاقة',
+'emp_transfer_cheque' => 'شيك',
+'emp_transfer_other' => 'أخرى',
+
+
+
+
 
 
 ];

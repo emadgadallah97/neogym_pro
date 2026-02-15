@@ -19,6 +19,8 @@ Route::group(
             //attendances_report
             Route::resource('attendances_report', 'attendances_report\attendances_reportcontroller');
 
+            //employees_report
+            Route::resource('employees_report', 'employees_report\employees_reportcontroller');
 
         });
     },
