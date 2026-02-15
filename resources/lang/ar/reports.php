@@ -263,7 +263,92 @@ return [
 'emp_transfer_credit_card' => 'بطاقة',
 'emp_transfer_cheque' => 'شيك',
 'emp_transfer_other' => 'أخرى',
+// Members report
+'members_report_title' => 'تقرير الأعضاء',
 
+// Filters
+'mem_all' => 'الكل',
+'mem_filter_member' => 'بحث العضو',
+'mem_filter_member_hint' => 'كود/اسم/موبايل/واتساب/Email',
+'mem_filter_branches' => 'الفروع',
+'mem_filter_status' => 'الحالة',
+'mem_filter_gender' => 'النوع',
+'mem_filter_join_date' => 'تاريخ الاشتراك',
+'mem_filter_join_date_from' => 'تاريخ الاشتراك من',
+'mem_filter_join_date_to' => 'تاريخ الاشتراك إلى',
+'mem_filter_birth_date' => 'تاريخ الميلاد',
+'mem_filter_birth_date_from' => 'تاريخ الميلاد من',
+'mem_filter_birth_date_to' => 'تاريخ الميلاد إلى',
+'mem_filter_government' => 'المحافظة',
+'mem_filter_city' => 'المدينة',
+'mem_filter_area' => 'المنطقة',
+'mem_filter_freeze_now' => 'مجمد الآن',
+'mem_filter_freeze_range' => 'فترة التجميد',
+'mem_filter_freeze_from' => 'تجميد من',
+'mem_filter_freeze_to' => 'تجميد إلى',
+'mem_filter_height' => 'الطول',
+'mem_filter_height_from' => 'طول من',
+'mem_filter_height_to' => 'طول إلى',
+'mem_filter_weight' => 'الوزن',
+'mem_filter_weight_from' => 'وزن من',
+'mem_filter_weight_to' => 'وزن إلى',
+
+// KPIs
+'mem_kpi_total' => 'إجمالي الأعضاء',
+'mem_kpi_active' => 'نشط',
+'mem_kpi_inactive' => 'غير نشط',
+'mem_kpi_frozen' => 'مجمد',
+'mem_kpi_frozen_now' => 'مجمد الآن',
+'mem_kpi_gender' => 'النوع',
+'mem_kpi_branches_used' => 'فروع مستخدمة',
+'mem_kpi_avg_body' => 'متوسط القياسات',
+
+// Status/Gender
+'mem_status_active' => 'نشط',
+'mem_status_inactive' => 'غير نشط',
+'mem_status_frozen' => 'مجمد',
+'mem_gender_male' => 'ذكر',
+'mem_gender_female' => 'أنثى',
+'mem_yes' => 'نعم',
+'mem_no' => 'لا',
+'mem_frozen_now_badge' => 'مجمد الآن',
+
+// Table
+'mem_table_title' => 'تفاصيل الأعضاء',
+'mem_table_hint' => 'الجدول يدعم البحث، الترتيب، والتصفح.',
+'mem_tip' => 'يمكنك استخدام البحث العام داخل الجدول أيضاً.',
+
+'mem_col_member' => 'بيانات العضو',
+'mem_col_member_code' => 'كود العضو',
+'mem_col_name' => 'الاسم',
+'mem_col_branch' => 'الفرع',
+'mem_col_status' => 'الحالة',
+'mem_col_gender' => 'النوع',
+'mem_col_dates' => 'تواريخ',
+'mem_col_join_date' => 'تاريخ الاشتراك',
+'mem_col_birth_date' => 'تاريخ الميلاد',
+'mem_col_freeze_range' => 'فترة التجميد',
+
+'mem_col_location' => 'الموقع',
+'mem_col_government' => 'المحافظة',
+'mem_col_city' => 'المدينة',
+'mem_col_area' => 'المنطقة',
+
+'mem_col_contact' => 'التواصل',
+'mem_col_phone' => 'موبايل',
+'mem_col_whatsapp' => 'واتساب',
+'mem_col_email' => 'Email',
+
+'mem_col_body' => 'القياسات',
+'mem_col_height' => 'الطول',
+'mem_col_weight' => 'الوزن',
+
+'mem_col_medical' => 'طبي/ملاحظات',
+'mem_col_medical_conditions' => 'حالات طبية',
+'mem_col_allergies' => 'حساسية',
+'mem_col_notes' => 'ملاحظات',
+
+'mem_col_added_by' => 'مضاف بواسطة',
 
 
 

@@ -22,6 +22,8 @@ Route::group(
             //employees_report
             Route::resource('employees_report', 'employees_report\employees_reportcontroller');
 
+            //members_report
+            Route::resource('members_report', 'members_report\members_reportcontroller');
         });
     },
 );
