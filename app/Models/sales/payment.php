@@ -21,6 +21,8 @@ class Payment extends Model
         'reference',
         'notes',
         'user_add',
+        'source',
+
     ];
 
     protected $casts = [

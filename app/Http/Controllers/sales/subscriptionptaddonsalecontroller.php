@@ -88,7 +88,7 @@ class SubscriptionPtAddonSaleController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $paymentMethods = ['cash','card','transfer','instapay','ewallet','cheque','other'];
+        $paymentMethods = ['cash', 'card', 'transfer', 'instapay', 'ewallet', 'cheque', 'other'];
 
         return view('sales.pt_addons.create', compact('subscription', 'Coaches', 'paymentMethods'));
     }
@@ -183,6 +183,7 @@ class SubscriptionPtAddonSaleController extends Controller
                 'reference' => 'PTA#' . (int)$addon->id . '-SUB#' . (int)$subscription->id,
                 'notes' => null,
                 'user_add' => Auth::id(),
+                'source' => 'PT_only',
             ]);
 
             // 3) Create Invoice
@@ -202,6 +203,7 @@ class SubscriptionPtAddonSaleController extends Controller
                 'paid_at' => $paidAt,
                 'notes' => null,
                 'user_add' => Auth::id(),
+                'source' => 'PT_only',
             ]);
 
             $finalInvoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad((string)$invoice->id, 6, '0', STR_PAD_LEFT);

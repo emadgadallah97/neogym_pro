@@ -831,6 +831,11 @@ public function store(MemberSubscriptionRequest $request)
 
         $grossAmount = (float)$pricePlan + (float)$ptTotal;
 
+        // ✅ تحديد source للفاتورة والمدفوعات (اشتراك فقط vs اشتراك + PT)
+        $invoicePaymentSource = ($ptTotal > 0 || !empty($ptAddons))
+            ? 'main_subscription&PT'
+            : 'main_subscription_only';
+
         // Offers
         $offerContext = [
             'applies_to'            => 'subscription',
@@ -904,7 +909,7 @@ public function store(MemberSubscriptionRequest $request)
         }
         $commission = $this->computeCommissionSnapshot($salesEmployee, $grossAmount, $totalAmount);
 
-        // Dates (حتى لو الخطة حصص، لو عندك duration_days هنخزن end_date كقيمة إضافية)
+        // Dates
         $startDate = Carbon::parse($data['start_date']);
         $endDate   = $durationDays > 0 ? $startDate->copy()->addDays($durationDays) : null;
 
@@ -920,11 +925,10 @@ public function store(MemberSubscriptionRequest $request)
         $subscription->duration_days = $durationDays;
         $subscription->sessions_count = $sessionsCount;
 
-        // ✅ بدون مدرب (لكن يعتمد على حصص)
+        // ✅ بدون مدرب
         $subscription->with_trainer = 0;
         $subscription->main_trainer_id = null;
 
-        // ✅ المهم: تهيئة الحصص للاشتراك الأساسي
         $subscription->sessions_included = $sessionsCount;
         $subscription->sessions_remaining = $sessionsCount;
 
@@ -947,7 +951,6 @@ public function store(MemberSubscriptionRequest $request)
 
         $subscription->sales_employee_id = $salesEmployee?->id;
 
-        // ✅ حفظ العمولة فعليًا
         $subscription->commission_base_amount = $commission['base_amount'];
         $subscription->commission_value_type  = $commission['value_type'];
         $subscription->commission_value       = $commission['value'];
@@ -960,15 +963,14 @@ public function store(MemberSubscriptionRequest $request)
         foreach ($ptAddons as $addon) {
             MemberSubscriptionPtAddon::create([
                 'member_subscription_id' => $subscription->id,
-                'trainer_id'             => $addon['trainer_id'],
-                'session_price'          => $addon['session_price'],
-                'sessions_count'         => $addon['sessions_count'],
-                'sessions_remaining'     => $addon['sessions_remaining'],
-                'total_amount'           => $addon['total_amount'],
+                'trainer_id'              => $addon['trainer_id'],
+                'session_price'           => $addon['session_price'],
+                'sessions_count'          => $addon['sessions_count'],
+                'sessions_remaining'      => $addon['sessions_remaining'],
+                'total_amount'            => $addon['total_amount'],
             ]);
         }
 
-        // ✅ Generate invoice number early (use it as payment reference too)
         $invoiceNumber = $this->generateInvoiceNumber($branchId);
 
         // Payment
@@ -984,6 +986,7 @@ public function store(MemberSubscriptionRequest $request)
             'reference'              => $paymentReference,
             'notes'                  => null,
             'user_add'               => Auth::id(),
+            'source'                 => $invoicePaymentSource,
         ]);
 
         // Invoice
@@ -999,24 +1002,24 @@ public function store(MemberSubscriptionRequest $request)
         $invoice->discount_total = $totalDiscount;
         $invoice->total = $totalAmount;
 
-        // ✅ بما أن الدفع تم الآن: اجعل الفاتورة paid
         $invoice->status = 'paid';
         $invoice->issued_at = $now;
         $invoice->paid_at = $now;
 
         $invoice->user_add = Auth::id();
+        $invoice->source = $invoicePaymentSource;
         $invoice->save();
 
         if ($couponId) {
             CouponUsage::create([
-                'coupon_id'       => $couponId,
-                'member_id'       => $memberId,
-                'applied_to_type' => MemberSubscription::class,
-                'applied_to_id'   => $subscription->id,
-                'amount_before'   => $grossAmount,
-                'discount_amount' => $couponDiscount,
-                'amount_after'    => $totalAmount,
-                'used_at'         => Carbon::now(),
+                'coupon_id'        => $couponId,
+                'member_id'        => $memberId,
+                'applied_to_type'  => MemberSubscription::class,
+                'applied_to_id'    => $subscription->id,
+                'amount_before'    => $grossAmount,
+                'discount_amount'  => $couponDiscount,
+                'amount_after'     => $totalAmount,
+                'used_at'          => Carbon::now(),
             ]);
         }
 
@@ -1038,6 +1041,7 @@ public function store(MemberSubscriptionRequest $request)
         return redirect()->back()->withInput()->with('error', trans('sales.somethingwentwrong'));
     }
 }
+
 public function ajaxSubscriptionShowModal($id)
 {
     $subscription = MemberSubscription::with([

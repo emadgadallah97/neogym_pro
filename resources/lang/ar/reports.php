@@ -467,8 +467,382 @@ return [
 'sub_col_branches_prices' => 'الفروع والأسعار والاشتراكات الفعالة',
 'sub_branch_price' => 'السعر',
 'sub_active_subs' => 'اشتراكات فعالة',
+// Sales report
+'sales_report_title' => 'تقرير المبيعات',
+
+// Subscription statuses (for sales report)
+'sub_status_expired' => 'منتهي',
+'sub_status_frozen' => 'مجمّد',
+'sub_status_cancelled' => 'ملغي',
+'sub_status_pending' => 'معلّق',
+
+// KPIs
+'sales_kpi_total_sales' => 'إجمالي المبيعات',
+'sales_kpi_subs_count' => 'عدد الاشتراكات',
+'sales_kpi_avg_sale' => 'متوسط قيمة البيع',
+'sales_kpi_total_discount' => 'إجمالي الخصم',
+'sales_kpi_offer_coupon' => 'خصم عرض/خصم كوبون',
+'sales_kpi_pt_addons' => 'مبيعات الحصص الخاصة (PT)',
+'sales_kpi_usage' => 'استخدام',
+'sales_kpi_usage_hint' => 'عدد الاشتراكات التي استخدمت عرض/كوبون',
+
+// Tips
+'sales_tip' => 'التقرير يشمل الحصص الخاصه PT المباعه ضمن الاشتراك فقط وحصص PT المضافه في وقت لاحق تظهر في تقرير منفصل',
+
+// Filters
+'sales_filter_date' => 'الفترة',
+'sales_filter_date_from' => 'من تاريخ',
+'sales_filter_date_to' => 'إلى تاريخ',
+'sales_filter_branches' => 'الفروع',
+'sales_filter_status' => 'حالة الاشتراك',
+'sales_filter_type' => 'نوع الاشتراك',
+'sales_filter_plan' => 'الخطة',
+'sales_filter_source' => 'المصدر',
+'sales_filter_sales_employee' => 'موظف المبيعات',
+'sales_filter_has_offer' => 'استخدم عرض',
+'sales_filter_has_coupon' => 'استخدم كوبون',
+'sales_filter_amount' => 'إجمالي البيع',
+'sales_filter_amount_from' => 'المبلغ من',
+'sales_filter_amount_to' => 'المبلغ إلى',
+'sales_filter_discount' => 'إجمالي الخصم',
+'sales_filter_discount_from' => 'الخصم من',
+'sales_filter_discount_to' => 'الخصم إلى',
+'sales_filter_group_by' => 'تجميع حسب',
+
+// Grouping
+'sales_group_title' => 'ملخص التجميع',
+'sales_group_hint' => 'يتغير حسب خيار (تجميع حسب).',
+'sales_group_col_name' => 'البند',
+'sales_group_col_subs' => 'عدد الاشتراكات',
+'sales_group_col_sales' => 'إجمالي المبيعات',
+'sales_group_col_discount' => 'إجمالي الخصم',
+'sales_group_col_pt' => 'مبيعات PT',
+
+'sales_group_branch' => 'الفرع',
+'sales_group_type' => 'نوع الاشتراك',
+'sales_group_plan' => 'الخطة',
+'sales_group_source' => 'المصدر',
+'sales_group_sales_employee' => 'موظف المبيعات',
+'sales_group_status' => 'الحالة',
+
+// Table
+'sales_table_title' => 'تفاصيل المبيعات (الاشتراكات)',
+'sales_table_hint' => 'الجدول يدعم البحث والترتيب والتصفح.',
+
+// Columns
+'sales_col_dates' => 'التواريخ',
+'sales_col_sale_date' => 'تاريخ البيع',
+'sales_col_start_end' => 'بداية/نهاية',
+
+'sales_col_branch' => 'الفرع',
+'sales_col_member' => 'العضو',
+'sales_col_plan' => 'الخطة',
+'sales_col_plan_code' => 'كود الخطة',
+'sales_col_type' => 'نوع الاشتراك',
+
+'sales_col_status' => 'الحالة',
+'sales_col_source' => 'المصدر',
+
+'sales_col_discounts' => 'الخصومات',
+'sales_col_total_discount' => 'إجمالي الخصم',
+'sales_col_offer_discount' => 'خصم العرض',
+'sales_col_coupon_discount' => 'خصم الكوبون',
+
+'sales_col_amounts' => 'المبالغ',
+'sales_col_price_plan' => 'سعر الخطة',
+'sales_col_price_pt_addons' => 'سعر PT',
+'sales_col_total_amount' => 'الإجمالي',
+
+'sales_col_offer_coupon' => 'عرض/كوبون',
+'sales_col_offer' => 'عرض',
+'sales_col_coupon' => 'كوبون',
+
+'sales_col_sales_employee' => 'موظف المبيعات',
+
+// Payments report
+'payments_report_title' => 'تقرير المدفوعات',
+
+// KPIs
+'pay_kpi_net_collected' => 'صافي التحصيل',
+'pay_kpi_payments_count' => 'عدد العمليات',
+'pay_kpi_paid' => 'مدفوع',
+'pay_kpi_pending_failed' => 'معلّق/فشل',
+'pay_kpi_refunded' => 'مسترد',
+'pay_kpi_unique_members' => 'عدد العملاء',
+'pay_kpi_unique_subscriptions' => 'عدد الاشتراكات',
+'pay_kpi_outstanding' => 'الرصيد المتبقي',
+
+// Tip
+'pay_tip' => 'PT-->Private Trainer',
+
+// Filters
+'pay_filter_date' => 'الفترة',
+'pay_filter_date_from' => 'من تاريخ',
+'pay_filter_date_to' => 'إلى تاريخ',
+'pay_filter_branches' => 'الفروع',
+'pay_filter_status' => 'الحالة',
+'pay_filter_method' => 'طريقة الدفع',
+'pay_filter_source' => 'المصدر',
+'pay_filter_member' => 'رقم العضو',
+'pay_filter_subscription' => 'رقم الاشتراك',
+'pay_filter_amount' => 'المبلغ',
+'pay_filter_amount_from' => 'المبلغ من',
+'pay_filter_amount_to' => 'المبلغ إلى',
+'pay_filter_group_by' => 'تجميع حسب',
+
+// Status
+'pay_status_paid' => 'مدفوع',
+'pay_status_pending' => 'معلّق',
+'pay_status_failed' => 'فشل',
+'pay_status_refunded' => 'مسترد',
+
+// Grouping
+'pay_group_title' => 'ملخص التجميع',
+'pay_group_hint' => 'يتغير حسب خيار (تجميع حسب).',
+'pay_group_col_name' => 'البند',
+'pay_group_col_count' => 'عدد العمليات',
+'pay_group_col_paid' => 'مدفوع',
+'pay_group_col_refunded' => 'مسترد',
+'pay_group_col_pending' => 'معلّق',
+'pay_group_col_failed' => 'فشل',
+
+'pay_group_method' => 'طريقة الدفع',
+'pay_group_status' => 'الحالة',
+'pay_group_branch' => 'الفرع',
+'pay_group_type' => 'نوع الاشتراك',
+'pay_group_plan' => 'الخطة',
+'pay_group_source' => 'المصدر',
+
+// Tables
+'pay_table_title' => 'تفاصيل عمليات الدفع',
+'pay_table_hint' => 'الجدول يدعم البحث والترتيب والتصفح.',
+
+'pay_col_dates' => 'التواريخ',
+'pay_col_date' => 'التاريخ',
+'pay_col_paid_at' => 'تاريخ الدفع',
+'pay_col_created_at' => 'تاريخ الإنشاء',
+
+'pay_col_status' => 'الحالة',
+'pay_col_method' => 'الطريقة',
+'pay_col_amount' => 'المبلغ',
+'pay_col_branch' => 'الفرع',
+'pay_col_member' => 'العضو',
+'pay_col_subscription' => 'الاشتراك',
+'pay_col_plan' => 'الخطة',
+'pay_col_type' => 'النوع',
+'pay_col_source' => 'المصدر',
+'pay_col_reference' => 'المرجع',
+'pay_col_added_by' => 'أضيف بواسطة',
+
+// Matching (installments-ready)
+'pay_matching_title' => 'مطابقة (بيع مقابل مدفوع) - تمهيد للأقساط',
+'pay_matching_hint' => 'هذا الجزء سيُبنى عليه نظام الأقساط مستقبلًا.',
+'pay_matching_only_outstanding' => 'إظهار المتبقي فقط',
+
+'pay_match_col_date' => 'تاريخ البيع',
+'pay_match_col_sale' => 'إجمالي البيع',
+'pay_match_col_paid' => 'مدفوع',
+'pay_match_col_refunded' => 'مسترد',
+'pay_match_col_net' => 'صافي التحصيل',
+'pay_match_col_outstanding' => 'المتبقي',
+// Commissions report
+'commissions_report_title' => 'تقرير العمولات',
+
+// KPIs
+'com_kpi_total_all' => 'إجمالي العمولات (الكل)',
+'com_kpi_items_count' => 'عدد البنود',
+'com_kpi_included' => 'عمولات غير مستبعدة',
+'com_kpi_excluded' => 'عمولات مستبعدة',
+'com_kpi_paid' => 'عمولات مدفوعة',
+'com_kpi_unpaid' => 'عمولات غير مدفوعة',
+'com_kpi_settled' => 'ضمن تسوية / بدون تسوية',
+'com_kpi_settled_hint' => 'ضمن تسوية / بدون تسوية',
+
+// Labels
+'com_paid' => 'مدفوعة',
+'com_unpaid' => 'غير مدفوعة',
+'com_included' => 'مشمولة',
+'com_excluded' => 'مستبعدة',
+'com_unsettled' => 'بدون تسوية',
+
+'com_paid_at' => 'وقت الدفع',
+'com_paid_by' => 'دُفعت بواسطة',
+
+'com_settlement_status' => 'حالة التسوية',
+'com_settlement_paid_at' => 'وقت سداد التسوية',
+'com_settlement_paid_by' => 'سددت بواسطة',
+
+'com_rule_fixed' => 'ثابت',
+
+// Tip
+'com_tip' => 'إذا كانت هناك تسوية، يتم أخذ الاستبعاد/السبب من عناصر التسوية، وإلا تُحسب من بيانات الاشتراك.',
+
+// Filters
+'com_filter_date' => 'الفترة',
+'com_filter_date_from' => 'من تاريخ',
+'com_filter_date_to' => 'إلى تاريخ',
+'com_filter_branches' => 'الفروع',
+'com_filter_sales_employee' => 'موظف المبيعات',
+'com_filter_paid' => 'حالة الدفع',
+'com_filter_has_settlement' => 'ضمن تسوية',
+'com_filter_settlement_status' => 'حالة التسوية',
+'com_filter_excluded' => 'مستبعد',
+'com_filter_source' => 'المصدر',
+
+'com_filter_sale_amount' => 'قيمة البيع',
+'com_filter_sale_from' => 'قيمة البيع من',
+'com_filter_sale_to' => 'قيمة البيع إلى',
+
+'com_filter_commission_amount' => 'قيمة العمولة',
+'com_filter_commission_from' => 'العمولة من',
+'com_filter_commission_to' => 'العمولة إلى',
+
+'com_filter_only_with_commission' => 'عمولات فقط',
+'com_filter_group_by' => 'تجميع حسب',
+
+// Grouping
+'com_group_title' => 'ملخص التجميع',
+'com_group_hint' => 'يتغير حسب خيار (تجميع حسب).',
+'com_group_col_name' => 'البند',
+'com_group_col_count' => 'عدد البنود',
+'com_group_col_total' => 'إجمالي العمولة',
+'com_group_col_excluded' => 'مستبعدة',
+'com_group_col_paid' => 'مدفوعة',
+
+'com_group_sales_employee' => 'موظف المبيعات',
+'com_group_branch' => 'الفرع',
+'com_group_paid_status' => 'حالة الدفع',
+'com_group_settlement_status' => 'حالة التسوية',
+'com_group_excluded' => 'الاستبعاد',
+'com_group_source' => 'المصدر',
+
+// Table
+'com_table_title' => 'تفاصيل العمولات',
+'com_table_hint' => 'الجدول يدعم البحث والترتيب.',
+
+// Columns
+'com_col_sale_date' => 'تاريخ البيع',
+'com_col_branch' => 'الفرع',
+'com_col_member' => 'العضو',
+'com_col_subscription' => 'الاشتراك',
+
+'com_col_plan' => 'الخطة',
+'com_col_type' => 'النوع',
+'com_col_source' => 'المصدر',
+
+'com_col_sale_total' => 'قيمة البيع',
+'com_col_commission_base' => 'أساس العمولة',
+'com_col_commission_rule' => 'قيمة/نوع العمولة',
+'com_col_commission_amount' => 'قيمة العمولة',
+
+'com_col_excluded' => 'الاستبعاد',
+'com_col_paid' => 'الدفع',
+'com_col_settlement' => 'التسوية',
+'com_col_sales_employee' => 'موظف المبيعات',
+'cs_status_paid' => 'مدفوعة',
+'cs_status_draft' => 'مسودة',
+'cs_status_cancelled' => 'ملغاة',
+// PT Add-ons report
+'pt_addons_report_title' => 'تقرير حصص PT الإضافية',
+
+// KPIs
+'pt_kpi_total_amount' => 'إجمالي قيمة الإضافات',
+'pt_kpi_addons_count' => 'عدد الإضافات',
+'pt_kpi_sessions_total' => 'إجمالي الحصص',
+'pt_kpi_sessions_used' => 'حصص مستخدمة',
+'pt_kpi_sessions_remaining' => 'حصص متبقية',
+'pt_kpi_net_paid' => 'صافي المدفوع',
+'pt_kpi_paid' => 'مدفوع',
+'pt_kpi_refunded' => 'مسترد',
+'pt_kpi_outstanding' => 'متبقي ماليًا',
+'pt_kpi_unique_members' => 'عدد الأعضاء',
+'pt_kpi_unique_subs' => 'عدد الاشتراكات',
+
+// Filters
+'pt_filter_date' => 'الفترة',
+'pt_filter_date_from' => 'من تاريخ',
+'pt_filter_date_to' => 'إلى تاريخ',
+'pt_filter_branches' => 'الفروع',
+'pt_filter_trainer' => 'المدرب',
+'pt_filter_member' => 'رقم العضو',
+'pt_filter_subscription' => 'رقم الاشتراك',
+'pt_filter_source' => 'المصدر',
+'pt_filter_only_remaining' => 'المتبقي فقط',
+'pt_filter_payment_state' => 'حالة السداد',
+'pt_filter_payment_status' => 'حالة الدفع (Payment)',
+'pt_filter_payment_status_hint' => 'يعمل فقط على مدفوعات PTA (reference يبدأ بـ PTA#)',
+'pt_filter_sessions' => 'الحصص',
+'pt_filter_sessions_from' => 'الحصص من',
+'pt_filter_sessions_to' => 'الحصص إلى',
+'pt_filter_amount' => 'القيمة',
+'pt_filter_amount_from' => 'القيمة من',
+'pt_filter_amount_to' => 'القيمة إلى',
+'pt_filter_group_by' => 'تجميع حسب',
+
+// Tip
+'pt_tip' => 'حساب السداد يتم من payments.reference بصيغة PTA#ID، لذلك يلزم الالتزام بهذا النمط.',
+
+// Payment state labels
+'pt_state_unpaid' => 'غير مدفوع',
+'pt_state_partial' => 'مدفوع جزئيًا',
+'pt_state_paid' => 'مدفوع',
+'pt_state_outstanding' => 'عليه متبقي',
+'pt_state_with_refund' => 'مع استرداد',
+
+// Grouping
+'pt_group_trainer' => 'المدرب',
+'pt_group_branch' => 'الفرع',
+'pt_group_subscription' => 'الاشتراك',
+'pt_group_member' => 'العضو',
+'pt_group_title' => 'ملخص التجميع',
+'pt_group_hint' => 'يتغير حسب خيار (تجميع حسب).',
+'pt_group_col_name' => 'البند',
+'pt_group_col_count' => 'عدد الإضافات',
+'pt_group_col_total_amount' => 'إجمالي القيمة',
+'pt_group_col_sessions_total' => 'إجمالي الحصص',
+'pt_group_col_sessions_used' => 'المستخدم',
+'pt_group_col_sessions_remaining' => 'المتبقي',
+'pt_group_col_net_paid' => 'صافي المدفوع',
+'pt_group_col_outstanding' => 'متبقي ماليًا',
+
+// Table
+'pt_table_title' => 'تفاصيل PT Add-ons',
+'pt_table_hint' => 'الجدول يدعم البحث والترتيب.',
+
+// Columns
+'pt_col_date' => 'التاريخ',
+'pt_col_branch' => 'الفرع',
+'pt_col_member' => 'العضو',
+'pt_col_subscription' => 'الاشتراك',
+'pt_col_trainer' => 'المدرب',
+'pt_col_sessions_count' => 'إجمالي الحصص',
+'pt_col_sessions_used' => 'حصص مستخدمة',
+'pt_col_sessions_remaining' => 'حصص متبقية',
+'pt_col_session_price' => 'سعر الحصة',
+'pt_col_total_amount' => 'الإجمالي',
+'pt_col_paid' => 'مدفوع',
+'pt_col_refunded' => 'مسترد',
+'pt_col_net_paid' => 'صافي المدفوع',
+'pt_col_outstanding' => 'متبقي ماليًا',
+'pt_col_payment_state' => 'حالة السداد',
+'pt_col_notes' => 'ملاحظات',
+'pt_col_pta_id' => 'PTA#',
+'pt_col_plan' => 'الخطة',
+'pt_col_type' => 'النوع',
+'serial' => 'م',
+'member_code' => 'كود العضو',
+// Added keys (Sales report)
+'sales_filter_member_q' => 'بحث العضو (اسم/كود)',
+'sales_filter_member_q_ph' => 'مثال: M-0001 أو أحمد',
 
 
+    'pay_filter_member_q' => 'بحث العضو (اسم/كود)',
+    'pay_filter_member_q_ph' => 'مثال: M-0001 أو أحمد',
+    'pay_filter_member_q_hint' => 'ابحث بالاسم أو كود العضو.',
 
+    'pay_filter_source_hint' => 'يميز بين الاشتراك الأساسي و PT (حسب المصدر في payments/invoices).',
 
+    'pay_source_main_and_pt' => 'اشتراك + PT',
+    'pay_source_main_only' => 'اشتراك فقط',
+    'pay_source_pt_only' => 'PT فقط',
 ];

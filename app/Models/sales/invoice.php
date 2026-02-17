@@ -25,6 +25,7 @@ class Invoice extends Model
         'paid_at',
         'notes',
         'user_add',
+        'source',
     ];
 
     protected $casts = [
