@@ -13,9 +13,20 @@
     $filterOptions = $filterOptions ?? [];
 
     $groupByOptions = $filterOptions['group_by'] ?? [];
-    $paymentStates = $filterOptions['payment_states'] ?? [];
     $sources = $filterOptions['sources'] ?? [];
-    $paymentStatuses = $filterOptions['payment_statuses'] ?? [];
+
+    // Fix: when translation key is missing, Laravel returns the key itself (not null)
+    $tr = function($key, $fallback){
+        $v = __($key);
+        return ($v === $key || $v === '') ? $fallback : $v;
+    };
+
+    // Source value label (for dropdown display)
+    $sourceLabel = function($source) use ($tr){
+        $s = strtolower(trim((string)$source));
+        if ($s === 'reception') return $tr('reports.source_reception', 'الاستقبال');
+        return (string)$source;
+    };
 @endphp
 
 <style>
@@ -40,9 +51,9 @@
     </div>
 </div>
 
-{{-- KPIs --}}
+{{-- KPIs (Payment removed) --}}
 <div class="row g-3 mb-3">
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card border mb-0 kpi-card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -64,7 +75,7 @@
         </div>
     </div>
 
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card border mb-0 kpi-card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -89,49 +100,24 @@
         </div>
     </div>
 
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card border mb-0 kpi-card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <small class="text-muted">{{ __('reports.pt_kpi_net_paid') ?? 'صافي المدفوع' }}</small>
-                        <h4 class="mb-0" id="kpi_net_paid">{{ (float)($kpis['net_paid_sum'] ?? 0) }}</h4>
-                    </div>
-                    <div class="avatar-sm">
-                        <span class="avatar-title rounded bg-soft-info text-info">
-                            <i class="ri-check-double-line fs-20"></i>
-                        </span>
-                    </div>
-                </div>
-                <small class="text-muted d-block mt-1">
-                    {{ __('reports.pt_kpi_paid') ?? 'مدفوع' }}:
-                    <span id="kpi_paid">{{ (float)($kpis['paid_sum'] ?? 0) }}</span>
-                    —
-                    {{ __('reports.pt_kpi_refunded') ?? 'مسترد' }}:
-                    <span id="kpi_refunded">{{ (float)($kpis['refunded_sum'] ?? 0) }}</span>
-                </small>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="card border mb-0 kpi-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <small class="text-muted">{{ __('reports.pt_kpi_outstanding') ?? 'متبقي ماليًا' }}</small>
-                        <h4 class="mb-0" id="kpi_outstanding">{{ (float)($kpis['outstanding_sum'] ?? 0) }}</h4>
+                        <small class="text-muted">{{ __('reports.pt_kpi_unique') ?? 'إحصائيات' }}</small>
+                        <h4 class="mb-0">
+                            <span id="kpi_unique_members">{{ (int)($kpis['unique_members'] ?? 0) }}</span>
+                            <small class="text-muted">{{ __('reports.pt_kpi_unique_members') ?? 'أعضاء' }}</small>
+                        </h4>
                     </div>
                     <div class="avatar-sm">
                         <span class="avatar-title rounded bg-soft-warning text-warning">
-                            <i class="ri-alert-line fs-20"></i>
+                            <i class="ri-user-3-line fs-20"></i>
                         </span>
                     </div>
                 </div>
                 <small class="text-muted d-block mt-1">
-                    {{ __('reports.pt_kpi_unique_members') ?? 'أعضاء' }}:
-                    <span id="kpi_unique_members">{{ (int)($kpis['unique_members'] ?? 0) }}</span>
-                    —
                     {{ __('reports.pt_kpi_unique_subs') ?? 'اشتراكات' }}:
                     <span id="kpi_unique_subs">{{ (int)($kpis['unique_subscriptions'] ?? 0) }}</span>
                 </small>
@@ -140,7 +126,7 @@
     </div>
 </div>
 
-{{-- Filters --}}
+{{-- Filters (Payment removed) --}}
 <div class="card border shadow-none mb-3">
     <div class="card-body">
         <form method="get" action="{{ route('pt_addons_report.index') }}" class="row g-2 align-items-end" id="filtersForm">
@@ -181,12 +167,12 @@
             </div>
 
             <div class="col-md-2">
-                <label class="form-label mb-1">{{ __('reports.pt_filter_member') ?? 'Member ID' }}</label>
+                <label class="form-label mb-1">{{ __('reports.pt_filter_member') ?? 'رقم العضو' }}</label>
                 <input type="number" class="form-control" name="member_id" value="{{ $filters['member_id'] ?? '' }}" min="1" step="1">
             </div>
 
             <div class="col-md-2">
-                <label class="form-label mb-1">{{ __('reports.pt_filter_subscription') ?? 'Subscription ID' }}</label>
+                <label class="form-label mb-1">{{ __('reports.pt_filter_subscription') ?? 'رقم الاشتراك' }}</label>
                 <input type="number" class="form-control" name="member_subscription_id" value="{{ $filters['member_subscription_id'] ?? '' }}" min="1" step="1">
             </div>
 
@@ -195,7 +181,9 @@
                 <select name="source" class="form-select select2">
                     <option value="">{{ __('reports.sub_all') ?? 'الكل' }}</option>
                     @foreach(($sources ?? []) as $s)
-                        <option value="{{ $s }}" {{ (string)($filters['source'] ?? '') === (string)$s ? 'selected' : '' }}>{{ $s }}</option>
+                        <option value="{{ $s }}" {{ (string)($filters['source'] ?? '') === (string)$s ? 'selected' : '' }}>
+                            {{ $sourceLabel($s) }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -206,29 +194,6 @@
                     <option value="0" {{ (string)($filters['only_remaining'] ?? '0') === '0' ? 'selected' : '' }}>{{ __('reports.sub_no') ?? 'لا' }}</option>
                     <option value="1" {{ (string)($filters['only_remaining'] ?? '0') === '1' ? 'selected' : '' }}>{{ __('reports.sub_yes') ?? 'نعم' }}</option>
                 </select>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label mb-1">{{ __('reports.pt_filter_payment_state') ?? 'حالة السداد' }}</label>
-                <select name="payment_state" class="form-select">
-                    @foreach(($paymentStates ?? []) as $ps)
-                        <option value="{{ $ps['value'] }}" {{ (string)($filters['payment_state'] ?? '') === (string)$ps['value'] ? 'selected' : '' }}>
-                            {{ $ps['label'] }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label mb-1">{{ __('reports.pt_filter_payment_status') ?? 'Payment status' }}</label>
-                <select name="payment_status" class="form-select select2">
-                    @foreach(($paymentStatuses ?? []) as $opt)
-                        <option value="{{ $opt['value'] }}" {{ (string)($filters['payment_status'] ?? '') === (string)$opt['value'] ? 'selected' : '' }}>
-                            {{ $opt['label'] }}
-                        </option>
-                    @endforeach
-                </select>
-                <small class="text-muted">{{ __('reports.pt_filter_payment_status_hint') ?? 'يعمل فقط على مدفوعات PTA (reference يبدأ بـ PTA#)' }}</small>
             </div>
 
             <div class="col-md-2">
@@ -262,37 +227,30 @@
                 </select>
             </div>
 
-            <div class="col-12 d-flex justify-content-between flex-wrap gap-2 mt-2">
-                <div class="alert alert-info mb-0 py-2 px-3">
-                    <i class="mdi mdi-information-outline"></i>
-                    <strong>{{ __('reports.pt_tip') ?? 'حساب السداد يتم من payments.reference بصيغة PTA#ID، لذلك يلزم الالتزام بهذا النمط.' }}</strong>
-                </div>
+            <div class="col-12 d-flex justify-content-end flex-wrap gap-2 mt-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-search-line align-bottom me-1"></i> {{ __('reports.search') ?? 'بحث' }}
+                </button>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-search-line align-bottom me-1"></i> {{ __('reports.search') ?? 'بحث' }}
-                    </button>
+                <a class="btn btn-soft-secondary" href="{{ route('pt_addons_report.index') }}">
+                    <i class="ri-refresh-line align-bottom me-1"></i> {{ __('reports.reset') ?? 'إعادة تعيين' }}
+                </a>
 
-                    <a class="btn btn-soft-secondary" href="{{ route('pt_addons_report.index') }}">
-                        <i class="ri-refresh-line align-bottom me-1"></i> {{ __('reports.reset') ?? 'إعادة تعيين' }}
-                    </a>
+                <a class="btn btn-soft-success" target="_blank" id="btnPrint"
+                   href="{{ route('pt_addons_report.index', array_merge(request()->all(), ['action' => 'print'])) }}">
+                    <i class="ri-printer-line align-bottom me-1"></i> {{ __('reports.print') ?? 'طباعة' }}
+                </a>
 
-                    <a class="btn btn-soft-success" target="_blank" id="btnPrint"
-                       href="{{ route('pt_addons_report.index', array_merge(request()->all(), ['action' => 'print'])) }}">
-                        <i class="ri-printer-line align-bottom me-1"></i> {{ __('reports.print') ?? 'طباعة' }}
-                    </a>
-
-                    <a class="btn btn-soft-success" id="btnExport"
-                       href="{{ route('pt_addons_report.index', array_merge(request()->all(), ['action' => 'export_excel'])) }}">
-                        <i class="ri-file-excel-2-line align-bottom me-1"></i> {{ __('reports.export_excel') ?? 'تصدير Excel' }}
-                    </a>
-                </div>
+                <a class="btn btn-soft-success" id="btnExport"
+                   href="{{ route('pt_addons_report.index', array_merge(request()->all(), ['action' => 'export_excel'])) }}">
+                    <i class="ri-file-excel-2-line align-bottom me-1"></i> {{ __('reports.export_excel') ?? 'تصدير Excel' }}
+                </a>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Group Summary --}}
+{{-- Group Summary (Payment removed) --}}
 <div class="card mb-3">
     <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h5 class="card-title mb-0">{{ __('reports.pt_group_title') ?? 'ملخص التجميع' }}</h5>
@@ -309,19 +267,17 @@
                     <th>{{ __('reports.pt_group_col_sessions_total') ?? 'حصص' }}</th>
                     <th>{{ __('reports.pt_group_col_sessions_used') ?? 'مستخدم' }}</th>
                     <th>{{ __('reports.pt_group_col_sessions_remaining') ?? 'متبقي' }}</th>
-                    <th>{{ __('reports.pt_group_col_net_paid') ?? 'صافي المدفوع' }}</th>
-                    <th>{{ __('reports.pt_group_col_outstanding') ?? 'متبقي ماليًا' }}</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr><td colspan="8" class="text-center text-muted py-3">{{ __('reports.loading') ?? 'جاري التحميل...' }}</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-3">{{ __('reports.loading') ?? 'جاري التحميل...' }}</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-{{-- Detail Table --}}
+{{-- Detail Table (Payment removed + PTA# removed) --}}
 <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h5 class="card-title mb-0">{{ __('reports.pt_table_title') ?? 'تفاصيل PT Add-ons' }}</h5>
@@ -346,14 +302,7 @@
                     <th>{{ __('reports.pt_col_session_price') ?? 'سعر الحصة' }}</th>
                     <th>{{ __('reports.pt_col_total_amount') ?? 'الإجمالي' }}</th>
 
-                    <th>{{ __('reports.pt_col_paid') ?? 'مدفوع' }}</th>
-                    <th>{{ __('reports.pt_col_refunded') ?? 'مسترد' }}</th>
-                    <th>{{ __('reports.pt_col_net_paid') ?? 'صافي' }}</th>
-                    <th>{{ __('reports.pt_col_outstanding') ?? 'متبقي' }}</th>
-
-                    <th>{{ __('reports.pt_col_payment_state') ?? 'حالة السداد' }}</th>
                     <th>{{ __('reports.pt_col_notes') ?? 'ملاحظات' }}</th>
-                    <th>{{ __('reports.pt_col_pta_id') ?? 'PTA#' }}</th>
                 </tr>
                 </thead>
                 <tbody></tbody>
@@ -382,8 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
         obj.source = $form.find('[name="source"]').val() || '';
 
         obj.only_remaining = $form.find('[name="only_remaining"]').val() || '0';
-        obj.payment_state = $form.find('[name="payment_state"]').val() || '';
-        obj.payment_status = $form.find('[name="payment_status"]').val() || '';
 
         obj.sessions_from = $form.find('[name="sessions_from"]').val() || '';
         obj.sessions_to = $form.find('[name="sessions_to"]').val() || '';
@@ -448,11 +395,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 $('#kpi_sessions_used').text(parseInt(res.sessions_used_sum || 0, 10));
                 $('#kpi_sessions_remaining').text(parseInt(res.sessions_remaining_sum || 0, 10));
 
-                $('#kpi_paid').text(res.paid_sum || 0);
-                $('#kpi_refunded').text(res.refunded_sum || 0);
-                $('#kpi_net_paid').text(res.net_paid_sum || 0);
-                $('#kpi_outstanding').text(res.outstanding_sum || 0);
-
                 $('#kpi_unique_members').text(parseInt(res.unique_members || 0, 10));
                 $('#kpi_unique_subs').text(parseInt(res.unique_subscriptions || 0, 10));
             }
@@ -472,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $tbody.empty();
 
                 if (!res || !res.rows || !res.rows.length) {
-                    $tbody.append('<tr><td colspan="8" class="text-center text-muted py-3">{{ __("reports.no_results") ?? "لا توجد نتائج" }}</td></tr>');
+                    $tbody.append('<tr><td colspan="6" class="text-center text-muted py-3">{{ __("reports.no_results") ?? "لا توجد نتائج" }}</td></tr>');
                     return;
                 }
 
@@ -484,8 +426,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<td class="text-center">' + (r.sessions_total_sum || 0) + '</td>' +
                         '<td class="text-center">' + (r.sessions_used_sum || 0) + '</td>' +
                         '<td class="text-center">' + (r.sessions_remaining_sum || 0) + '</td>' +
-                        '<td class="text-center">' + (r.net_paid_sum || 0) + '</td>' +
-                        '<td class="text-center">' + (r.outstanding_sum || 0) + '</td>' +
                     '</tr>';
                     $tbody.append(tr);
                 });
@@ -528,25 +468,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 d.source = f.source;
 
                 d.only_remaining = f.only_remaining;
-                d.payment_state = f.payment_state;
-                d.payment_status = f.payment_status;
 
                 d.sessions_from = f.sessions_from;
                 d.sessions_to = f.sessions_to;
 
                 d.amount_from = f.amount_from;
                 d.amount_to = f.amount_to;
+
+                d.group_by = f.group_by;
             }
         },
         columnDefs: [
-            { targets: [3, 15], className: 'dt-cell-wrap' }
+            // member, subscription, notes
+            { targets: [2, 3, 10], className: 'dt-cell-wrap' }
         ],
         columns: [
             { data: 'date', name: 'pta.created_at' },
-            { data: 'branch', name: 'branch' },
-            { data: 'member', name: 'member' },
-            { data: 'subscription', name: 'subscription' },
-            { data: 'trainer', name: 'trainer' },
+            { data: 'branch', name: 'b.name' },
+            { data: 'member', name: 'member_name', orderable: false, searchable: true },
+            { data: 'subscription', name: 'pta.member_subscription_id', orderable: false, searchable: true },
+            { data: 'trainer', name: 'trainer_name' },
 
             { data: 'sessions_count', name: 'pta.sessions_count' },
             { data: 'sessions_used', name: 'sessions_used' },
@@ -555,14 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
             { data: 'session_price', name: 'pta.session_price' },
             { data: 'total_amount', name: 'pta.total_amount' },
 
-            { data: 'paid_sum', name: 'paid_sum' },
-            { data: 'refunded_sum', name: 'refunded_sum' },
-            { data: 'net_paid', name: 'net_paid' },
-            { data: 'outstanding', name: 'outstanding' },
-
-            { data: 'payment_state', name: 'payment_state' },
             { data: 'notes', name: 'pta.notes' },
-            { data: 'pta_id', name: 'pta.id' },
         ]
     });
 

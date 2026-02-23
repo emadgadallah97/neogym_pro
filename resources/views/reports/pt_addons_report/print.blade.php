@@ -28,6 +28,22 @@
     $fmt = function($v){
         return number_format((float)$v, 2, '.', '');
     };
+
+    // Fix: when translation key is missing, Laravel returns the key itself (not null)
+    $tr = function($key, $fallback){
+        $v = __($key);
+        return ($v === $key || $v === '') ? $fallback : $v;
+    };
+
+    // Source label (for values like reception)
+    $sourceLabel = function($source) use ($tr){
+        $s = strtolower(trim((string)$source));
+        if ($s === '') return '-';
+
+        if ($s === 'reception') return $tr('reports.source_reception', 'الاستقبال');
+
+        return (string)$source;
+    };
 @endphp
 <html lang="{{ app()->getLocale() }}" dir="{{ $rtl ? 'rtl' : 'ltr' }}">
 <head>
@@ -70,6 +86,7 @@
         .muted{color:#777}
         .small{font-size:9px}
         .block{display:block}
+        .fw-semibold{font-weight:600}
 
         @media print{
             .no-print{display:none!important}
@@ -118,8 +135,8 @@
             <div>{{ __('reports.generated_at') ?? 'تاريخ الإنشاء' }}: {{ $meta['generated_at'] ?? now('Africa/Cairo')->format('Y-m-d H:i') }}</div>
             <div>{{ __('reports.items_count') ?? 'عدد السجلات' }}: {{ $meta['total_count'] ?? $rows->count() }}</div>
             <div>{{ __('reports.pt_kpi_total_amount') ?? 'إجمالي القيمة' }}: {{ (float)($kpis['total_amount_sum'] ?? 0) }}</div>
-            <div>{{ __('reports.pt_kpi_net_paid') ?? 'صافي المدفوع' }}: {{ (float)($kpis['net_paid_sum'] ?? 0) }}</div>
-            <div>{{ __('reports.pt_kpi_outstanding') ?? 'متبقي ماليًا' }}: {{ (float)($kpis['outstanding_sum'] ?? 0) }}</div>
+            <div>{{ __('reports.pt_kpi_sessions_total') ?? 'إجمالي الحصص' }}: {{ (int)($kpis['sessions_total_sum'] ?? 0) }}</div>
+            <div>{{ __('reports.pt_kpi_unique_members') ?? 'أعضاء' }}: {{ (int)($kpis['unique_members'] ?? 0) }}</div>
         </div>
     </div>
 
@@ -134,6 +151,7 @@
         </div>
     @endif
 
+    {{-- KPIs (Payment removed) --}}
     <div class="summary-cards">
         <div class="summary-card">
             <div class="summary-label">{{ __('reports.pt_kpi_addons_count') ?? 'عدد الإضافات' }}</div>
@@ -152,10 +170,10 @@
             </div>
         </div>
         <div class="summary-card">
-            <div class="summary-label">{{ __('reports.pt_kpi_net_paid') ?? 'صافي المدفوع / المتبقي' }}</div>
+            <div class="summary-label">{{ __('reports.pt_kpi_unique_members') ?? 'أعضاء / اشتراكات' }}</div>
             <div class="summary-value">
-                {{ (float)($kpis['net_paid_sum'] ?? 0) }} /
-                {{ (float)($kpis['outstanding_sum'] ?? 0) }}
+                {{ (int)($kpis['unique_members'] ?? 0) }} /
+                {{ (int)($kpis['unique_subscriptions'] ?? 0) }}
             </div>
         </div>
     </div>
@@ -163,17 +181,16 @@
     <h3 class="section-title">{{ __('reports.pt_group_title') ?? 'ملخص التجميع' }}</h3>
     <div class="section-subtitle">{{ __('reports.pt_group_hint') ?? 'حسب خيار التجميع' }}</div>
 
+    {{-- Group table (Payment removed) --}}
     <div class="table-wrap">
         <table>
             <colgroup>
-                <col style="width:28%">
-                <col style="width:10%">
-                <col style="width:12%">
-                <col style="width:10%">
-                <col style="width:10%">
-                <col style="width:10%">
-                <col style="width:10%">
-                <col style="width:10%">
+                <col style="width:34%">
+                <col style="width:11%">
+                <col style="width:15%">
+                <col style="width:13%">
+                <col style="width:13%">
+                <col style="width:14%">
             </colgroup>
             <thead>
             <tr>
@@ -183,8 +200,6 @@
                 <th>{{ __('reports.pt_group_col_sessions_total') ?? 'حصص' }}</th>
                 <th>{{ __('reports.pt_group_col_sessions_used') ?? 'مستخدم' }}</th>
                 <th>{{ __('reports.pt_group_col_sessions_remaining') ?? 'متبقي' }}</th>
-                <th>{{ __('reports.pt_group_col_net_paid') ?? 'صافي المدفوع' }}</th>
-                <th>{{ __('reports.pt_group_col_outstanding') ?? 'متبقي ماليًا' }}</th>
             </tr>
             </thead>
             <tbody>
@@ -196,11 +211,9 @@
                     <td class="text-center">{{ (int)($g['sessions_total_sum'] ?? 0) }}</td>
                     <td class="text-center">{{ (int)($g['sessions_used_sum'] ?? 0) }}</td>
                     <td class="text-center">{{ (int)($g['sessions_remaining_sum'] ?? 0) }}</td>
-                    <td class="text-center">{{ (float)($g['net_paid_sum'] ?? 0) }}</td>
-                    <td class="text-center">{{ (float)($g['outstanding_sum'] ?? 0) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="text-center" style="padding:18px;color:#999">{{ __('reports.no_results') ?? 'لا توجد نتائج' }}</td></tr>
+                <tr><td colspan="6" class="text-center" style="padding:18px;color:#999">{{ __('reports.no_results') ?? 'لا توجد نتائج' }}</td></tr>
             @endforelse
             </tbody>
         </table>
@@ -209,21 +222,22 @@
     <h3 class="section-title">{{ __('reports.pt_table_title') ?? 'تفاصيل PT Add-ons' }}</h3>
     <div class="section-subtitle">{{ __('reports.items_count') ?? 'عدد السجلات' }}: {{ $rows->count() }}</div>
 
+    {{-- Detail table (Member details + payment removed + PTA removed) --}}
     <div class="table-wrap">
         <table>
             <colgroup>
                 <col style="width:4%">
                 <col style="width:10%">
                 <col style="width:10%">
-                <col style="width:7%">
-                <col style="width:14%">
+                <col style="width:12%">
+                <col style="width:18%">
                 <col style="width:10%">
                 <col style="width:7%">
                 <col style="width:7%">
                 <col style="width:7%">
-                <col style="width:7%">
-                <col style="width:7%">
-                <col style="width:10%">
+                <col style="width:8%">
+                <col style="width:8%">
+                <col style="width:9%">
             </colgroup>
             <thead>
             <tr>
@@ -236,9 +250,9 @@
                 <th>{{ __('reports.pt_col_sessions_count') ?? 'إجمالي' }}</th>
                 <th>{{ __('reports.pt_col_sessions_used') ?? 'مستخدم' }}</th>
                 <th>{{ __('reports.pt_col_sessions_remaining') ?? 'متبقي' }}</th>
+                <th>{{ __('reports.pt_col_session_price') ?? 'سعر الحصة' }}</th>
                 <th>{{ __('reports.pt_col_total_amount') ?? 'الإجمالي' }}</th>
-                <th>{{ __('reports.pt_col_net_paid') ?? 'صافي' }}</th>
-                <th>{{ __('reports.pt_col_outstanding') ?? 'متبقي' }}</th>
+                <th>{{ __('reports.pt_col_notes') ?? 'ملاحظات' }}</th>
             </tr>
             </thead>
             <tbody>
@@ -254,30 +268,37 @@
                     $sessionsRemaining = (int)($r->sessions_remaining ?? 0);
                     $sessionsUsed = max(0, $sessionsCount - $sessionsRemaining);
 
-                    $paidSum = (float)($r->paid_sum ?? 0);
-                    $refSum  = (float)($r->refunded_sum ?? 0);
-                    $netPaid = $paidSum - $refSum;
-                    $outstanding = (float)($r->total_amount ?? 0) - $netPaid;
+                    $memberName = trim((string)($r->member_name ?? ''));
+                    $memberCode = trim((string)($r->member_code ?? ''));
+                    $srcLabel = $sourceLabel($r->source ?? null);
                 @endphp
                 <tr>
                     <td class="text-center">{{ $i + 1 }}</td>
                     <td class="text-center">{{ $date }}</td>
                     <td class="wrap">{{ $branchName }}</td>
-                    <td class="text-center">#{{ $r->member_id ?? '-' }}</td>
+
+                    {{-- UPDATED: member details --}}
+                    <td class="wrap">
+                        <span class="block fw-semibold">{{ $memberName !== '' ? $memberName : ('#'.($r->member_id ?? '-')) }}</span>
+                        <span class="block muted small">{{ $tr('reports.member_code','كود العضو') }}: {{ $memberCode !== '' ? $memberCode : '-' }}</span>
+                        <span class="block muted small">{{ $tr('reports.pt_col_member_id','رقم العضو') }}: #{{ $r->member_id ?? '-' }}</span>
+                    </td>
+
+                    {{-- UPDATED: subscription block, source fixed, PTA removed --}}
                     <td class="wrap">
                         <span class="block"><span class="muted small">{{ __('reports.pt_col_subscription') ?? 'الاشتراك' }}:</span> #{{ $r->member_subscription_id ?? '-' }}</span>
                         <span class="block muted small">{{ __('reports.pt_col_plan') ?? 'الخطة' }}: {{ $r->plan_code ? ($r->plan_code . ' - ') : '' }}{{ $planName }}</span>
                         <span class="block muted small">{{ __('reports.pt_col_type') ?? 'النوع' }}: {{ $typeName }}</span>
-                        <span class="block muted small">{{ __('reports.pt_col_source') ?? 'المصدر' }}: {{ $r->source ?? '-' }}</span>
-                        <span class="block muted small">{{ __('reports.pt_col_pta_id') ?? 'PTA#' }}: {{ $r->pta_id ?? '-' }}</span>
+                        <span class="block muted small">{{ $tr('reports.pt_col_source','المصدر') }}: {{ $srcLabel }}</span>
                     </td>
+
                     <td class="wrap">{{ $r->trainer_name ?? '-' }}</td>
                     <td class="text-center">{{ $sessionsCount }}</td>
                     <td class="text-center">{{ $sessionsUsed }}</td>
                     <td class="text-center">{{ $sessionsRemaining }}</td>
+                    <td class="text-center">{{ $fmt($r->session_price ?? 0) }}</td>
                     <td class="text-center">{{ $fmt($r->total_amount ?? 0) }}</td>
-                    <td class="text-center">{{ $fmt($netPaid) }}</td>
-                    <td class="text-center">{{ $fmt($outstanding) }}</td>
+                    <td class="wrap">{{ $r->notes ?? '' }}</td>
                 </tr>
             @empty
                 <tr>

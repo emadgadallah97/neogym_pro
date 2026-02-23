@@ -70,6 +70,7 @@
         .muted{color:#777}
         .small{font-size:9px}
         .block{display:block}
+        .fw-semibold{font-weight:600}
 
         @media print{
             .no-print{display:none!important}
@@ -199,12 +200,12 @@
                 <col style="width:4%">
                 <col style="width:10%">
                 <col style="width:10%">
-                <col style="width:8%">
+                <col style="width:10%">
                 <col style="width:16%">
-                <col style="width:9%">
+                <col style="width:8%">
+                <col style="width:8%">
                 <col style="width:9%">
                 <col style="width:10%">
-                <col style="width:9%">
                 <col style="width:15%">
             </colgroup>
             <thead>
@@ -230,12 +231,22 @@
                     $saleDate = $r->sale_date ? \Carbon\Carbon::parse($r->sale_date)->format('Y-m-d H:i') : '-';
                     $excluded = ((int)($r->is_excluded ?? 0) === 1);
                     $paid = ((int)($r->commission_is_paid ?? 0) === 1);
+
+                    // UPDATED: member name & code
+                    $memberName = trim((string)($r->member_name ?? ''));
+                    $memberCode = trim((string)($r->member_code ?? ''));
                 @endphp
                 <tr>
                     <td class="text-center">{{ $i + 1 }}</td>
                     <td class="text-center">{{ $saleDate }}</td>
                     <td class="wrap">{{ $branchName }}</td>
-                    <td class="text-center">#{{ $r->member_id ?? '-' }}</td>
+
+                    {{-- UPDATED: Member column with name & code --}}
+                    <td class="wrap">
+                        <span class="block fw-semibold">{{ $memberName ?: ('#' . ($r->member_id ?? '-')) }}</span>
+                        <span class="block muted small">{{ __('reports.member_code') ?? 'كود العضو' }}: {{ $memberCode ?: '-' }}</span>
+                    </td>
+
                     <td class="wrap">
                         <span class="block"><span class="muted small">{{ __('reports.com_col_subscription') ?? 'الاشتراك' }}:</span> #{{ $r->subscription_id ?? '-' }}</span>
                         <span class="block muted small">{{ __('reports.com_col_plan') ?? 'الخطة' }}: {{ $planName }}</span>

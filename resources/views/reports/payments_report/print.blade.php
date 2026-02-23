@@ -46,13 +46,14 @@
     };
 
     $sourceLabel = function($kind){
-        $k = (string)$kind;
+        $k = trim((string)$kind);
+        if ($k === '') return '-';
         $map = [
             'main_subscription&PT' => __('reports.pay_source_main_and_pt') ?? 'اشتراك + PT',
             'main_subscription_only' => __('reports.pay_source_main_only') ?? 'اشتراك فقط',
             'PT_only' => __('reports.pay_source_pt_only') ?? 'PT فقط',
         ];
-        return $map[$k] ?? '';
+        return $map[$k] ?? '-';
     };
 @endphp
 <html lang="{{ app()->getLocale() }}" dir="{{ $rtl ? 'rtl' : 'ltr' }}">
@@ -237,7 +238,7 @@
                 <col style="width:10%">
                 <col style="width:10%">
                 <col style="width:14%">
-                <col style="width:20%">
+                <col style="width:18%">
                 <col style="width:8%">
                 <col style="width:10%">
                 <col style="width:10%">
@@ -269,8 +270,8 @@
                     $memberName = trim((string)($r->member_name ?? ''));
                     $memberCode = trim((string)($r->member_code ?? ''));
 
-                    $srcKind = (string)($r->source_kind ?? '');
-                    $srcLbl = $sourceLabel($srcKind);
+                    $srcKind = trim((string)($r->source_kind ?? ''));
+                    $srcLbl  = $sourceLabel($srcKind);
                 @endphp
                 <tr>
                     <td class="text-center">{{ $i + 1 }}</td>
@@ -289,17 +290,10 @@
                         <span class="block"><span class="muted small">{{ __('reports.pay_col_subscription') ?? 'الاشتراك' }}:</span> #{{ $r->member_subscription_id ?? '-' }}</span>
                         <span class="block muted small">{{ __('reports.pay_col_plan') ?? 'الخطة' }}: {{ ($r->plan_code ? ($r->plan_code.' - ') : '') . $planName }}</span>
                         <span class="block muted small">{{ __('reports.pay_col_type') ?? 'النوع' }}: {{ $typeName }}</span>
-                        @if($srcLbl)
-                            <span class="block muted small">{{ __('reports.pay_col_source') ?? 'المصدر' }}: {{ $srcLbl }}</span>
-                        @endif
                     </td>
 
-                    <td class="text-center">
-                        <span class="block">{{ $srcKind ?: '-' }}</span>
-                        @if($srcLbl)
-                            <span class="block muted small">{{ $srcLbl }}</span>
-                        @endif
-                    </td>
+                    {{-- Source column: show TRANSLATION ONLY --}}
+                    <td class="text-center">{{ $srcLbl }}</td>
 
                     <td class="wrap text-center">{{ $r->reference ?? '-' }}</td>
                     <td class="wrap text-center">{{ $r->user_add_name ?? '-' }}</td>

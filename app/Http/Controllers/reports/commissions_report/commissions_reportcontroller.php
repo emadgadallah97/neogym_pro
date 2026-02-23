@@ -90,11 +90,13 @@ class commissions_reportcontroller extends Controller
             'date_to' => $request->get('date_to'),
             'branch_ids' => (array)$request->get('branch_ids', []),
 
+            'member_q' => $request->get('member_q'),
+
             'sales_employee_id' => $request->get('sales_employee_id'),
-            'commission_is_paid' => $request->get('commission_is_paid'), // 1/0
-            'has_settlement' => $request->get('has_settlement'), // 1/0
+            'commission_is_paid' => $request->get('commission_is_paid'),
+            'has_settlement' => $request->get('has_settlement'),
             'settlement_status' => $request->get('settlement_status'),
-            'is_excluded' => $request->get('is_excluded'), // 1/0
+            'is_excluded' => $request->get('is_excluded'),
 
             'source' => $request->get('source'),
 
@@ -190,7 +192,12 @@ class commissions_reportcontroller extends Controller
                 'sale_date' => e($saleDate),
                 'branch' => e($branchName),
 
-                'member' => $this->buildMemberBlock($r->member_id ?? null),
+                'member' => $this->buildMemberBlock(
+                    $r->member_id ?? null,
+                    $r->member_name ?? null,
+                    $r->member_code ?? null
+                ),
+
                 'subscription' => $this->buildSubscriptionBlock(
                     $r->subscription_id ?? null,
                     $planName,
@@ -247,6 +254,9 @@ class commissions_reportcontroller extends Controller
             ->leftJoin('employees as se', function ($j) {
                 $j->on('se.id', '=', 'ms.sales_employee_id')->whereNull('se.deleted_at');
             })
+            ->leftJoin('members as m', function ($j) {
+                $j->on('m.id', '=', 'ms.member_id')->whereNull('m.deleted_at');
+            })
             ->select([
                 DB::raw("COALESCE(csi.subscription_created_at, ms.created_at) as sale_date"),
 
@@ -284,6 +294,10 @@ class commissions_reportcontroller extends Controller
                 'st.name as type_name',
 
                 DB::raw("TRIM(CONCAT(COALESCE(se.first_name,''),' ',COALESCE(se.last_name,''))) as sales_employee_name"),
+
+                // FIXED: Use first_name, last_name, member_code
+                DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))) as member_name"),
+                'm.member_code as member_code',
             ]);
 
         $this->applyFilters($q, $request);
@@ -302,12 +316,29 @@ class commissions_reportcontroller extends Controller
             $q->whereIn('ms.branch_id', $branchIds);
         }
 
-        // Date filter uses sale_date = COALESCE(csi.subscription_created_at, ms.created_at)
         if ($request->filled('date_from')) {
             $q->whereDate(DB::raw("DATE(COALESCE(csi.subscription_created_at, ms.created_at))"), '>=', $request->get('date_from'));
         }
         if ($request->filled('date_to')) {
             $q->whereDate(DB::raw("DATE(COALESCE(csi.subscription_created_at, ms.created_at))"), '<=', $request->get('date_to'));
+        }
+
+        // FIXED: member_q filter using first_name, last_name, member_code
+        if ($request->filled('member_q')) {
+            $mq = trim((string)$request->get('member_q'));
+            if ($mq !== '') {
+                $q->where(function ($w) use ($mq) {
+                    $like = '%' . $mq . '%';
+                    $w->where('m.first_name', 'like', $like)
+                      ->orWhere('m.last_name', 'like', $like)
+                      ->orWhere('m.member_code', 'like', $like)
+                      ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))"), 'like', $like);
+
+                    if (is_numeric($mq)) {
+                        $w->orWhere('ms.member_id', (int)$mq);
+                    }
+                });
+            }
         }
 
         if ($request->filled('sales_employee_id')) {
@@ -376,6 +407,11 @@ class commissions_reportcontroller extends Controller
             $w->orWhere('ms.plan_code', 'like', $like)
                 ->orWhere('ms.plan_name', 'like', $like)
                 ->orWhere('ms.source', 'like', $like)
+                // FIXED: search in member fields
+                ->orWhere('m.first_name', 'like', $like)
+                ->orWhere('m.last_name', 'like', $like)
+                ->orWhere('m.member_code', 'like', $like)
+                ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))"), 'like', $like)
                 ->orWhere(DB::raw("COALESCE(b.name,'')"), 'like', $like)
                 ->orWhere(DB::raw("COALESCE(st.name,'')"), 'like', $like)
                 ->orWhere(DB::raw("COALESCE(cs.status,'')"), 'like', $like)
@@ -444,6 +480,9 @@ class commissions_reportcontroller extends Controller
             ->leftJoin('commission_settlement_items as csi', function ($j) {
                 $j->on('csi.member_subscription_id', '=', 'ms.id')
                   ->on('csi.commission_settlement_id', '=', 'ms.commission_settlement_id');
+            })
+            ->leftJoin('members as m', function ($j) {
+                $j->on('m.id', '=', 'ms.member_id')->whereNull('m.deleted_at');
             });
 
         $this->applyFilters($q, $request);
@@ -507,7 +546,7 @@ class commissions_reportcontroller extends Controller
                 DB::raw("$sumExcludedExpr as excluded_commission"),
                 DB::raw("$sumPaidExpr as paid_commission"),
             ])->groupBy(DB::raw("COALESCE(csi.is_excluded,0)"));
-        } else { // source
+        } else {
             $q->select([
                 DB::raw("COALESCE(ms.source,'-') as group_id"),
                 DB::raw("COALESCE(ms.source,'-') as group_name"),
@@ -599,18 +638,16 @@ class commissions_reportcontroller extends Controller
             ->orderBy(DB::raw("COALESCE(csi.subscription_created_at, ms.created_at)"), 'desc')
             ->limit(50000)
             ->get();
-
         $locale = app()->getLocale();
         $isRtl = ($locale === 'ar');
-
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         if ($isRtl) $sheet->setRightToLeft(true);
-
         $headers = [
             __('reports.com_col_sale_date'),
             __('reports.com_col_branch'),
             __('reports.com_col_member'),
+            __('reports.member_code'),
             __('reports.com_col_subscription'),
             __('reports.com_col_sale_total'),
             __('reports.com_col_commission_base'),
@@ -622,9 +659,7 @@ class commissions_reportcontroller extends Controller
             __('reports.com_col_sales_employee'),
             __('reports.com_col_source'),
         ];
-
         $sheet->fromArray($headers, null, 'A1');
-
         $headerRange = 'A1:' . $sheet->getHighestColumn() . '1';
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => ['bold' => true, 'size' => 12],
@@ -644,33 +679,32 @@ class commissions_reportcontroller extends Controller
             ],
         ]);
         $sheet->freezePane('A2');
-
         $rowNum = 2;
         foreach ($rows as $r) {
             $branchName = $this->nameJsonOrText($r->branch_name ?? null, $locale) ?: '-';
             $saleDate = $r->sale_date ? Carbon::parse($r->sale_date)->format('Y-m-d H:i') : '-';
-
             $commissionValueType = (string)($r->commission_value_type ?? '');
             $commissionValue = (float)($r->commission_value ?? 0);
-
             $rule = $commissionValueType;
             if ($commissionValueType === 'percent') $rule = $commissionValue . '%';
             elseif ($commissionValueType === 'fixed') $rule = (string)$commissionValue;
-
             $excludedText = ((int)($r->is_excluded ?? 0) === 1)
                 ? (__('reports.sub_yes') . ' - ' . ($r->exclude_reason ?: ''))
                 : __('reports.sub_no');
-
             $paidText = ((int)($r->commission_is_paid ?? 0) === 1) ? __('reports.sub_yes') : __('reports.sub_no');
 
             $settlementText = $r->commission_settlement_id
                 ? ('#' . $r->commission_settlement_id . ' / ' . ($r->settlement_status ?? '-'))
                 : '-';
 
+            $memberName = trim((string)($r->member_name ?? ''));
+            $memberCode = trim((string)($r->member_code ?? ''));
+
             $sheet->fromArray([
                 $saleDate,
                 $branchName,
-                (string)($r->member_id ?? '-'),
+                $memberName ?: ('#' . ($r->member_id ?? '-')),
+                $memberCode ?: '-',
                 (string)($r->subscription_id ?? '-'),
                 (float)($r->sale_total ?? 0),
                 (float)($r->commission_base_amount ?? 0),
@@ -685,11 +719,9 @@ class commissions_reportcontroller extends Controller
 
             $rowNum++;
         }
-
         foreach (range('A', $sheet->getHighestColumn()) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-
         $dataRange = 'A1:' . $sheet->getHighestColumn() . ($rowNum - 1);
         $sheet->getStyle($dataRange)->applyFromArray([
             'borders' => [
@@ -699,13 +731,10 @@ class commissions_reportcontroller extends Controller
                 ],
             ],
         ]);
-
         $fileName = 'commissions_report_' . now('Africa/Cairo')->format('Ymd_His') . '.xlsx';
-
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
         header('Cache-Control: max-age=0');
-
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
@@ -713,10 +742,19 @@ class commissions_reportcontroller extends Controller
 
     // ===================== UI blocks =====================
 
-    private function buildMemberBlock($memberId): string
+    private function buildMemberBlock($memberId, $memberName, $memberCode): string
     {
         $id = $memberId ? (string)$memberId : '-';
-        return '<span class="fw-semibold">#' . e($id) . '</span>';
+        $name = trim((string)$memberName);
+        $code = trim((string)$memberCode);
+
+        $displayName = $name ?: ('#' . $id);
+        $displayCode = $code ?: '-';
+
+        return '<div class="d-flex flex-column">' .
+            '<span class="fw-semibold">' . e($displayName) . '</span>' .
+            '<small class="text-muted">' . e(__('reports.member_code') . ': ' . $displayCode) . '</small>' .
+            '</div>';
     }
 
     private function buildSubscriptionBlock($subId, $planName, $typeName, $source): string
@@ -761,7 +799,6 @@ class commissions_reportcontroller extends Controller
                 '<small class="text-muted">' . e($r !== '' ? $r : '-') . '</small>' .
                 '</div>';
         }
-
         return '<span class="badge bg-soft-success text-success">' . e(__('reports.com_included')) . '</span>';
     }
 
@@ -784,18 +821,14 @@ class commissions_reportcontroller extends Controller
     private function buildSettlementStatusBadge(?string $status): string
     {
         $s = strtolower(trim((string)$status));
-
-        // paid/draft/cancelled
         $map = [
             'paid' => ['success', 'paid'],
             'draft' => ['warning', 'draft'],
             'cancelled' => ['danger', 'cancelled'],
         ];
-
         if (isset($map[$s])) {
             return '<span class="badge bg-' . e($map[$s][0]) . '">' . e($map[$s][1]) . '</span>';
         }
-
         return '<span class="badge bg-dark">' . e($s ?: '-') . '</span>';
     }
 
@@ -804,11 +837,9 @@ class commissions_reportcontroller extends Controller
         if (!$settlementId) {
             return '<span class="badge bg-secondary">' . e(__('reports.com_unsettled')) . '</span>';
         }
-
         $st = (string)($status ?: '-');
         $dt = $paidAt ? Carbon::parse($paidAt)->format('Y-m-d H:i') : '-';
         $by = $paidByName ?: '-';
-
         return '<div class="d-flex flex-column">' .
             '<span class="fw-semibold">#' . e((string)$settlementId) . '</span>' .
             '<div class="mt-1">' . $this->buildSettlementStatusBadge($st) . '</div>' .
@@ -827,11 +858,9 @@ class commissions_reportcontroller extends Controller
     private function buildFilterChips(Request $request): array
     {
         $chips = [];
-
         if ($request->filled('date_from') || $request->filled('date_to')) {
             $chips[] = __('reports.com_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
         }
-
         $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
         if (!empty($branchIds)) {
             $branchNames = Branch::query()
@@ -846,6 +875,10 @@ class commissions_reportcontroller extends Controller
             $chips[] = __('reports.com_filter_branches') . ': ' . ($branchNames ?: '---');
         }
 
+        if ($request->filled('member_q')) {
+            $chips[] = __('reports.pay_filter_member_q') . ': ' . $request->get('member_q');
+        }
+
         foreach ([
             'sales_employee_id' => 'com_filter_sales_employee',
             'source' => 'com_filter_source',
@@ -855,35 +888,27 @@ class commissions_reportcontroller extends Controller
                 $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
             }
         }
-
         if ($request->filled('commission_is_paid')) {
             $chips[] = __('reports.com_filter_paid') . ': ' . ((string)$request->get('commission_is_paid') === '1' ? __('reports.com_paid') : __('reports.com_unpaid'));
         }
-
         if ($request->filled('has_settlement')) {
             $chips[] = __('reports.com_filter_has_settlement') . ': ' . ((string)$request->get('has_settlement') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
         }
-
         if ($request->filled('is_excluded')) {
             $chips[] = __('reports.com_filter_excluded') . ': ' . ((string)$request->get('is_excluded') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
         }
-
         if ($request->filled('amount_from') || $request->filled('amount_to')) {
             $chips[] = __('reports.com_filter_sale_amount') . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
         }
-
         if ($request->filled('commission_from') || $request->filled('commission_to')) {
             $chips[] = __('reports.com_filter_commission_amount') . ': ' . ($request->get('commission_from') ?: '---') . ' ⟶ ' . ($request->get('commission_to') ?: '---');
         }
-
         if ($request->filled('only_with_commission')) {
             $chips[] = __('reports.com_filter_only_with_commission') . ': ' . ((string)$request->get('only_with_commission') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
         }
-
         if ($request->filled('group_by')) {
             $chips[] = __('reports.com_filter_group_by') . ': ' . $request->get('group_by');
         }
-
         return $chips;
     }
 
@@ -913,32 +938,24 @@ class commissions_reportcontroller extends Controller
     private function nameJsonOrText($nameJsonOrText, string $locale): string
     {
         if ($nameJsonOrText === null) return '';
-
         if (is_array($nameJsonOrText)) {
             return (string)($nameJsonOrText[$locale] ?? $nameJsonOrText['ar'] ?? $nameJsonOrText['en'] ?? reset($nameJsonOrText) ?? '');
         }
-
         $v = (string)$nameJsonOrText;
-
         for ($i = 0; $i < 2; $i++) {
             $decoded = json_decode($v, true);
-
             if (json_last_error() !== JSON_ERROR_NONE) {
                 break;
             }
-
             if (is_array($decoded)) {
                 return (string)($decoded[$locale] ?? $decoded['ar'] ?? $decoded['en'] ?? reset($decoded) ?? '');
             }
-
             if (is_string($decoded)) {
                 $v = $decoded;
                 continue;
             }
-
             break;
         }
-
         return trim($v);
     }
 }

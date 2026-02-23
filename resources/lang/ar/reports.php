@@ -845,4 +845,14 @@ return [
     'pay_source_main_and_pt' => 'اشتراك + PT',
     'pay_source_main_only' => 'اشتراك فقط',
     'pay_source_pt_only' => 'PT فقط',
+
+    'loading' => 'جاري التحميل',
+
+    'pt_col_member_id' => 'رقم العضو',
+
+    // Sources (member_subscriptions.source)
+    'source_reception' => 'الاستقبال',
+
+    // KPIs
+    'pt_kpi_unique' => 'إحصائيات',
 ];

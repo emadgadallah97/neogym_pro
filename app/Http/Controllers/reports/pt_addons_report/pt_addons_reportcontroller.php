@@ -37,10 +37,6 @@ class pt_addons_reportcontroller extends Controller
                 return response()->json($this->groupSummary($request));
             }
 
-            if ($action === 'payment_statuses') {
-                return response()->json($this->paymentStatusOptionsFromDb());
-            }
-
             return $this->datatable($request);
         }
 
@@ -53,7 +49,6 @@ class pt_addons_reportcontroller extends Controller
         $trainers = DB::table('employees as e')
             ->whereNull('e.deleted_at')
             ->where(function ($w) {
-                // في مشروعك يوجد is_coach، لكن trainer قد يكون أي موظف؛ نخليه مرن
                 $w->where('e.is_coach', 1)->orWhereNull('e.is_coach')->orWhere('e.is_coach', 0);
             })
             ->select([
@@ -73,22 +68,18 @@ class pt_addons_reportcontroller extends Controller
             ->pluck('ms.source')
             ->toArray();
 
+        // UPDATED: Removed payment-related KPIs
         $kpis = [
             'addons_count' => 0,
             'total_amount_sum' => 0,
             'sessions_total_sum' => 0,
             'sessions_used_sum' => 0,
             'sessions_remaining_sum' => 0,
-
-            'paid_sum' => 0,
-            'refunded_sum' => 0,
-            'net_paid_sum' => 0,
-            'outstanding_sum' => 0,
-
             'unique_subscriptions' => 0,
             'unique_members' => 0,
         ];
 
+        // UPDATED: Removed payment filters (payment_state, payment_status)
         $filters = [
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
@@ -101,9 +92,7 @@ class pt_addons_reportcontroller extends Controller
 
             'source' => $request->get('source'),
 
-            'only_remaining' => $request->get('only_remaining', '0'), // 1/0
-            'payment_state' => $request->get('payment_state'), // unpaid/partial/paid/with_refund/outstanding
-            'payment_status' => $request->get('payment_status'), // from payments.status (optional)
+            'only_remaining' => $request->get('only_remaining', '0'),
 
             'sessions_from' => $request->get('sessions_from'),
             'sessions_to' => $request->get('sessions_to'),
@@ -114,12 +103,11 @@ class pt_addons_reportcontroller extends Controller
             'group_by' => $request->get('group_by', 'trainer'),
         ];
 
+        // UPDATED: Removed payment_states, payment_statuses
         $filterOptions = [
             'yes_no' => $this->yesNoOptions(),
             'group_by' => $this->groupByOptions(),
-            'payment_states' => $this->paymentStateOptions(),
             'sources' => $sources,
-            'payment_statuses' => $this->paymentStatusOptionsFromDb(),
         ];
 
         return view('reports.pt_addons_report.index', [
@@ -151,22 +139,23 @@ class pt_addons_reportcontroller extends Controller
         $orderDir = strtolower((string)data_get($request->input('order', []), '0.dir', 'desc'));
         $orderDir = in_array($orderDir, ['asc', 'desc'], true) ? $orderDir : 'desc';
 
+        // UPDATED: Remove payment + PTA# ordering columns
+        // Expected (new) columns order in index:
+        // 0 date, 1 branch, 2 member, 3 subscription, 4 trainer,
+        // 5 sessions_count, 6 sessions_used, 7 sessions_remaining,
+        // 8 session_price, 9 total_amount, 10 notes
         $columnsMap = [
             0  => 'pta.created_at',
             1  => 'b.name',
-            2  => 'ms.member_id',
-            3  => 'ms.id',
+            2  => DB::raw("member_name"),
+            3  => 'pta.member_subscription_id',
             4  => DB::raw("trainer_name"),
             5  => 'pta.sessions_count',
-            6  => 'pta.sessions_remaining',
-            7  => DB::raw("(pta.sessions_count - pta.sessions_remaining)"),
+            6  => DB::raw("(pta.sessions_count - pta.sessions_remaining)"),
+            7  => 'pta.sessions_remaining',
             8  => 'pta.session_price',
             9  => 'pta.total_amount',
-            10 => DB::raw("COALESCE(pay.paid_sum,0)"),
-            11 => DB::raw("COALESCE(pay.refunded_sum,0)"),
-            12 => DB::raw("(COALESCE(pay.paid_sum,0) - COALESCE(pay.refunded_sum,0))"),
-            13 => DB::raw("(pta.total_amount - (COALESCE(pay.paid_sum,0) - COALESCE(pay.refunded_sum,0)))"),
-            14 => 'pta.id',
+            10 => 'pta.notes',
         ];
 
         $orderBy = $columnsMap[$orderColIndex] ?? 'pta.created_at';
@@ -189,18 +178,25 @@ class pt_addons_reportcontroller extends Controller
             $sessionsRemaining = (int)($r->sessions_remaining ?? 0);
             $sessionsUsed = max(0, $sessionsCount - $sessionsRemaining);
 
-            $paidSum = (float)($r->paid_sum ?? 0);
-            $refSum  = (float)($r->refunded_sum ?? 0);
-            $netPaid = $paidSum - $refSum;
-            $outstanding = (float)($r->total_amount ?? 0) - $netPaid;
-
             $data[] = [
                 'rownum' => $start + $idx + 1,
                 'date' => $r->created_at ? Carbon::parse($r->created_at)->format('Y-m-d H:i') : '-',
                 'branch' => e($branchName),
 
-                'member' => $this->buildMemberBlock($r->member_id ?? null),
-                'subscription' => $this->buildSubscriptionBlock($r->member_subscription_id ?? null, $planName, $typeName, $r->source ?? null),
+                // UPDATED: Member details
+                'member' => $this->buildMemberBlock(
+                    $r->member_id ?? null,
+                    $r->member_name ?? null,
+                    $r->member_code ?? null
+                ),
+
+                // UPDATED: Source label fix + translate source value
+                'subscription' => $this->buildSubscriptionBlock(
+                    $r->member_subscription_id ?? null,
+                    $planName,
+                    $typeName,
+                    $r->source ?? null
+                ),
 
                 'trainer' => e($r->trainer_name ?: '-'),
 
@@ -211,14 +207,7 @@ class pt_addons_reportcontroller extends Controller
                 'session_price' => $this->fmtMoney($r->session_price ?? 0),
                 'total_amount' => $this->fmtMoney($r->total_amount ?? 0),
 
-                'paid_sum' => $this->fmtMoney($paidSum),
-                'refunded_sum' => $this->fmtMoney($refSum),
-                'net_paid' => $this->buildNetPaidBlock($netPaid, $refSum),
-                'outstanding' => $this->buildOutstandingBlock($outstanding),
-
-                'payment_state' => $this->buildPaymentStateBadge($paidSum, $refSum, (float)($r->total_amount ?? 0)),
                 'notes' => e($r->notes ?? ''),
-                'pta_id' => (int)($r->pta_id ?? 0),
             ];
         }
 
@@ -232,8 +221,6 @@ class pt_addons_reportcontroller extends Controller
 
     private function buildDetailQuery(Request $request, bool $applySearch = false, string $search = '')
     {
-        $paymentsAgg = $this->paymentsAggSubquery($request);
-
         $q = DB::table('member_subscription_pt_addons as pta')
             ->whereNull('pta.deleted_at')
             ->leftJoin('member_subscriptions as ms', function ($j) {
@@ -248,10 +235,12 @@ class pt_addons_reportcontroller extends Controller
             ->leftJoin('employees as tr', function ($j) {
                 $j->on('tr.id', '=', 'pta.trainer_id')->whereNull('tr.deleted_at');
             })
-            ->leftJoinSub($paymentsAgg, 'pay', function ($j) {
-                $j->on('pay.pt_addon_id', '=', 'pta.id');
+            // NEW: join members to show member details + enable search
+            ->leftJoin('members as m', function ($j) {
+                $j->on('m.id', '=', 'ms.member_id')->whereNull('m.deleted_at');
             })
             ->select([
+                // addon
                 'pta.id as pta_id',
                 'pta.member_subscription_id',
                 'pta.trainer_id',
@@ -262,6 +251,7 @@ class pt_addons_reportcontroller extends Controller
                 'pta.notes',
                 'pta.created_at',
 
+                // subscription
                 'ms.id as subscription_id',
                 'ms.member_id',
                 'ms.branch_id',
@@ -269,52 +259,23 @@ class pt_addons_reportcontroller extends Controller
                 'ms.plan_name',
                 'ms.source',
 
+                // lookups
                 'b.name as branch_name',
                 'st.name as type_name',
-
                 DB::raw("TRIM(CONCAT(COALESCE(tr.first_name,''),' ',COALESCE(tr.last_name,''))) as trainer_name"),
 
-                DB::raw("COALESCE(pay.paid_sum,0) as paid_sum"),
-                DB::raw("COALESCE(pay.refunded_sum,0) as refunded_sum"),
-                DB::raw("COALESCE(pay.net_paid,0) as net_paid"),
-                DB::raw("COALESCE(pay.payments_count,0) as payments_count"),
-                DB::raw("pay.last_payment_at as last_payment_at"),
+                // member fields
+                DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))) as member_name"),
+                'm.member_code as member_code',
 
+                // derived sessions
                 DB::raw("(pta.sessions_count - pta.sessions_remaining) as sessions_used"),
-                DB::raw("(pta.total_amount - COALESCE(pay.net_paid,0)) as outstanding"),
             ]);
 
         $this->applyFilters($q, $request);
 
         if ($applySearch && $search !== '') {
             $this->applySearch($q, $search);
-        }
-
-        return $q;
-    }
-
-    private function paymentsAggSubquery(Request $request)
-    {
-        // استخراج PT Addon ID من reference مثل: PTA#3-INV#4-SUB#3
-        $ptAddonIdExpr = "CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(p.reference,'PTA#',-1),'-',1) AS UNSIGNED)";
-
-        $q = DB::table('payments as p')
-            ->whereNull('p.deleted_at')
-            ->whereNotNull('p.reference')
-            ->where('p.reference', 'like', 'PTA#%')
-            ->select([
-                DB::raw("$ptAddonIdExpr as pt_addon_id"),
-                DB::raw("SUM(CASE WHEN p.status='paid' THEN p.amount ELSE 0 END) as paid_sum"),
-                DB::raw("SUM(CASE WHEN p.status='refunded' THEN p.amount ELSE 0 END) as refunded_sum"),
-                DB::raw("(SUM(CASE WHEN p.status='paid' THEN p.amount ELSE 0 END) - SUM(CASE WHEN p.status='refunded' THEN p.amount ELSE 0 END)) as net_paid"),
-                DB::raw("COUNT(p.id) as payments_count"),
-                DB::raw("MAX(COALESCE(p.paid_at, p.created_at)) as last_payment_at"),
-            ])
-            ->groupBy(DB::raw($ptAddonIdExpr));
-
-        // فلتر اختياري على payment_status من نفس التقرير
-        if ($request->filled('payment_status')) {
-            $q->where('p.status', (string)$request->get('payment_status'));
         }
 
         return $q;
@@ -371,23 +332,7 @@ class pt_addons_reportcontroller extends Controller
             $q->where('pta.total_amount', '<=', (float)$request->get('amount_to'));
         }
 
-        // payment_state filter uses computed expressions
-        if ($request->filled('payment_state')) {
-            $st = (string)$request->get('payment_state');
-
-            if ($st === 'unpaid') {
-                $q->whereRaw("COALESCE(pay.net_paid,0) <= 0.0001");
-            } elseif ($st === 'paid') {
-                $q->whereRaw("(pta.total_amount - COALESCE(pay.net_paid,0)) <= 0.0001");
-            } elseif ($st === 'partial') {
-                $q->whereRaw("COALESCE(pay.net_paid,0) > 0.0001")
-                  ->whereRaw("(pta.total_amount - COALESCE(pay.net_paid,0)) > 0.0001");
-            } elseif ($st === 'outstanding') {
-                $q->whereRaw("(pta.total_amount - COALESCE(pay.net_paid,0)) > 0.0001");
-            } elseif ($st === 'with_refund') {
-                $q->whereRaw("COALESCE(pay.refunded_sum,0) > 0.0001");
-            }
-        }
+        // UPDATED: removed payment_state filter
     }
 
     private function applySearch($q, string $search): void
@@ -398,19 +343,24 @@ class pt_addons_reportcontroller extends Controller
         $q->where(function ($w) use ($s, $like) {
             if (is_numeric($s)) {
                 $w->orWhere('pta.id', (int)$s)
-                  ->orWhere('pta.member_subscription_id', (int)$s)
-                  ->orWhere('ms.member_id', (int)$s)
-                  ->orWhere('ms.branch_id', (int)$s)
-                  ->orWhere('pta.trainer_id', (int)$s);
+                    ->orWhere('pta.member_subscription_id', (int)$s)
+                    ->orWhere('ms.member_id', (int)$s)
+                    ->orWhere('ms.branch_id', (int)$s)
+                    ->orWhere('pta.trainer_id', (int)$s);
             }
 
             $w->orWhere('ms.plan_code', 'like', $like)
-              ->orWhere('ms.plan_name', 'like', $like)
-              ->orWhere('ms.source', 'like', $like)
-              ->orWhere(DB::raw("COALESCE(b.name,'')"), 'like', $like)
-              ->orWhere(DB::raw("COALESCE(st.name,'')"), 'like', $like)
-              ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(tr.first_name,''),' ',COALESCE(tr.last_name,'')))"), 'like', $like)
-              ->orWhere(DB::raw("COALESCE(pta.notes,'')"), 'like', $like);
+                ->orWhere('ms.plan_name', 'like', $like)
+                ->orWhere('ms.source', 'like', $like)
+                ->orWhere(DB::raw("COALESCE(b.name,'')"), 'like', $like)
+                ->orWhere(DB::raw("COALESCE(st.name,'')"), 'like', $like)
+                ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(tr.first_name,''),' ',COALESCE(tr.last_name,'')))"), 'like', $like)
+                ->orWhere(DB::raw("COALESCE(pta.notes,'')"), 'like', $like)
+                // NEW: member search
+                ->orWhere('m.member_code', 'like', $like)
+                ->orWhere('m.first_name', 'like', $like)
+                ->orWhere('m.last_name', 'like', $like)
+                ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))"), 'like', $like);
         });
     }
 
@@ -427,12 +377,6 @@ class pt_addons_reportcontroller extends Controller
         $sessionsRemainingSum = (int)(clone $q)->sum('pta.sessions_remaining');
         $sessionsUsedSum = max(0, $sessionsTotalSum - $sessionsRemainingSum);
 
-        // sums over computed fields
-        $paidSum = (float)(clone $q)->sum(DB::raw("COALESCE(pay.paid_sum,0)"));
-        $refundedSum = (float)(clone $q)->sum(DB::raw("COALESCE(pay.refunded_sum,0)"));
-        $netPaidSum = (float)(clone $q)->sum(DB::raw("COALESCE(pay.net_paid,0)"));
-        $outstandingSum = (float)(clone $q)->sum(DB::raw("(pta.total_amount - COALESCE(pay.net_paid,0))"));
-
         $uniqueSubscriptions = (int)(clone $q)->distinct('pta.member_subscription_id')->count('pta.member_subscription_id');
         $uniqueMembers = (int)(clone $q)->distinct('ms.member_id')->count('ms.member_id');
 
@@ -443,11 +387,6 @@ class pt_addons_reportcontroller extends Controller
             'sessions_total_sum' => (int)$sessionsTotalSum,
             'sessions_used_sum' => (int)$sessionsUsedSum,
             'sessions_remaining_sum' => (int)$sessionsRemainingSum,
-
-            'paid_sum' => round($paidSum, 2),
-            'refunded_sum' => round($refundedSum, 2),
-            'net_paid_sum' => round($netPaidSum, 2),
-            'outstanding_sum' => round($outstandingSum, 2),
 
             'unique_subscriptions' => $uniqueSubscriptions,
             'unique_members' => $uniqueMembers,
@@ -464,8 +403,6 @@ class pt_addons_reportcontroller extends Controller
             $groupBy = 'trainer';
         }
 
-        $paymentsAgg = $this->paymentsAggSubquery($request);
-
         $q = DB::table('member_subscription_pt_addons as pta')
             ->whereNull('pta.deleted_at')
             ->leftJoin('member_subscriptions as ms', function ($j) {
@@ -477,8 +414,9 @@ class pt_addons_reportcontroller extends Controller
             ->leftJoin('employees as tr', function ($j) {
                 $j->on('tr.id', '=', 'pta.trainer_id')->whereNull('tr.deleted_at');
             })
-            ->leftJoinSub($paymentsAgg, 'pay', function ($j) {
-                $j->on('pay.pt_addon_id', '=', 'pta.id');
+            // NEW: for member grouping display name
+            ->leftJoin('members as m', function ($j) {
+                $j->on('m.id', '=', 'ms.member_id')->whereNull('m.deleted_at');
             });
 
         $this->applyFilters($q, $request);
@@ -489,8 +427,6 @@ class pt_addons_reportcontroller extends Controller
         $sumSessions = "SUM(pta.sessions_count)";
         $sumRemaining = "SUM(pta.sessions_remaining)";
         $sumUsed = "SUM(pta.sessions_count - pta.sessions_remaining)";
-        $sumNetPaid = "SUM(COALESCE(pay.net_paid,0))";
-        $sumOutstanding = "SUM(pta.total_amount - COALESCE(pay.net_paid,0))";
 
         if ($groupBy === 'trainer') {
             $q->select([
@@ -501,8 +437,6 @@ class pt_addons_reportcontroller extends Controller
                 DB::raw("$sumSessions as sessions_total_sum"),
                 DB::raw("$sumUsed as sessions_used_sum"),
                 DB::raw("$sumRemaining as sessions_remaining_sum"),
-                DB::raw("$sumNetPaid as net_paid_sum"),
-                DB::raw("$sumOutstanding as outstanding_sum"),
             ])->groupBy('pta.trainer_id', DB::raw("TRIM(CONCAT(COALESCE(tr.first_name,''),' ',COALESCE(tr.last_name,'')))"));
         } elseif ($groupBy === 'branch') {
             $q->select([
@@ -513,8 +447,6 @@ class pt_addons_reportcontroller extends Controller
                 DB::raw("$sumSessions as sessions_total_sum"),
                 DB::raw("$sumUsed as sessions_used_sum"),
                 DB::raw("$sumRemaining as sessions_remaining_sum"),
-                DB::raw("$sumNetPaid as net_paid_sum"),
-                DB::raw("$sumOutstanding as outstanding_sum"),
             ])->groupBy('ms.branch_id', 'b.name');
         } elseif ($groupBy === 'subscription') {
             $q->select([
@@ -525,21 +457,17 @@ class pt_addons_reportcontroller extends Controller
                 DB::raw("$sumSessions as sessions_total_sum"),
                 DB::raw("$sumUsed as sessions_used_sum"),
                 DB::raw("$sumRemaining as sessions_remaining_sum"),
-                DB::raw("$sumNetPaid as net_paid_sum"),
-                DB::raw("$sumOutstanding as outstanding_sum"),
             ])->groupBy('pta.member_subscription_id');
         } else { // member
             $q->select([
                 'ms.member_id as group_id',
-                DB::raw("CONCAT('#',ms.member_id) as group_name"),
+                DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,''))) as group_name"),
                 DB::raw("COUNT(pta.id) as addons_count"),
                 DB::raw("$sumTotal as total_amount_sum"),
                 DB::raw("$sumSessions as sessions_total_sum"),
                 DB::raw("$sumUsed as sessions_used_sum"),
                 DB::raw("$sumRemaining as sessions_remaining_sum"),
-                DB::raw("$sumNetPaid as net_paid_sum"),
-                DB::raw("$sumOutstanding as outstanding_sum"),
-            ])->groupBy('ms.member_id');
+            ])->groupBy('ms.member_id', DB::raw("TRIM(CONCAT(COALESCE(m.first_name,''),' ',COALESCE(m.last_name,'')))"));
         }
 
         $rows = $q->orderByDesc(DB::raw("total_amount_sum"))->limit(200)->get();
@@ -560,8 +488,6 @@ class pt_addons_reportcontroller extends Controller
                 'sessions_total_sum' => (int)($r->sessions_total_sum ?? 0),
                 'sessions_used_sum' => (int)($r->sessions_used_sum ?? 0),
                 'sessions_remaining_sum' => (int)($r->sessions_remaining_sum ?? 0),
-                'net_paid_sum' => round((float)($r->net_paid_sum ?? 0), 2),
-                'outstanding_sum' => round((float)($r->outstanding_sum ?? 0), 2),
             ];
         }
 
@@ -627,10 +553,13 @@ class pt_addons_reportcontroller extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         if ($isRtl) $sheet->setRightToLeft(true);
 
+        // UPDATED: remove payment columns + remove PTA#
+        // UPDATED: add member_code column
         $headers = [
             __('reports.pt_col_date') ?? 'التاريخ',
             __('reports.pt_col_branch') ?? 'الفرع',
             __('reports.pt_col_member') ?? 'العضو',
+            __('reports.member_code') ?? 'كود العضو',
             __('reports.pt_col_subscription') ?? 'الاشتراك',
             __('reports.pt_col_trainer') ?? 'المدرب',
             __('reports.pt_col_sessions_count') ?? 'إجمالي الحصص',
@@ -638,13 +567,8 @@ class pt_addons_reportcontroller extends Controller
             __('reports.pt_col_sessions_remaining') ?? 'المتبقي',
             __('reports.pt_col_session_price') ?? 'سعر الحصة',
             __('reports.pt_col_total_amount') ?? 'الإجمالي',
-            __('reports.pt_col_paid') ?? 'مدفوع',
-            __('reports.pt_col_refunded') ?? 'مسترد',
-            __('reports.pt_col_net_paid') ?? 'صافي المدفوع',
-            __('reports.pt_col_outstanding') ?? 'متبقي ماليًا',
             __('reports.pt_col_source') ?? 'المصدر',
             __('reports.pt_col_notes') ?? 'ملاحظات',
-            __('reports.pt_col_pta_id') ?? 'PTA#',
         ];
 
         $sheet->fromArray($headers, null, 'A1');
@@ -680,15 +604,15 @@ class pt_addons_reportcontroller extends Controller
             $sessionsRemaining = (int)($r->sessions_remaining ?? 0);
             $sessionsUsed = max(0, $sessionsCount - $sessionsRemaining);
 
-            $paidSum = (float)($r->paid_sum ?? 0);
-            $refSum  = (float)($r->refunded_sum ?? 0);
-            $netPaid = $paidSum - $refSum;
-            $outstanding = (float)($r->total_amount ?? 0) - $netPaid;
+            $memberName = trim((string)($r->member_name ?? ''));
+            $memberCode = trim((string)($r->member_code ?? ''));
+            $srcLabel = $this->sourceValueLabel($r->source ?? null);
 
             $sheet->fromArray([
                 $date,
                 $branchName,
-                (string)($r->member_id ?? '-'),
+                $memberName ?: ('#' . (string)($r->member_id ?? '-')),
+                $memberCode ?: '-',
                 '#' . (string)($r->member_subscription_id ?? '-') . ' | ' . ($r->plan_code ? ($r->plan_code . ' - ') : '') . $planName . ' | ' . $typeName,
                 (string)($r->trainer_name ?? '-'),
                 $sessionsCount,
@@ -696,13 +620,8 @@ class pt_addons_reportcontroller extends Controller
                 $sessionsRemaining,
                 (float)($r->session_price ?? 0),
                 (float)($r->total_amount ?? 0),
-                round($paidSum, 2),
-                round($refSum, 2),
-                round($netPaid, 2),
-                round($outstanding, 2),
-                (string)($r->source ?? '-'),
+                $srcLabel ?: '-',
                 (string)($r->notes ?? ''),
-                (int)($r->pta_id ?? 0),
             ], null, 'A' . $rowNum);
 
             $rowNum++;
@@ -735,10 +654,19 @@ class pt_addons_reportcontroller extends Controller
 
     // ===================== UI blocks =====================
 
-    private function buildMemberBlock($memberId): string
+    private function buildMemberBlock($memberId, $memberName, $memberCode): string
     {
         $id = $memberId ? (string)$memberId : '-';
-        return '<span class="fw-semibold">#' . e($id) . '</span>';
+        $name = trim((string)$memberName);
+        $code = trim((string)$memberCode);
+
+        $displayName = $name !== '' ? $name : ('#' . $id);
+        $displayCode = $code !== '' ? $code : '-';
+
+        return '<div class="d-flex flex-column">' .
+            '<span class="fw-semibold">' . e($displayName) . '</span>' .
+            '<small class="text-muted">' . e(($this->tr('reports.member_code', 'كود العضو')) . ': ' . $displayCode) . '</small>' .
+            '</div>';
     }
 
     private function buildSubscriptionBlock($subId, $planName, $typeName, $source): string
@@ -747,48 +675,14 @@ class pt_addons_reportcontroller extends Controller
         $pn = $planName ?: '-';
         $tn = $typeName ?: '-';
 
+        $srcLabel = $this->sourceValueLabel($source);
+
         return '<div class="d-flex flex-column">' .
             '<span class="fw-semibold">#' . e($sid) . '</span>' .
-            '<small class="text-muted">' . e(__('reports.pt_col_plan') ?? 'الخطة') . ': ' . e($pn) . '</small>' .
-            '<small class="text-muted">' . e(__('reports.pt_col_type') ?? 'النوع') . ': ' . e($tn) . '</small>' .
-            '<small class="text-muted">' . e(__('reports.pt_col_source') ?? 'المصدر') . ': ' . e($source ?: '-') . '</small>' .
+            '<small class="text-muted">' . e($this->tr('reports.pt_col_plan', 'الخطة')) . ': ' . e($pn) . '</small>' .
+            '<small class="text-muted">' . e($this->tr('reports.pt_col_type', 'النوع')) . ': ' . e($tn) . '</small>' .
+            '<small class="text-muted">' . e($this->tr('reports.pt_col_source', 'المصدر')) . ': ' . e($srcLabel ?: '-') . '</small>' .
             '</div>';
-    }
-
-    private function buildPaymentStateBadge(float $paidSum, float $refundedSum, float $totalAmount): string
-    {
-        $net = $paidSum - $refundedSum;
-        $out = $totalAmount - $net;
-
-        if ($refundedSum > 0.0001) {
-            return '<span class="badge bg-info">' . e(__('reports.pt_state_with_refund') ?? 'مع استرداد') . '</span>';
-        }
-
-        if ($net <= 0.0001) {
-            return '<span class="badge bg-secondary">' . e(__('reports.pt_state_unpaid') ?? 'غير مدفوع') . '</span>';
-        }
-
-        if ($out <= 0.0001) {
-            return '<span class="badge bg-success">' . e(__('reports.pt_state_paid') ?? 'مدفوع') . '</span>';
-        }
-
-        return '<span class="badge bg-warning">' . e(__('reports.pt_state_partial') ?? 'جزئي') . '</span>';
-    }
-
-    private function buildNetPaidBlock(float $netPaid, float $refunded): string
-    {
-        $cls = $netPaid > 0 ? 'text-success' : 'text-muted';
-        $html = '<span class="fw-semibold ' . e($cls) . '">' . e($this->fmtMoney($netPaid)) . '</span>';
-        if ($refunded > 0.0001) {
-            $html .= '<div><small class="text-info">' . e((__('reports.pt_col_refunded') ?? 'مسترد') . ': ' . $this->fmtMoney($refunded)) . '</small></div>';
-        }
-        return $html;
-    }
-
-    private function buildOutstandingBlock(float $outstanding): string
-    {
-        $cls = $outstanding > 0.0001 ? 'text-danger' : 'text-success';
-        return '<span class="fw-semibold ' . e($cls) . '">' . e($this->fmtMoney($outstanding)) . '</span>';
     }
 
     private function fmtMoney($v): string
@@ -803,7 +697,7 @@ class pt_addons_reportcontroller extends Controller
         $chips = [];
 
         if ($request->filled('date_from') || $request->filled('date_to')) {
-            $chips[] = (__('reports.pt_filter_date') ?? 'الفترة') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_date', 'الفترة')) . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
         }
 
         $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
@@ -817,7 +711,7 @@ class pt_addons_reportcontroller extends Controller
                 ->filter()
                 ->values()
                 ->implode('، ');
-            $chips[] = (__('reports.pt_filter_branches') ?? 'الفروع') . ': ' . ($branchNames ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_branches', 'الفروع')) . ': ' . ($branchNames ?: '---');
         }
 
         foreach ([
@@ -825,28 +719,35 @@ class pt_addons_reportcontroller extends Controller
             'member_id' => 'pt_filter_member',
             'member_subscription_id' => 'pt_filter_subscription',
             'source' => 'pt_filter_source',
-            'payment_state' => 'pt_filter_payment_state',
-            'payment_status' => 'pt_filter_payment_status',
         ] as $key => $labelKey) {
             if ($request->filled($key)) {
-                $chips[] = (__('reports.' . $labelKey) ?? $key) . ': ' . $request->get($key);
+                $val = $request->get($key);
+
+                if ($key === 'source') {
+                    $val = $this->sourceValueLabel((string)$val);
+                }
+
+                $chips[] = ($this->tr('reports.' . $labelKey, $key)) . ': ' . $val;
             }
         }
 
         if ($request->filled('only_remaining')) {
-            $chips[] = (__('reports.pt_filter_only_remaining') ?? 'المتبقي فقط') . ': ' . ((string)$request->get('only_remaining') === '1' ? (__('reports.sub_yes') ?? 'نعم') : (__('reports.sub_no') ?? 'لا'));
+            $chips[] = ($this->tr('reports.pt_filter_only_remaining', 'المتبقي فقط')) . ': ' .
+                ((string)$request->get('only_remaining') === '1'
+                    ? ($this->tr('reports.sub_yes', 'نعم'))
+                    : ($this->tr('reports.sub_no', 'لا')));
         }
 
         if ($request->filled('sessions_from') || $request->filled('sessions_to')) {
-            $chips[] = (__('reports.pt_filter_sessions') ?? 'الحصص') . ': ' . ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_sessions', 'الحصص')) . ': ' . ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
         }
 
         if ($request->filled('amount_from') || $request->filled('amount_to')) {
-            $chips[] = (__('reports.pt_filter_amount') ?? 'القيمة') . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_amount', 'القيمة')) . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
         }
 
         if ($request->filled('group_by')) {
-            $chips[] = (__('reports.pt_filter_group_by') ?? 'تجميع حسب') . ': ' . $request->get('group_by');
+            $chips[] = ($this->tr('reports.pt_filter_group_by', 'تجميع حسب')) . ': ' . $request->get('group_by');
         }
 
         return $chips;
@@ -857,54 +758,53 @@ class pt_addons_reportcontroller extends Controller
     private function yesNoOptions(): array
     {
         return [
-            ['value' => '', 'label' => __('reports.sub_all') ?? 'الكل'],
-            ['value' => '1', 'label' => __('reports.sub_yes') ?? 'نعم'],
-            ['value' => '0', 'label' => __('reports.sub_no') ?? 'لا'],
-        ];
-    }
-
-    private function paymentStateOptions(): array
-    {
-        return [
-            ['value' => '', 'label' => __('reports.sub_all') ?? 'الكل'],
-            ['value' => 'unpaid', 'label' => __('reports.pt_state_unpaid') ?? 'غير مدفوع'],
-            ['value' => 'partial', 'label' => __('reports.pt_state_partial') ?? 'جزئي'],
-            ['value' => 'paid', 'label' => __('reports.pt_state_paid') ?? 'مدفوع'],
-            ['value' => 'outstanding', 'label' => __('reports.pt_state_outstanding') ?? 'عليه متبقي'],
-            ['value' => 'with_refund', 'label' => __('reports.pt_state_with_refund') ?? 'مع استرداد'],
+            ['value' => '', 'label' => $this->tr('reports.sub_all', 'الكل')],
+            ['value' => '1', 'label' => $this->tr('reports.sub_yes', 'نعم')],
+            ['value' => '0', 'label' => $this->tr('reports.sub_no', 'لا')],
         ];
     }
 
     private function groupByOptions(): array
     {
         return [
-            'trainer' => __('reports.pt_group_trainer') ?? 'المدرب',
-            'branch' => __('reports.pt_group_branch') ?? 'الفرع',
-            'subscription' => __('reports.pt_group_subscription') ?? 'الاشتراك',
-            'member' => __('reports.pt_group_member') ?? 'العضو',
+            'trainer' => $this->tr('reports.pt_group_trainer', 'المدرب'),
+            'branch' => $this->tr('reports.pt_group_branch', 'الفرع'),
+            'subscription' => $this->tr('reports.pt_group_subscription', 'الاشتراك'),
+            'member' => $this->tr('reports.pt_group_member', 'العضو'),
         ];
     }
 
-    private function paymentStatusOptionsFromDb(): array
-    {
-        $statuses = DB::table('payments as p')
-            ->whereNull('p.deleted_at')
-            ->whereNotNull('p.reference')
-            ->where('p.reference', 'like', 'PTA#%')
-            ->whereNotNull('p.status')
-            ->where('p.status', '!=', '')
-            ->distinct()
-            ->orderBy('p.status')
-            ->pluck('p.status')
-            ->toArray();
+    // ===================== Helpers =====================
 
-        $out = [
-            ['value' => '', 'label' => __('reports.sub_all') ?? 'الكل'],
+    private function tr(string $key, string $fallback): string
+    {
+        $v = __($key);
+        return ($v === $key || $v === '') ? $fallback : $v;
+    }
+
+    private function sourceValueLabel(?string $source): string
+    {
+        $s = strtolower(trim((string)$source));
+        if ($s === '') return '-';
+
+        $locale = app()->getLocale();
+
+        // Fix common values (esp. reception)
+        $map = [
+            'reception' => [$locale === 'ar' ? 'الاستقبال' : 'Reception'],
+            'front_desk' => [$locale === 'ar' ? 'الاستقبال' : 'Front desk'],
+            'sales' => [$locale === 'ar' ? 'المبيعات' : 'Sales'],
+            'online' => [$locale === 'ar' ? 'أونلاين' : 'Online'],
+            'app' => [$locale === 'ar' ? 'التطبيق' : 'App'],
+            'system' => [$locale === 'ar' ? 'النظام' : 'System'],
         ];
-        foreach ($statuses as $s) {
-            $out[] = ['value' => $s, 'label' => $s];
+
+        if (isset($map[$s])) {
+            return (string)$map[$s][0];
         }
-        return $out;
+
+        // default: return original (avoid showing translation key)
+        return (string)$source;
     }
 
     private function nameJsonOrText($nameJsonOrText, string $locale): string

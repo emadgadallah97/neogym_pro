@@ -1,12 +1,8 @@
 @extends('layouts.master_table')
 
-
-
 @section('title')
     {{ __('reports.payments_report_title') ?? 'تقرير المدفوعات' }}
 @endsection
-
-
 
 @section('content')
 @php
@@ -24,17 +20,12 @@
     $groupByOptions = $filterOptions['group_by'] ?? [];
     $paymentMethods = $filterOptions['payment_methods'] ?? [];
 
-    // IMPORTANT:
-    // You requested to use "source" from invoices/payments with these values:
-    // main_subscription&PT, main_subscription_only, PT_only
     $paymentSources = [
         'main_subscription&PT' => __('reports.pay_source_main_and_pt') ?? 'اشتراك + PT',
         'main_subscription_only' => __('reports.pay_source_main_only') ?? 'اشتراك فقط',
         'PT_only' => __('reports.pay_source_pt_only') ?? 'PT فقط',
     ];
 @endphp
-
-
 
 <style>
     .select2-container { width: 100% !important; max-width: 100% !important; }
@@ -43,8 +34,6 @@
     .dt-cell-wrap { white-space: normal !important; }
     .group-table td, .group-table th { vertical-align: middle; }
 </style>
-
-
 
 <div class="row">
     <div class="col-12">
@@ -59,8 +48,6 @@
         </div>
     </div>
 </div>
-
-
 
 {{-- KPIs --}}
 <div class="row g-3 mb-3">
@@ -86,8 +73,6 @@
         </div>
     </div>
 
-
-
     <div class="col-md-6 col-xl-4">
         <div class="card border mb-0 kpi-card">
             <div class="card-body">
@@ -109,8 +94,6 @@
             </div>
         </div>
     </div>
-
-
 
     <div class="col-md-6 col-xl-4">
         <div class="card border mb-0 kpi-card">
@@ -139,8 +122,6 @@
     </div>
 </div>
 
-
-
 {{-- Filters --}}
 <div class="card border shadow-none mb-3">
     <div class="card-body">
@@ -150,14 +131,10 @@
                 <input type="date" class="form-control" name="date_from" value="{{ $filters['date_from'] ?? '' }}">
             </div>
 
-
-
             <div class="col-md-3">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_date_to') ?? 'إلى تاريخ' }}</label>
                 <input type="date" class="form-control" name="date_to" value="{{ $filters['date_to'] ?? '' }}">
             </div>
-
-
 
             <div class="col-md-6">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_branches') ?? 'الفروع' }}</label>
@@ -172,17 +149,12 @@
                 </select>
             </div>
 
-
-
-            {{-- Member search (name/code) --}}
             <div class="col-md-4">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_member_q') ?? 'بحث العضو (اسم/كود)' }}</label>
                 <input type="text" class="form-control" name="member_q" value="{{ $filters['member_q'] ?? '' }}"
                        placeholder="{{ __('reports.pay_filter_member_q_ph') ?? 'مثال: M-0001 أو أحمد' }}">
                 <small class="text-muted">{{ __('reports.pay_filter_member_q_hint') ?? 'ابحث بالاسم أو كود العضو.' }}</small>
             </div>
-
-
 
             <div class="col-md-3">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_status') ?? 'الحالة' }}</label>
@@ -192,8 +164,6 @@
                     @endforeach
                 </select>
             </div>
-
-
 
             <div class="col-md-3">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_method') ?? 'طريقة الدفع' }}</label>
@@ -205,9 +175,6 @@
                 </select>
             </div>
 
-
-
-            {{-- Payment/Invoice source kinds --}}
             <div class="col-md-3">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_source') ?? 'مصدر العملية' }}</label>
                 <select name="source" class="form-select select2">
@@ -219,36 +186,25 @@
                 <small class="text-muted">{{ __('reports.pay_filter_source_hint') ?? 'يميز بين الاشتراك الأساسي و PT (حسب المصدر في payments/invoices).' }}</small>
             </div>
 
-
-
-            {{-- Keep exact IDs filters (optional) --}}
             <div class="col-md-2">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_member') ?? 'رقم العضو' }}</label>
                 <input type="number" class="form-control" name="member_id" value="{{ $filters['member_id'] ?? '' }}" min="1" step="1">
             </div>
-
-
 
             <div class="col-md-2">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_subscription') ?? 'رقم الاشتراك' }}</label>
                 <input type="number" class="form-control" name="member_subscription_id" value="{{ $filters['member_subscription_id'] ?? '' }}" min="1" step="1">
             </div>
 
-
-
             <div class="col-md-2">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_amount_from') ?? 'المبلغ من' }}</label>
                 <input type="number" class="form-control" name="amount_from" value="{{ $filters['amount_from'] ?? '' }}" min="0" step="0.01">
             </div>
 
-
-
             <div class="col-md-2">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_amount_to') ?? 'المبلغ إلى' }}</label>
                 <input type="number" class="form-control" name="amount_to" value="{{ $filters['amount_to'] ?? '' }}" min="0" step="0.01">
             </div>
-
-
 
             <div class="col-md-4">
                 <label class="form-label mb-1">{{ __('reports.pay_filter_group_by') ?? 'تجميع حسب' }}</label>
@@ -261,32 +217,25 @@
                 </select>
             </div>
 
-
-
             <div class="col-12 d-flex justify-content-between flex-wrap gap-2 mt-2">
                 <div class="alert alert-info mb-0 py-2 px-3">
                     <i class="mdi mdi-information-outline"></i>
                     <strong>{{ __('reports.pay_tip') ?? 'صافي التحصيل = مدفوع - مسترد.' }}</strong>
                 </div>
 
-
-
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="ri-search-line align-bottom me-1"></i> {{ __('reports.search') ?? 'بحث' }}
                     </button>
 
-
                     <a class="btn btn-soft-secondary" href="{{ route('payments_report.index') }}">
                         <i class="ri-refresh-line align-bottom me-1"></i> {{ __('reports.reset') ?? 'إعادة تعيين' }}
                     </a>
-
 
                     <a class="btn btn-soft-success" target="_blank" id="btnPrint"
                        href="{{ route('payments_report.index', array_merge(request()->all(), ['action' => 'print'])) }}">
                         <i class="ri-printer-line align-bottom me-1"></i> {{ __('reports.print') ?? 'طباعة' }}
                     </a>
-
 
                     <a class="btn btn-soft-success" id="btnExport"
                        href="{{ route('payments_report.index', array_merge(request()->all(), ['action' => 'export_excel'])) }}">
@@ -297,8 +246,6 @@
         </form>
     </div>
 </div>
-
-
 
 {{-- Group Summary --}}
 <div class="card mb-3">
@@ -327,16 +274,12 @@
     </div>
 </div>
 
-
-
 {{-- Detail Table --}}
 <div class="card mb-3">
     <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h5 class="card-title mb-0">{{ __('reports.pay_table_title') ?? 'تفاصيل عمليات الدفع' }}</h5>
         <div class="text-muted small">{{ __('reports.pay_table_hint') ?? 'الجدول يدعم البحث والترتيب والتصفح.' }}</div>
     </div>
-
-
 
     <div class="card-body">
         <div class="table-responsive">
@@ -362,13 +305,28 @@
     </div>
 </div>
 
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof $ === 'undefined') return;
 
     var isRtl = (document.documentElement.getAttribute('dir') || '').toLowerCase() === 'rtl';
+
+    // FIXED: Use JSON_UNESCAPED_UNICODE to prevent & encoding
+    var SOURCE_LABELS = {!! json_encode($paymentSources, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
+
+    function sourceToLabel(kind){
+        var k = (kind === null || kind === undefined) ? '' : String(kind).trim();
+        if (!k) return '-';
+
+        // Direct check with fallback for common values
+        if (SOURCE_LABELS[k]) return SOURCE_LABELS[k];
+
+        // Fallback: check with decoded entities (in case & was encoded as &amp;)
+        var decoded = k.replace(/&amp;/g, '&');
+        if (SOURCE_LABELS[decoded]) return SOURCE_LABELS[decoded];
+
+        return '-';
+    }
 
     function getFiltersObject() {
         var $form = $('#filtersForm');
@@ -504,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
         serverSide: true,
         responsive: true,
         pageLength: 25,
-        order: [[1, 'desc']], // dates column after serial
+        order: [[1, 'desc']],
         ajax: {
             url: "{{ route('payments_report.index') }}",
             type: "GET",
@@ -530,7 +488,13 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         columnDefs: [
             { targets: [0], orderable: false, searchable: false },
-            { targets: [1,7,9], className: 'dt-cell-wrap' }
+            { targets: [1,7], className: 'dt-cell-wrap' },
+            {
+                targets: [8],
+                render: function (data, type, row, meta) {
+                    return sourceToLabel(data);
+                }
+            }
         ],
         columns: [
             { data: 'rownum', name: 'rownum' },

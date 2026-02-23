@@ -159,6 +159,14 @@
                 <small class="text-muted">{{ __('reports.multiselecthint') ?? 'يمكن اختيار أكثر من فرع' }}</small>
             </div>
 
+            {{-- NEW: Member Search Field --}}
+            <div class="col-md-4">
+                <label class="form-label mb-1">{{ __('reports.pay_filter_member_q') ?? 'بحث العضو (اسم/كود)' }}</label>
+                <input type="text" class="form-control" name="member_q" value="{{ $filters['member_q'] ?? '' }}"
+                       placeholder="{{ __('reports.pay_filter_member_q_ph') ?? 'مثال: M-0001 أو أحمد' }}">
+                <small class="text-muted">{{ __('reports.pay_filter_member_q_hint') ?? 'ابحث بالاسم أو كود العضو.' }}</small>
+            </div>
+
             <div class="col-md-4">
                 <label class="form-label mb-1">{{ __('reports.com_filter_sales_employee') ?? 'موظف المبيعات' }}</label>
                 <select name="sales_employee_id" class="form-select select2">
@@ -361,6 +369,9 @@ document.addEventListener('DOMContentLoaded', function () {
         obj.date_to = $form.find('[name="date_to"]').val() || '';
         obj.branch_ids = $('#filterBranches').val() || [];
 
+        // NEW: member_q filter
+        obj.member_q = $form.find('[name="member_q"]').val() || '';
+
         obj.sales_employee_id = $form.find('[name="sales_employee_id"]').val() || '';
         obj.commission_is_paid = $form.find('[name="commission_is_paid"]').val() || '';
         obj.has_settlement = $form.find('[name="has_settlement"]').val() || '';
@@ -502,6 +513,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 d.date_to = f.date_to;
                 d.branch_ids = f.branch_ids;
 
+                // NEW: member_q in AJAX request
+                d.member_q = f.member_q;
+
                 d.sales_employee_id = f.sales_employee_id;
                 d.commission_is_paid = f.commission_is_paid;
                 d.has_settlement = f.has_settlement;
@@ -520,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
         columnDefs: [
-            { targets: [3,8,9,10], className: 'dt-cell-wrap' }
+            { targets: [2,3,8,9,10], className: 'dt-cell-wrap' }
         ],
         columns: [
             { data: 'sale_date', name: 'sale_date' },

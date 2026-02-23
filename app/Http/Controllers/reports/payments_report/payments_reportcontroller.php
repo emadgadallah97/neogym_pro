@@ -200,12 +200,12 @@ class payments_reportcontroller extends Controller
                 'member' => $this->buildMemberBlock($r->member_id ?? null, $memberCode, $memberName),
 
                 'subscription' => $this->buildSubscriptionBlock(
-                    $r->member_subscription_id ?? null,
-                    $r->plan_code ?? null,
-                    $planName,
-                    $typeName,
-                    $sourceLabel
-                ),
+    $r->member_subscription_id ?? null,
+    $r->plan_code ?? null,
+    $planName,
+    $typeName
+),
+
 
                 'source' => e($sourceKind ?: '-'),
                 'reference' => e($r->reference ?? '-'),
@@ -1029,22 +1029,20 @@ class payments_reportcontroller extends Controller
             '</div>';
     }
 
-    private function buildSubscriptionBlock($subId, $planCode, $planName, $typeName, string $sourceLabel = ''): string
-    {
-        $sid = $subId ? (string)$subId : '-';
-        $pc = $planCode ?: '-';
-        $pn = $planName ?: '-';
-        $tn = $typeName ?: '-';
+private function buildSubscriptionBlock($subId, $planCode, $planName, $typeName): string
+{
+    $sid = $subId ? (string)$subId : '-';
+    $pc = $planCode ?: '-';
+    $pn = $planName ?: '-';
+    $tn = $typeName ?: '-';
 
-        $kind = trim($sourceLabel);
+    return '<div class="d-flex flex-column">' .
+        '<span class="fw-semibold">#' . e($sid) . '</span>' .
+        '<small class="text-muted">' . e(__('reports.pay_col_plan') . ': ' . ($pc !== '-' ? ($pc . ' - ') : '') . $pn) . '</small>' .
+        '<small class="text-muted">' . e(__('reports.pay_col_type') . ': ' . $tn) . '</small>' .
+        '</div>';
+}
 
-        return '<div class="d-flex flex-column">' .
-            '<span class="fw-semibold">#' . e($sid) . '</span>' .
-            '<small class="text-muted">' . e(__('reports.pay_col_plan') . ': ' . ($pc !== '-' ? ($pc . ' - ') : '') . $pn) . '</small>' .
-            '<small class="text-muted">' . e(__('reports.pay_col_type') . ': ' . $tn) . '</small>' .
-            ($kind !== '' ? '<small class="text-muted">' . e((__('reports.pay_col_source') ?? 'المصدر') . ': ' . $kind) . '</small>' : '') .
-            '</div>';
-    }
 
     // ===================== Chips =====================
 
