@@ -36,7 +36,10 @@ class employee extends Model
         'salary_transfer_details',
         'status',
         'user_add',
-        'is_coach'
+        'is_coach',
+        'device_user_id',
+
+
     ];
 
     protected $dates = ['deleted_at'];

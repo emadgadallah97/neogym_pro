@@ -15,8 +15,20 @@ Route::group(
         Route::group(['namespace' => 'hr'], function () {
             //hr programs
             Route::resource('hr', 'hrprogramscontroller');
+
+            
             //hr attendance
+// routes/web.php (داخل مجموعة hr أو حسب تنظيم مشروعك)
+
+Route::get('attendance/process', 'attendancecontroller@processIndex')->name('attendance.process.index');
+Route::post('attendance/process/run', 'attendancecontroller@processRun')->name('attendance.process.run');
+
+Route::get('attendance/employees/by-branch', 'attendancecontroller@employeesByBranch')->name('attendance.employees.byBranch');
+
+// استقبال من الجهاز (اختياري الآن)
+Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')->name('attendance.logs.receive');
             Route::resource('attendance', 'attendancecontroller');
+
             //hr advances
             Route::resource('advances', 'advancescontroller');
             //hr deductions
