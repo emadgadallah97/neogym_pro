@@ -124,6 +124,16 @@
                         <span data-key="t-widgets">{{ trans('main_trans.accounting') }}</span>
                     </a>
                 </li>
+                {{-- الموارد البشريه --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'hr.create' || Route::currentRouteName() == 'hr.index') active @endif"
+                        href="{{ url('/' . ($page = 'hr')) }}">
+
+                        <i class="mdi mdi-clipboard-account"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.hr') }}</span>
+                    </a>
+                </li>
                 <!--user management-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.user_management') }}</span></li>
@@ -162,6 +172,7 @@
                         <span data-key="t-widgets">{{ trans('main_trans.reports') }}</span>
                     </a>
                 </li>
+
                 <!--settings-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.settings') }}</span></li>

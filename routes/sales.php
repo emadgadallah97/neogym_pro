@@ -46,7 +46,6 @@ Route::group(
 
             Route::get('ajax/subscriptions/{id}/modal', 'salescontroller@ajaxSubscriptionShowModal')
                 ->name('sales.ajax.subscriptions.modal');
-            //-------
 
             Route::match(['GET', 'POST'], 'ajax/current-subscriptions/table', 'salescontroller@ajaxCurrentSubscriptionsTable')
                 ->name('sales.ajax.current_subscriptions.table');
