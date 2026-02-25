@@ -16,19 +16,23 @@ Route::group(
             //hr programs
             Route::resource('hr', 'hrprogramscontroller');
 
-            
+
             //hr attendance
-// routes/web.php (داخل مجموعة hr أو حسب تنظيم مشروعك)
+            // routes/web.php (داخل مجموعة hr أو حسب تنظيم مشروعك)
 
-Route::get('attendance/process', 'attendancecontroller@processIndex')->name('attendance.process.index');
-Route::post('attendance/process/run', 'attendancecontroller@processRun')->name('attendance.process.run');
+            Route::get('attendance/process', 'attendancecontroller@processIndex')->name('attendance.process.index');
+            Route::post('attendance/process/run', 'attendancecontroller@processRun')->name('attendance.process.run');
 
-Route::get('attendance/employees/by-branch', 'attendancecontroller@employeesByBranch')->name('attendance.employees.byBranch');
+            Route::get('attendance/employees/by-branch', 'attendancecontroller@employeesByBranch')->name('attendance.employees.byBranch');
 
-// استقبال من الجهاز (اختياري الآن)
-Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')->name('attendance.logs.receive');
+            // استقبال من الجهاز (اختياري الآن)
+            Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')->name('attendance.logs.receive');
             Route::resource('attendance', 'attendancecontroller');
 
+            //shifts
+            Route::resource('shifts', 'shiftscontroller');
+            //employee_shifts
+            Route::resource('employee_shifts', 'employee_shiftscontroller');
             //hr advances
             Route::resource('advances', 'advancescontroller');
             //hr deductions
@@ -39,14 +43,14 @@ Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')->name(
             Route::resource('payrolls', 'payrollscontroller');
             //hr devices
             Route::resource('devices', 'devicescontroller');
-//  Route::get('/', [HrController::class, 'index'])->name('index');
-//     Route::resource('attendances',  HrAttendanceController::class);
-//     Route::resource('advances',     HrAdvanceController::class);
-//     Route::resource('deductions',   HrDeductionController::class);
-//     Route::resource('overtime',     HrOvertimeController::class);
-//     Route::resource('payrolls',     HrPayrollController::class);
-//     Route::resource('devices',      HrDeviceController::class);
-//     Route::get('reports',           [HrReportController::class, 'index'])->name('reports.index');
+            //  Route::get('/', [HrController::class, 'index'])->name('index');
+            //     Route::resource('attendances',  HrAttendanceController::class);
+            //     Route::resource('advances',     HrAdvanceController::class);
+            //     Route::resource('deductions',   HrDeductionController::class);
+            //     Route::resource('overtime',     HrOvertimeController::class);
+            //     Route::resource('payrolls',     HrPayrollController::class);
+            //     Route::resource('devices',      HrDeviceController::class);
+            //     Route::get('reports',           [HrReportController::class, 'index'])->name('reports.index');
         });
     },
 );

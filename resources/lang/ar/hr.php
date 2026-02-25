@@ -108,6 +108,7 @@ return [
 'late'                        => 'متأخر',
 'halfday'                     => 'نصف يوم',
 'leave'                       => 'إجازة',
+'fullday'                     => 'يوم كامل',
 
 // ── Sources ───────────────────────────────────────────────
 'source_manual'               => 'يدوي',
@@ -145,5 +146,62 @@ return [
 // ── Errors ────────────────────────────────────────────────
 'employee_not_in_branch'      => 'هذا الموظف غير تابع لهذا الفرع (الفرع الأساسي)',
 'device_not_found'            => 'لم يتم العثور على الجهاز',
+// Shifts cards
+'shifts_desc'          => 'إدارة الورديات (مواعيد العمل وأيام الدوام والسماح)',
+
+'employee_shifts'      => 'ورديات الموظفين',
+'employee_shifts_desc' => 'تحديد وردية لكل موظف حسب الفرع وفترة السريان',
+// Night shifts support
+'overnight'              => 'ليلي',
+'shift_duration'         => 'المدة',
+'hours'                  => 'ساعة',
+'night_shift_hint'       => 'للوردية الليلية: اختر نهاية أقل من البداية (سيتم اعتبارها اليوم التالي).',
+
+// Validation messages
+'shift_time_invalid'       => 'وقت النهاية غير صحيح',
+'shift_duration_too_long'  => 'مدة الوردية لا يجب أن تكون 24 ساعة أو أكثر',
+'min_half_exceeds_shift'   => 'حد نصف يوم أكبر من مدة الوردية',
+'min_full_exceeds_shift'   => 'حد اليوم الكامل أكبر من مدة الوردية',
+// Shifts CRUD
+'shifts_list'            => 'قائمة الورديات',
+'add_shift'              => 'إضافة وردية',
+'edit_shift'             => 'تعديل وردية',
+'work_time'              => 'وقت العمل',
+'min_hours'              => 'الحد الأدنى (ساعات)',
+'min_half_hours'         => 'حد نصف يوم (ساعات)',
+'min_full_hours'         => 'حد يوم كامل (ساعات)',
+'create_date'            => 'تاريخ الإنشاء',
+
+// Days (لو غير موجودة عندك)
+'sun' => 'أحد',
+'mon' => 'إثنين',
+'tue' => 'ثلاثاء',
+'wed' => 'أربعاء',
+'thu' => 'خميس',
+'fri' => 'جمعة',
+'sat' => 'سبت',
+
+// Messages
+'shift_saved_success'    => 'تم حفظ الوردية بنجاح',
+'shift_updated_success'  => 'تم تحديث الوردية بنجاح',
+'shift_deleted_success'  => 'تم حذف الوردية بنجاح',
+'night_shift_logs_hint' => 'ملاحظة: يعرض النظام بصمات هذا اليوم + اليوم التالي لدعم الورديات الليلية.',
+
+'employee_shifts_list'               => 'قائمة ورديات الموظفين',
+'add_employee_shift'                 => 'إضافة وردية لموظف',
+'edit_employee_shift'                => 'تعديل وردية موظف',
+'select_branch_first'                => 'يرجى اختيار الفرع أولاً',
+
+'select_shift'                       => 'اختر الوردية',
+'start_date'                         => 'من',
+'end_date'                           => 'إلى',
+
+'employee_shift_saved_success'       => 'تم حفظ وردية الموظف بنجاح',
+'employee_shift_updated_success'     => 'تم تحديث وردية الموظف بنجاح',
+'employee_shift_deleted_success'     => 'تم حذف وردية الموظف بنجاح',
+
+'employee_shift_overlap'             => 'يوجد تعارض مع وردية فعّالة أخرى لنفس الموظف والفرع ضمن نفس الفترة',
+'end_date_after_or_equal_start'      => 'تاريخ النهاية يجب أن يكون بعد/يساوي تاريخ البداية',
+
 
 ];

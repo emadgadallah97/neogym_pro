@@ -90,10 +90,14 @@ class attendancecontroller extends Controller
             return response()->json(['success' => false, 'message' => trans('hr.employee_not_in_branch')], 422);
         }
 
+        // date هنا = تاريخ الدخول (check_in) كما اتفقنا
         $shift = $this->getEmployeeShiftForDate($employee->id, (int)$data['branch_id'], $data['date']);
 
         $checkInDT  = $data['check_in'] ? Carbon::parse($data['date'] . ' ' . $data['check_in']) : null;
         $checkOutDT = $data['check_out'] ? Carbon::parse($data['date'] . ' ' . $data['check_out']) : null;
+
+        // ✅ دعم الليلي: تطبيع التاريخ/الوقت للانصراف (قد يكون اليوم التالي)
+        [$checkInDT, $checkOutDT] = $this->normalizeCheckTimes($shift, $data['date'], $checkInDT, $checkOutDT);
 
         $attendance = HrAttendance::where('employee_id', $employee->id)
             ->whereDate('date', $data['date'])
@@ -112,7 +116,8 @@ class attendancecontroller extends Controller
         $attendance->check_out = $checkOutDT;
         $attendance->notes     = $data['notes'] ?? null;
 
-        $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out);
+        $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out, $shift, $attendance->date);
+
         $attendance->status = $this->normalizeAttendanceStatus(
             $this->calcStatus($shift, $attendance->date, $attendance->check_in, $attendance->check_out, (float)$attendance->total_hours)
         );
@@ -171,16 +176,20 @@ class attendancecontroller extends Controller
         $checkInDT  = $data['check_in'] ? Carbon::parse($data['date'] . ' ' . $data['check_in']) : null;
         $checkOutDT = $data['check_out'] ? Carbon::parse($data['date'] . ' ' . $data['check_out']) : null;
 
+        // ✅ دعم الليلي
+        [$checkInDT, $checkOutDT] = $this->normalizeCheckTimes($shift, $data['date'], $checkInDT, $checkOutDT);
+
         $att->employee_id = $employee->id;
         $att->branch_id   = (int)$data['branch_id'];
-        $att->date        = $data['date'];
+        $att->date        = $data['date']; // تاريخ الدخول
         $att->check_in    = $checkInDT;
         $att->check_out   = $checkOutDT;
         $att->notes       = $data['notes'] ?? null;
 
         if (!$att->source) $att->source = 'manual';
 
-        $att->total_hours = $this->calcHours($att->check_in, $att->check_out);
+        $att->total_hours = $this->calcHours($att->check_in, $att->check_out, $shift, $att->date);
+
         $att->status = $this->normalizeAttendanceStatus(
             $this->calcStatus($shift, $att->date, $att->check_in, $att->check_out, (float)$att->total_hours)
         );
@@ -234,9 +243,13 @@ class attendancecontroller extends Controller
         $deviceId = (int)$request->get('device_id', 0);
         $date     = $request->get('date', Carbon::today()->toDateString());
 
+        // ✅ لدعم الليلي: اعرض Logs اليوم + اليوم التالي (ستظل "غير معالجة" حتى تُشغّل المعالجة)
+        $from = Carbon::parse($date)->startOfDay();
+        $to   = Carbon::parse($date)->addDay()->endOfDay();
+
         $logsQ = HrAttendanceLog::with(['employee', 'device'])
             ->where('is_processed', false)
-            ->whereDate('punch_time', $date);
+            ->whereBetween('punch_time', [$from, $to]);
 
         if ($deviceId > 0) $logsQ->where('device_id', $deviceId);
 
@@ -259,23 +272,23 @@ class attendancecontroller extends Controller
         ]);
 
         $branchId = (int)$data['branch_id'];
-        $dateStr  = $data['date'];
+        $dateStr  = $data['date']; // ✅ هذا هو تاريخ الدخول المطلوب معالجته
         $deviceId = (int)($data['device_id'] ?? 0);
 
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
         $employeeIds = $employees->pluck('id')->toArray();
 
+        // ✅ لجلب كل ما قد يخص وردية اليوم (اليوم + اليوم التالي)
+        $from = Carbon::parse($dateStr)->startOfDay();
+        $to   = Carbon::parse($dateStr)->addDay()->endOfDay();
+
         $logsQ = HrAttendanceLog::unprocessed()
             ->whereIn('employee_id', $employeeIds)
-            ->whereDate('punch_time', $dateStr);
+            ->whereBetween('punch_time', [$from, $to]);
 
         if ($deviceId > 0) $logsQ->where('device_id', $deviceId);
 
-        $logs = $logsQ->orderBy('punch_time')->get();
-
-        $groups = $logs->groupBy(function ($l) {
-            return $l->employee_id . '|' . Carbon::parse($l->punch_time)->toDateString();
-        });
+        $logs = $logsQ->orderBy('punch_time')->get()->groupBy('employee_id');
 
         $created = 0;
         $updated = 0;
@@ -283,56 +296,71 @@ class attendancecontroller extends Controller
 
         DB::beginTransaction();
         try {
-            foreach ($groups as $key => $items) {
-                [$empId, $d] = explode('|', $key);
-                $empId = (int)$empId;
-
-                $employee = $employees->firstWhere('id', $empId);
+            foreach ($employeeIds as $empId) {
+                $employee = $employees->firstWhere('id', (int)$empId);
                 if (!$employee) continue;
 
-                $shift = $this->getEmployeeShiftForDate($empId, $branchId, $d);
+                $shift = $this->getEmployeeShiftForDate((int)$empId, $branchId, $dateStr);
+                if (!$shift) continue;
 
-                $first = $items->first();
-                $last  = $items->last();
+                // نافذة الوردية لليوم (تاريخ الدخول)
+                [$winStart, $winEnd] = $this->shiftWindow($shift, $dateStr);
+
+                $empLogs = collect($logs[(int)$empId] ?? [])->filter(function ($l) use ($winStart, $winEnd) {
+                    $t = Carbon::parse($l->punch_time);
+                    return $t->betweenIncluded($winStart, $winEnd);
+                })->values();
+
+                if ($empLogs->count() === 0) {
+                    continue;
+                }
+
+                $first = $empLogs->first();
+                $last  = $empLogs->last();
 
                 $checkIn  = Carbon::parse($first->punch_time);
                 $checkOut = Carbon::parse($last->punch_time);
-                if ($items->count() === 1) $checkOut = null;
 
-                $attendance = HrAttendance::where('employee_id', $empId)
-                    ->whereDate('date', $d)
+                if ($empLogs->count() === 1) {
+                    $checkOut = null;
+                }
+
+                // ✅ date = تاريخ الدخول (check_in date الذي اخترته للتجميع)
+                $attendance = HrAttendance::where('employee_id', (int)$empId)
+                    ->whereDate('date', $dateStr)
                     ->first();
 
                 if (!$attendance) {
                     $attendance = new HrAttendance();
-                    $attendance->employee_id = $empId;
+                    $attendance->employee_id = (int)$empId;
                     $attendance->branch_id   = $branchId;
-                    $attendance->date        = $d;
-
-                    // ✅ المصدر من الجهاز = fingerprint
+                    $attendance->date        = $dateStr;
                     $attendance->source      = 'fingerprint';
-
                     $attendance->user_add    = Auth::id();
                     $created++;
                 } else {
                     $updated++;
                 }
 
-                $attendance->device_id   = $deviceId > 0 ? $deviceId : ($first->device_id ?? null);
-                $attendance->check_in    = $checkIn;
-                $attendance->check_out   = $checkOut;
-                $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out);
+                $attendance->device_id  = $deviceId > 0 ? $deviceId : ($first->device_id ?? null);
+                $attendance->check_in   = $checkIn;
+                $attendance->check_out  = $checkOut;
+
+                // ✅ normalize times (لو حصل أي انعكاس) + حساب ساعات مع الليلي
+                [$attendance->check_in, $attendance->check_out] =
+                    $this->normalizeCheckTimes($shift, $dateStr, $attendance->check_in, $attendance->check_out);
+
+                $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out, $shift, $attendance->date);
 
                 $attendance->status = $this->normalizeAttendanceStatus(
                     $this->calcStatus($shift, $attendance->date, $attendance->check_in, $attendance->check_out, (float)$attendance->total_hours)
                 );
 
-                // ✅ normalize source (في حال قديم/فارغ)
                 $attendance->source = $this->normalizeAttendanceSource($attendance->source ?: 'fingerprint');
 
                 $attendance->save();
 
-                foreach ($items as $log) {
+                foreach ($empLogs as $log) {
                     $log->attendance_id = $attendance->id;
                     $log->is_processed  = true;
                     $log->save();
@@ -462,12 +490,104 @@ class attendancecontroller extends Controller
         ];
     }
 
-    private function calcHours($checkIn, $checkOut): float
+    // ─────────────────────────────────────────
+    // Night shift helpers
+    // ─────────────────────────────────────────
+    private function isShiftOvernight(?HrShift $shift): bool
+    {
+        if (!$shift) return false;
+
+        try {
+            $st = Carbon::parse($shift->start_time)->format('H:i');
+            $en = Carbon::parse($shift->end_time)->format('H:i');
+
+            $s = Carbon::createFromFormat('H:i', $st);
+            $e = Carbon::createFromFormat('H:i', $en);
+
+            return $e->lessThanOrEqualTo($s);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function shiftWindow(HrShift $shift, string $dateStr): array
+    {
+        // نافذة تجميع البصمات لليوم (تاريخ الدخول)
+        $dateStr = Carbon::parse($dateStr)->toDateString();
+
+        $start = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->start_time)->format('H:i:s'));
+        $end   = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->end_time)->format('H:i:s'));
+
+        if ($this->isShiftOvernight($shift)) {
+            $end->addDay();
+        }
+
+        // buffers لتجميع بصمات قبل/بعد الوقت الرسمي
+        $start = (clone $start)->subHours(4);
+        $end   = (clone $end)->addHours(6);
+
+        // لا ننزل قبل بداية اليوم (لأننا نعالج حسب تاريخ الدخول)
+        $dayStart = Carbon::parse($dateStr)->startOfDay();
+        if ($start->lessThan($dayStart)) $start = $dayStart;
+
+        return [$start, $end];
+    }
+
+    private function normalizeCheckTimes(?HrShift $shift, string $dateStr, $checkIn, $checkOut): array
+    {
+        if (!$shift) return [$checkIn, $checkOut];
+
+        if (!$checkOut) return [$checkIn, $checkOut];
+
+        $dateStr = Carbon::parse($dateStr)->toDateString();
+        $overnight = $this->isShiftOvernight($shift);
+
+        $out = Carbon::parse($checkOut);
+
+        // لو الوردية ليلية والانصراف مُدخل على نفس يوم الدخول لكن وقته صباحي => اعتبره اليوم التالي
+        if ($overnight) {
+            $endTime = Carbon::parse($shift->end_time)->format('H:i');
+            $outTime = $out->format('H:i');
+
+            // لو الانصراف وقت <= نهاية الوردية، غالباً اليوم التالي
+            if ($out->toDateString() === $dateStr && $outTime <= $endTime) {
+                $out->addDay();
+            }
+        }
+
+        if ($checkIn) {
+            $in = Carbon::parse($checkIn);
+
+            // لو الانصراف <= الدخول في وردية ليلية => اعتبره اليوم التالي
+            if ($overnight && $out->lessThanOrEqualTo($in)) {
+                $out->addDay();
+            }
+
+            // لو ليست ليلية وبالخطأ out <= in: نتركها كما هي (سيحسب 0 ساعات)
+        }
+
+        return [$checkIn ? Carbon::parse($checkIn) : null, $out];
+    }
+
+    // ─────────────────────────────────────────
+    // Core calculations
+    // ─────────────────────────────────────────
+    private function calcHours($checkIn, $checkOut, ?HrShift $shift = null, ?string $attendanceDate = null): float
     {
         if (!$checkIn || !$checkOut) return 0;
+
         $in  = Carbon::parse($checkIn);
         $out = Carbon::parse($checkOut);
-        if ($out->lessThanOrEqualTo($in)) return 0;
+
+        if ($out->lessThanOrEqualTo($in)) {
+            // ✅ في الوردية الليلية: قد يكون الانصراف بعد منتصف الليل
+            if ($shift && $this->isShiftOvernight($shift)) {
+                $out = (clone $out)->addDay();
+            } else {
+                return 0;
+            }
+        }
+
         return round($out->diffInMinutes($in) / 60, 2);
     }
 
@@ -479,8 +599,14 @@ class attendancecontroller extends Controller
         if (!$this->isWorkingDay($shift, $dateStr)) return 'absent';
         if (!$checkIn) return 'absent';
 
-        $scheduledIn = Carbon::parse($dateStr . ' ' . $shift->start_time);
-        $graceIn     = (clone $scheduledIn)->addMinutes((int)$shift->grace_minutes);
+        $scheduledIn = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->start_time)->format('H:i:s'));
+        $scheduledOut = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->end_time)->format('H:i:s'));
+
+        if ($this->isShiftOvernight($shift)) {
+            $scheduledOut->addDay();
+        }
+
+        $graceIn = (clone $scheduledIn)->addMinutes((int)$shift->grace_minutes);
 
         $status = 'present';
 
@@ -526,11 +652,11 @@ class attendancecontroller extends Controller
         if (in_array($source, $allowed, true)) return $source;
 
         $map = [
-            'device'      => 'fingerprint',
-            'finger'      => 'fingerprint',
-            'biometric'   => 'fingerprint',
-            'machine'     => 'fingerprint',
-            'import'      => 'fingerprint',
+            'device'    => 'fingerprint',
+            'finger'    => 'fingerprint',
+            'biometric' => 'fingerprint',
+            'machine'   => 'fingerprint',
+            'import'    => 'fingerprint',
         ];
 
         if (isset($map[$source]) && in_array($map[$source], $allowed, true)) {
