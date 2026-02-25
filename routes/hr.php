@@ -43,6 +43,9 @@ Route::group(
             Route::get('advances/employees/by-branch', 'advancescontroller@employeesByBranch')->name('advances.employees.byBranch');
             //hr deductions
             Route::resource('deductions', 'deductionscontroller');
+            Route::post('deductions/{deduction}/approve', 'deductionscontroller@approve')->name('deductions.approve');
+            Route::get('deductions/employees/by-branch', 'deductionscontroller@employeesByBranch')->name('deductions.employees.byBranch');
+
             //hr overtime
             Route::resource('overtime', 'overtimecontroller');
             //hr payrolls

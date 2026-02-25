@@ -261,6 +261,31 @@ return [
 'not_paid'                       => 'غير مدفوع',
 'paid_date'                      => 'تاريخ الدفع',
 'payroll_id'                     => 'Payroll',
+// Deductions
+'deductions_list'            => 'قائمة الخصومات والجزاءات',
+'add_deduction'              => 'إضافة خصم/جزاء',
+'edit_deduction'             => 'تعديل خصم/جزاء',
+
+'type'                       => 'النوع',
+'type_deduction'             => 'خصم',
+'type_penalty'               => 'جزاء',
+'reason'                     => 'السبب',
+'amount'                     => 'القيمة',
+'applied_month'              => 'شهر التطبيق',
+
+'status_applied'             => 'مطبق',
+'all_status'                 => 'كل الحالات',
+
+'approve'                    => 'اعتماد',
+'deduction_saved_success'    => 'تم حفظ الخصم/الجزاء بنجاح',
+'deduction_updated_success'  => 'تم تحديث الخصم/الجزاء بنجاح',
+'deduction_deleted_success'  => 'تم حذف الخصم/الجزاء بنجاح',
+'deduction_approved_success' => 'تم اعتماد الخصم/الجزاء بنجاح',
+
+'deduction_cannot_approve'   => 'لا يمكن اعتماد هذا السجل',
+'deduction_applied_locked'   => 'هذا السجل تم تطبيقه على كشف راتب ولا يمكن تعديله/حذفه',
+
+'deduction_approve_confirm_msg' => 'هل تريد اعتماد هذا الخصم/الجزاء؟',
 
 
 ];
