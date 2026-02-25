@@ -6,7 +6,6 @@
 
 @section('content')
 
-
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -73,9 +72,15 @@
                     <i class="ri-filter-3-line me-1"></i> {{ trans('hr.filter') }}
                 </button>
 
-                <button type="button" class="btn btn-success font" id="btnOpenAdd">
-                    <i class="ri-add-line me-1"></i> {{ trans('hr.add_overtime') ?? 'إضافة' }}
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-soft-info font" id="btnOpenGenerate">
+                        <i class="ri-magic-line me-1"></i> {{ trans('hr.generate_from_attendance') ?? 'توليد من الحضور' }}
+                    </button>
+
+                    <button type="button" class="btn btn-success font" id="btnOpenAdd">
+                        <i class="ri-add-line me-1"></i> {{ trans('hr.add_overtime') ?? 'إضافة' }}
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -95,6 +100,7 @@
                     <th>{{ trans('hr.employee') }}</th>
                     <th>{{ trans('hr.branch') }}</th>
                     <th>{{ trans('hr.date') }}</th>
+                    <th>{{ trans('hr.source') ?? 'المصدر' }}</th>
                     <th>{{ trans('hr.hours') ?? 'الساعات' }}</th>
                     <th>{{ trans('hr.hour_rate') ?? 'سعر الساعة' }}</th>
                     <th>{{ trans('hr.total_amount') ?? 'الإجمالي' }}</th>
@@ -117,6 +123,16 @@
                         </td>
                         <td class="font">{{ $r->branch?->name ?? '-' }}</td>
                         <td class="text-center"><code>{{ $r->date }}</code></td>
+
+                        <td class="text-center">
+                            @php $src = $r->source ?? 'manual'; @endphp
+                            @if($src === 'attendance')
+                                <span class="badge bg-info">{{ trans('hr.source_attendance') ?? 'من الحضور' }}</span>
+                            @else
+                                <span class="badge bg-secondary">{{ trans('hr.source_manual') ?? 'يدوي' }}</span>
+                            @endif
+                        </td>
+
                         <td class="text-center">{{ number_format((float)$r->hours,2) }}</td>
                         <td class="text-center">{{ number_format((float)$r->hour_rate,2) }}</td>
                         <td class="text-center">{{ number_format((float)$r->total_amount,2) }}</td>
@@ -178,7 +194,7 @@
     </div>
 </div>
 
-{{-- Modal --}}
+{{-- Overtime Modal --}}
 <div id="overtimeModal" class="modal fade" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 overflow-hidden">
@@ -273,6 +289,78 @@
     </div>
 </div>
 
+{{-- Generate From Attendance Modal --}}
+<div id="generateModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 overflow-hidden">
+            <div class="modal-header p-3">
+                <h4 class="card-title mb-0 font">
+                    {{ trans('hr.generate_from_attendance') ?? 'توليد الوقت الإضافي من الحضور' }}
+                </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="alert alert-info font">
+                    <div class="mb-1"><strong>{{ trans('hr.calc_notes') ?? 'ملاحظات الحساب:' }}</strong></div>
+                    <div class="small">
+                        - يتم التوليد فقط إذا كان Attendance status = present.<br>
+                        - يوم العمل: الإضافي = الوقت بعد نهاية الوردية فقط (إذا كان الانصراف بعد نهاية الوردية).<br>
+                        - يوم الإجازة في الوردية: كل ساعات الحضور تُعتبر إضافي.<br>
+                        - يتم التقريب لأقرب 0.5 ساعة.<br>
+                        - grace_minutes في الوردية خاص بالتأخير فقط (لا يدخل في حساب الإضافي).<br>
+                        - في الشفت الليلي: اليوم يُحسب من تاريخ تسجيل الدخول (date) حتى لو كان الانصراف في اليوم التالي.
+                    </div>
+                </div>
+
+                <form id="generateForm" autocomplete="off">
+                    @csrf
+
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label class="form-label font">{{ trans('hr.branch') }}</label>
+                            <select name="branch_id" id="gen_branch_id" class="form-select font" required>
+                                <option value="">{{ trans('hr.select_branch') }}</option>
+                                @foreach($branches as $b)
+                                    <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback" id="gen_branch_id_error"></div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label font">{{ trans('hr.date_from') ?? 'من تاريخ' }}</label>
+                            <input type="date" name="date_from" id="gen_date_from" class="form-control font" required>
+                            <div class="invalid-feedback" id="gen_date_from_error"></div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label font">{{ trans('hr.date_to') ?? 'إلى تاريخ' }}</label>
+                            <input type="date" name="date_to" id="gen_date_to" class="form-control font" required>
+                            <div class="invalid-feedback" id="gen_date_to_error"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-light font" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i> {{ trans('hr.cancel') }}
+                        </button>
+                        <button type="submit" class="btn btn-info font" id="genSubmitBtn">
+                            <i class="ri-play-line me-1"></i> {{ trans('hr.generate') ?? 'توليد' }}
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <script>
 $(document).ready(function () {
 
@@ -319,6 +407,8 @@ $(document).ready(function () {
 
         $('#form_branch_id').select2({ width:'100%', dropdownParent: $('#overtimeModal') });
         $('#form_employee_id').select2({ width:'100%', dropdownParent: $('#overtimeModal') });
+
+        $('#gen_branch_id').select2({ width:'100%', dropdownParent: $('#generateModal') });
     }
     initSelect2();
 
@@ -327,11 +417,21 @@ $(document).ready(function () {
             $('#form_'+f).removeClass('is-invalid');
             $('#form_'+f+'_error').text('');
         });
+        ['branch_id','date_from','date_to'].forEach(function(f){
+            $('#gen_'+f).removeClass('is-invalid');
+            $('#gen_'+f+'_error').text('');
+        });
     }
     function showErrors(errors){
         $.each(errors, function(field, messages){
-            $('#form_'+field).addClass('is-invalid');
-            $('#form_'+field+'_error').text(messages[0]);
+            if ($('#form_'+field).length){
+                $('#form_'+field).addClass('is-invalid');
+                $('#form_'+field+'_error').text(messages[0]);
+            }
+            if ($('#gen_'+field).length){
+                $('#gen_'+field).addClass('is-invalid');
+                $('#gen_'+field+'_error').text(messages[0]);
+            }
         });
     }
     function setLoading(btn, loading, htmlNormal){
@@ -343,6 +443,11 @@ $(document).ready(function () {
         if (status === 'pending') return '<span class="badge bg-warning text-dark">{{ trans('hr.status_pending') }}</span>';
         if (status === 'approved') return '<span class="badge bg-success">{{ trans('hr.status_approved') }}</span>';
         return '<span class="badge bg-primary">{{ trans('hr.status_applied') }}</span>';
+    }
+
+    function sourceBadge(source){
+        if (source === 'attendance') return '<span class="badge bg-info">{{ trans('hr.source_attendance') ?? 'من الحضور' }}</span>';
+        return '<span class="badge bg-secondary">{{ trans('hr.source_manual') ?? 'يدوي' }}</span>';
     }
 
     function actionsHtml(d){
@@ -464,6 +569,68 @@ $(document).ready(function () {
         $('#overtimeModal').modal('show');
     });
 
+    // Open Generate
+    $('#btnOpenGenerate').on('click', function(){
+        clearErrors();
+
+        var defaultBranch = $('#filter_branch_id').val() || '';
+        if (defaultBranch) $('#gen_branch_id').val(defaultBranch).trigger('change');
+        else $('#gen_branch_id').val('').trigger('change');
+
+        // default date range: current month from filter_month if exists
+        var m = $('#filter_month').val(); // Y-m
+        if (m) {
+            var from = m + '-01';
+            $('#gen_date_from').val(from);
+
+            var dt = new Date(m + '-01T00:00:00');
+            dt.setMonth(dt.getMonth() + 1);
+            dt.setDate(0);
+            var last = dt.toISOString().substring(0,10);
+            $('#gen_date_to').val(last);
+        }
+
+        $('#generateModal').modal('show');
+    });
+
+    // Submit Generate
+    $('#generateForm').on('submit', function(e){
+        e.preventDefault();
+        clearErrors();
+
+        var btn = $('#genSubmitBtn');
+        setLoading(btn, true, '<i class="ri-play-line me-1"></i> {{ trans('hr.generate') ?? 'توليد' }}');
+
+        $.ajax({
+            url: '{{ route('overtime.generateFromAttendance') }}',
+            method: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res){
+                setLoading(btn, false, '<i class="ri-play-line me-1"></i> {{ trans('hr.generate') ?? 'توليد' }}');
+
+                if(!res.success){
+                    toastError(res.message || '{{ trans('hr.error_occurred') }}');
+                    return;
+                }
+
+                toastSuccess(res.message || '{{ trans('hr.done') ?? 'تم' }}');
+                $('#generateModal').modal('hide');
+
+                // easiest + safe: reload to show generated records
+                setTimeout(function(){ window.location.reload(); }, 600);
+            },
+            error: function(xhr){
+                setLoading(btn, false, '<i class="ri-play-line me-1"></i> {{ trans('hr.generate') ?? 'توليد' }}');
+                if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    showErrors(xhr.responseJSON.errors);
+                } else {
+                    toastError((xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : '{{ trans('hr.error_occurred') }}');
+                }
+            }
+        });
+    });
+
     // Open Edit
     $(document).on('click', '.btn-edit', function(){
         clearErrors();
@@ -499,7 +666,7 @@ $(document).ready(function () {
         });
     });
 
-    // Submit
+    // Submit Overtime (add/edit)
     $('#overtimeForm').on('submit', function(e){
         e.preventDefault();
         clearErrors();
@@ -535,6 +702,7 @@ $(document).ready(function () {
                     d.employee_name + ' <small class="text-muted">(' + (d.employee_code ?? '') + ')</small>',
                     d.branch_name,
                     '<div class="text-center"><code>'+ (d.date ?? '') +'</code></div>',
+                    '<div class="text-center">'+ sourceBadge(d.source) +'</div>',
                     '<div class="text-center">'+ d.hours +'</div>',
                     '<div class="text-center">'+ d.hour_rate +'</div>',
                     '<div class="text-center">'+ d.total_amount +'</div>',
@@ -590,8 +758,8 @@ $(document).ready(function () {
                     var row = table.row($tr.get(0));
                     if(row.any()){
                         var rowData = row.data();
-                        rowData[8] = '<div class="text-center">'+ statusBadge(d.status) +'</div>';
-                        rowData[10]= '<div class="text-center">'+ actionsHtml(d) +'</div>';
+                        rowData[9] = '<div class="text-center">'+ statusBadge(d.status) +'</div>';
+                        rowData[11]= '<div class="text-center">'+ actionsHtml(d) +'</div>';
                         row.data(rowData).draw(false);
                     }
                 },

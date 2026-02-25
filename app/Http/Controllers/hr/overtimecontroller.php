@@ -5,6 +5,9 @@ namespace App\Http\Controllers\hr;
 use App\Http\Controllers\Controller;
 use App\Models\general\Branch;
 use App\Models\hr\HrOvertime;
+use App\Models\hr\HrAttendance;
+use App\Models\hr\HrAttendanceLog;
+use App\Models\hr\HrEmployeeShift;
 use App\Models\employee\employee;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -142,6 +145,8 @@ class overtimecontroller extends Controller
             $o = new HrOvertime();
             $o->employee_id   = $employeeId;
             $o->branch_id     = $branchId;
+            $o->attendance_id = null;
+            $o->source        = 'manual';
             $o->date          = $date;
             $o->hours         = $hours;
             $o->hour_rate     = $rate;
@@ -294,6 +299,187 @@ class overtimecontroller extends Controller
     }
 
     // ─────────────────────────────────────────
+    // NEW: Generate overtime from attendance
+    public function generateFromAttendance(Request $request)
+    {
+        $data = $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'date_from' => 'required|date',
+            'date_to'   => 'required|date|after_or_equal:date_from',
+        ]);
+
+        $branchId  = (int)$data['branch_id'];
+        $dateFrom  = Carbon::parse($data['date_from'])->toDateString();
+        $dateTo    = Carbon::parse($data['date_to'])->toDateString();
+
+        $employees = $this->getEmployeesByPrimaryBranch($branchId);
+        $employeeIds = $employees->pluck('id')->toArray();
+
+        if (empty($employeeIds)) {
+            return response()->json(['success' => true, 'message' => trans('hr.no_data') ?? 'لا يوجد بيانات', 'data' => [
+                'created' => 0,
+                'skipped_exists' => 0,
+                'skipped_no_shift' => 0,
+                'skipped_no_time' => 0,
+                'skipped_zero' => 0,
+            ]]);
+        }
+
+        $created = 0;
+        $skippedExists = 0;
+        $skippedNoShift = 0;
+        $skippedNoTime = 0;
+        $skippedZero = 0;
+
+        $shiftCache = [];
+
+        try {
+            DB::beginTransaction();
+
+            $attRows = HrAttendance::where('branch_id', $branchId)
+                ->whereIn('employee_id', $employeeIds)
+                ->where('status', 'present')
+                ->whereDate('date', '>=', $dateFrom)
+                ->whereDate('date', '<=', $dateTo)
+                ->orderBy('date')
+                ->orderBy('employee_id')
+                ->get();
+
+            foreach ($attRows as $att) {
+                $empId = (int)$att->employee_id;
+                $attDate = Carbon::parse($att->date)->toDateString();
+
+                $exists = HrOvertime::where('employee_id', $empId)
+                    ->where('branch_id', $branchId)
+                    ->whereDate('date', $attDate)
+                    ->exists();
+
+                if ($exists) {
+                    $skippedExists++;
+                    continue;
+                }
+
+                // Shift
+                $cacheKey = $empId . '|' . $attDate;
+                if (!array_key_exists($cacheKey, $shiftCache)) {
+                    $es = HrEmployeeShift::with('shift')
+                        ->where('employee_id', $empId)
+                        ->where('branch_id', $branchId)
+                        ->where('status', 1)
+                        ->whereDate('start_date', '<=', $attDate)
+                        ->where(function ($q) use ($attDate) {
+                            $q->whereNull('end_date')->orWhereDate('end_date', '>=', $attDate);
+                        })
+                        ->first();
+
+                    $shiftCache[$cacheKey] = $es;
+                }
+
+                $employeeShift = $shiftCache[$cacheKey];
+                $shift = $employeeShift?->shift;
+
+                if (!$shift) {
+                    $skippedNoShift++;
+                    continue;
+                }
+
+                // Determine working day (sun..sat flags)
+                $isWorkingDay = $this->isWorkingDay($shift, $attDate);
+
+                // Actual in/out (prefer logs; fallback to attendance)
+                [$actualIn, $actualOut] = $this->getActualInOut($att);
+
+                if (!$actualIn || !$actualOut) {
+                    $skippedNoTime++;
+                    continue;
+                }
+
+                $workedMinutes = max(0, $actualIn->diffInMinutes($actualOut));
+
+                // Scheduled end (for working day calculation)
+                $scheduledStart = Carbon::parse($attDate . ' ' . $shift->start_time);
+                $scheduledEnd   = Carbon::parse($attDate . ' ' . $shift->end_time);
+                if ($scheduledEnd->lessThanOrEqualTo($scheduledStart)) {
+                    $scheduledEnd->addDay(); // night shift
+                }
+
+                $overtimeMinutes = 0;
+
+                if (!$isWorkingDay) {
+                    // Day off => all worked time is overtime
+                    $overtimeMinutes = $workedMinutes;
+                } else {
+                    // Working day => overtime only after scheduled end time
+                    if ($actualOut->greaterThan($scheduledEnd)) {
+                        $overtimeMinutes = $scheduledEnd->diffInMinutes($actualOut);
+                    } else {
+                        $overtimeMinutes = 0;
+                    }
+                }
+
+                $overtimeHours = $this->roundToHalfHour($overtimeMinutes / 60);
+
+                if ($overtimeHours <= 0) {
+                    $skippedZero++;
+                    continue;
+                }
+
+                $emp = $employees->firstWhere('id', $empId) ?: employee::find($empId);
+                $baseSalary = (float)($emp?->base_salary ?? 0);
+                $rate = ($baseSalary > 0) ? HrOvertime::calcHourRate($baseSalary) : 0.00;
+                $total = round($overtimeHours * $rate, 2);
+
+                $appliedMonth = Carbon::parse($attDate)->startOfMonth()->toDateString();
+
+                $o = new HrOvertime();
+                $o->employee_id   = $empId;
+                $o->branch_id     = $branchId;
+                $o->attendance_id = $att->id;
+                $o->source        = 'attendance';
+                $o->date          = $attDate;
+                $o->hours         = round($overtimeHours, 2);
+                $o->hour_rate     = round($rate, 2);
+                $o->total_amount  = round($total, 2);
+                $o->applied_month = $appliedMonth;
+                $o->status        = 'pending';
+                $o->payroll_id    = null;
+                $o->notes         = $o->notes ?: 'Auto from attendance #' . $att->id;
+                $o->user_add      = Auth::id();
+                $o->save();
+
+                $created++;
+            }
+
+            DB::commit();
+
+            $msg = (trans('hr.overtime_generated_success') ?? 'تم توليد الوقت الإضافي بنجاح')
+                . ' | Created: ' . $created
+                . ' | Exists: ' . $skippedExists
+                . ' | NoShift: ' . $skippedNoShift
+                . ' | NoTime: ' . $skippedNoTime
+                . ' | Zero: ' . $skippedZero;
+
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'data' => [
+                    'created' => $created,
+                    'skipped_exists' => $skippedExists,
+                    'skipped_no_shift' => $skippedNoShift,
+                    'skipped_no_time' => $skippedNoTime,
+                    'skipped_zero' => $skippedZero,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('overtime.generateFromAttendance error', ['msg' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
+            $msg = trans('hr.error_occurred');
+            if (config('app.debug')) $msg = $e->getMessage();
+            return response()->json(['success' => false, 'message' => $msg], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────
 
     private function dto(HrOvertime $o): array
     {
@@ -306,6 +492,9 @@ class overtimecontroller extends Controller
 
             'branch_id'   => $o->branch_id,
             'branch_name' => $o->branch?->name ?? '',
+
+            'attendance_id' => $o->attendance_id,
+            'source'        => $o->source ?? 'manual',
 
             'date' => $o->date ? Carbon::parse($o->date)->toDateString() : null,
             'applied_month' => $o->applied_month ? Carbon::parse($o->applied_month)->format('Y-m') : null,
@@ -343,5 +532,72 @@ class overtimecontroller extends Controller
             ->where('branch_id', $branchId)
             ->where('is_primary', 1)
             ->exists();
+    }
+
+    private function roundToHalfHour(float $hours): float
+    {
+        if (!is_finite($hours) || $hours <= 0) return 0.0;
+        $rounded = round($hours * 2) / 2; // nearest 0.5
+        return round($rounded, 2);
+    }
+
+    private function isWorkingDay($shift, string $date): bool
+    {
+        $dow = Carbon::parse($date)->dayOfWeek; // 0=Sun .. 6=Sat
+        $fields = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        $field = $fields[$dow] ?? 'sun';
+        return (bool)($shift->{$field} ?? false);
+    }
+
+    private function getActualInOut(HrAttendance $att): array
+    {
+        $attDate = Carbon::parse($att->date)->toDateString();
+
+        // Try logs first
+        $logs = HrAttendanceLog::where('attendance_id', $att->id)
+            ->orderBy('punch_time')
+            ->get();
+
+        $inTime = null;
+        $outTime = null;
+
+        if ($logs->count() > 0) {
+            $inLog = $logs->first(function ($l) {
+                $t = strtolower((string)($l->punch_type ?? ''));
+                return $t === 'in';
+            });
+
+            $outLog = $logs->reverse()->first(function ($l) {
+                $t = strtolower((string)($l->punch_type ?? ''));
+                return $t === 'out';
+            });
+
+            if ($inLog && $inLog->punch_time) $inTime = Carbon::parse($inLog->punch_time)->format('H:i:s');
+            if ($outLog && $outLog->punch_time) $outTime = Carbon::parse($outLog->punch_time)->format('H:i:s');
+
+            // Fallback if punch_type not reliable: first punch as in, last as out
+            if (!$inTime && $logs->first()?->punch_time) $inTime = Carbon::parse($logs->first()->punch_time)->format('H:i:s');
+            if (!$outTime && $logs->last()?->punch_time) $outTime = Carbon::parse($logs->last()->punch_time)->format('H:i:s');
+        }
+
+        // Fallback to attendance table times
+        if (!$inTime && $att->check_in) {
+            try { $inTime = Carbon::parse($att->check_in)->format('H:i:s'); } catch (\Throwable $e) {}
+        }
+        if (!$outTime && $att->check_out) {
+            try { $outTime = Carbon::parse($att->check_out)->format('H:i:s'); } catch (\Throwable $e) {}
+        }
+
+        if (!$inTime || !$outTime) return [null, null];
+
+        $actualIn  = Carbon::parse($attDate . ' ' . $inTime);
+        $actualOut = Carbon::parse($attDate . ' ' . $outTime);
+
+        // Night shift / next day checkout
+        if ($actualOut->lessThanOrEqualTo($actualIn)) {
+            $actualOut->addDay();
+        }
+
+        return [$actualIn, $actualOut];
     }
 }

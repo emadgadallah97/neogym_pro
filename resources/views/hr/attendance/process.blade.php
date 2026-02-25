@@ -6,7 +6,6 @@
 
 @section('content')
 
-    <div id="page-alerts" class="mb-3"></div>
 
     <div class="row">
         <div class="col-12">
@@ -23,6 +22,7 @@
             </div>
         </div>
     </div>
+    <div id="page-alerts" class="mb-3"></div>
 
     {{-- GET: فلاتر فقط --}}
     <form id="processFilterForm" method="GET" action="{{ route('attendance.process.index') }}"

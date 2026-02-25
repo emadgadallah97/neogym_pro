@@ -74,7 +74,7 @@ return [
 
 // ── Confirm Dialog ───────────────────────────────────────────
 'delete_confirm_title'       => 'تأكيد الحذف',
-'delete_confirm_msg'         => 'هل تريد حذف الجهاز',
+'delete_confirm_msg'         => 'هل تريد حذف ',
 'yes_delete'                 => 'نعم، احذف',
 // ── Attendance ─────────────────────────────────────────────
 'attendance'                  => 'الحضور والانصراف',
@@ -326,6 +326,21 @@ return [
 'allowance_type_other'           => 'أخرى',
 'overtime_desc'           => 'إدارة ساعات العمل الإضافي',
 'allowances_desc'           => 'إدارة المكافآت والبدلات',
+
+    // Overtime - generate from attendance
+    'generate_from_attendance' => 'توليد من الحضور',
+    'generate'                 => 'توليد',
+    'date_from'                => 'من تاريخ',
+    'date_to'                  => 'إلى تاريخ',
+    'calc_notes'               => 'ملاحظات الحساب',
+
+    // Source labels
+    'source_attendance'=> 'من الحضور',
+
+    // Messages (optional but مستخدمة في الكنترولر/الفيو)
+    'overtime_generated_success' => 'تم توليد الوقت الإضافي بنجاح',
+    'no_data'                    => 'لا توجد بيانات',
+    'done'                       => 'تم',
 
 
 

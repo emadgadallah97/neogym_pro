@@ -51,7 +51,7 @@ Route::group(
 Route::resource('overtime', 'overtimecontroller');
 Route::post('overtime/{overtime}/approve', 'overtimecontroller@approve')->name('overtime.approve');
 Route::get('overtime/employees/by-branch', 'overtimecontroller@employeesByBranch')->name('overtime.employees.byBranch');
-
+Route::post('overtime/generate/from-attendance', 'overtimecontroller@generateFromAttendance')->name('overtime.generateFromAttendance');
 // Allowances
 Route::resource('allowances', 'allowancescontroller');
 Route::post('allowances/{allowance}/approve', 'allowancescontroller@approve')->name('allowances.approve');
@@ -60,14 +60,7 @@ Route::get('allowances/employees/by-branch', 'allowancescontroller@employeesByBr
             Route::resource('payrolls', 'payrollscontroller');
             //hr devices
             Route::resource('devices', 'devicescontroller');
-            //  Route::get('/', [HrController::class, 'index'])->name('index');
-            //     Route::resource('attendances',  HrAttendanceController::class);
-            //     Route::resource('advances',     HrAdvanceController::class);
-            //     Route::resource('deductions',   HrDeductionController::class);
-            //     Route::resource('overtime',     HrOvertimeController::class);
-            //     Route::resource('payrolls',     HrPayrollController::class);
-            //     Route::resource('devices',      HrDeviceController::class);
-            //     Route::get('reports',           [HrReportController::class, 'index'])->name('reports.index');
+
         });
     },
 );

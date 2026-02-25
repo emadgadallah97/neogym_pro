@@ -24,6 +24,8 @@ class HrOvertime extends Model
         'payroll_id',
         'notes',
         'user_add',
+        'attendance_id',
+        'source',
     ];
 
     protected $casts = [
