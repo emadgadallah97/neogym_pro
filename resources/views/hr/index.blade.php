@@ -232,19 +232,19 @@
             </div>
         </div>
 
-        {{-- ④ الإضافي والمكافآت --}}
+        {{-- ④ الإضافي  --}}
         <div class="col">
             <div class="card report-card h-100 shadow-sm border-0">
                 <div class="card-body d-flex flex-column text-center p-3">
                     <div class="report-icon-wrapper mx-auto mb-2">
                         <div
                             class="avatar-title bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center report-icon-sm">
-                            <i class="ri-gift-2-line fs-36"></i>
+                            <i class="ri-time-line fs-36"></i>
                         </div>
                     </div>
-                    <h6 class="card-title mb-2 font">{{ trans('hr.overtime_allowances') ?? 'الإضافي والمكافآت' }}</h6>
+                    <h6 class="card-title mb-2 font">{{ trans('hr.overtime') ?? 'ساعات العمل الاضافي' }}</h6>
                     <p class="text-muted mb-3 small">
-                        {{ trans('hr.overtime_allowances_desc') ?? 'إدارة ساعات العمل الإضافي والمكافآت والبدلات' }}</p>
+                        {{ trans('hr.overtime_desc') ?? 'إدارة ساعات العمل الإضافي' }}</p>
                     <div class="mt-auto">
                         <a href="{{ route('overtime.index') }}" class="btn btn-soft-success w-100 btn-sm">
                             <i class="ri-gift-2-line align-bottom me-1"></i>
@@ -255,6 +255,28 @@
             </div>
         </div>
 
+        {{-- ④ المكافاءات والبدلات  --}}
+        <div class="col">
+            <div class="card report-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column text-center p-3">
+                    <div class="report-icon-wrapper mx-auto mb-2">
+                        <div
+                            class="avatar-title bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center report-icon-sm">
+                            <i class="ri-gift-2-line fs-36"></i>
+                        </div>
+                    </div>
+                    <h6 class="card-title mb-2 font">{{ trans('hr.allowances') ?? 'البدلات والمكافآت' }}</h6>
+                    <p class="text-muted mb-3 small">
+                        {{ trans('hr.allowances_desc') ?? 'إدارة المكافآت والبدلات' }}</p>
+                    <div class="mt-auto">
+                        <a href="{{ route('allowances.index') }}" class="btn btn-soft-success w-100 btn-sm">
+                            <i class="ri-gift-2-line align-bottom me-1"></i>
+                            {{ trans('hr.open') ?? 'فتح' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         {{-- ⑤ كشف وصرف الرواتب --}}
         <div class="col">
             <div class="card report-card h-100 shadow-sm border-0">

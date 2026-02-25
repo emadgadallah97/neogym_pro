@@ -47,7 +47,15 @@ Route::group(
             Route::get('deductions/employees/by-branch', 'deductionscontroller@employeesByBranch')->name('deductions.employees.byBranch');
 
             //hr overtime
-            Route::resource('overtime', 'overtimecontroller');
+// Overtime
+Route::resource('overtime', 'overtimecontroller');
+Route::post('overtime/{overtime}/approve', 'overtimecontroller@approve')->name('overtime.approve');
+Route::get('overtime/employees/by-branch', 'overtimecontroller@employeesByBranch')->name('overtime.employees.byBranch');
+
+// Allowances
+Route::resource('allowances', 'allowancescontroller');
+Route::post('allowances/{allowance}/approve', 'allowancescontroller@approve')->name('allowances.approve');
+Route::get('allowances/employees/by-branch', 'allowancescontroller@employeesByBranch')->name('allowances.employees.byBranch');
             //hr payrolls
             Route::resource('payrolls', 'payrollscontroller');
             //hr devices

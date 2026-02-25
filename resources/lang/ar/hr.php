@@ -209,7 +209,7 @@ return [
 
 'request_date'                   => 'تاريخ الطلب',
 'start_month'                    => 'بداية الخصم',
-'total_amount'                   => 'إجمالي السلفة',
+'total_amount'                   => 'الاجمالي',
 'monthly_installment'            => 'القسط الشهري',
 'installments_count'             => 'عدد الأقساط',
 'paid_amount'                    => 'المدفوع',
@@ -286,6 +286,47 @@ return [
 'deduction_applied_locked'   => 'هذا السجل تم تطبيقه على كشف راتب ولا يمكن تعديله/حذفه',
 
 'deduction_approve_confirm_msg' => 'هل تريد اعتماد هذا الخصم/الجزاء؟',
+// Common
+'record_applied_locked'   => 'هذا السجل تم تطبيقه على كشف راتب ولا يمكن تعديله/حذفه.',
+'cannot_approve'          => 'لا يمكن اعتماد هذا السجل.',
+'all_types'               => 'كل الأنواع',
+
+
+
+// Overtime
+'overtime'                => 'الوقت الإضافي',
+'overtime_list'           => 'قائمة الوقت الإضافي',
+'add_overtime'            => 'إضافة وقت إضافي',
+'edit_overtime'           => 'تعديل وقت إضافي',
+'hour_rate'               => 'سعر الساعة',
+'hour_rate_auto_hint'     => 'يتم حسابه تلقائيًا من الراتب الأساسي ويمكنك تعديله.',
+'overtime_saved_success'  => 'تم حفظ الوقت الإضافي بنجاح',
+'overtime_updated_success'=> 'تم تحديث الوقت الإضافي بنجاح',
+'overtime_deleted_success'=> 'تم حذف الوقت الإضافي بنجاح',
+'overtime_approved_success'=> 'تم اعتماد الوقت الإضافي بنجاح',
+'overtime_approve_confirm_msg'     => 'سيتم اعتماد الوقت الاضافي وحفظه، هل تريد المتابعة؟',
+
+// Allowances
+'allowances'              => 'المكافآت والبدلات',
+'allowances_list'         => 'قائمة المكافآت والبدلات',
+'add_allowance'           => 'إضافة مكافأة/بدل',
+'edit_allowance'          => 'تعديل مكافأة/بدل',
+'allowance_saved_success' => 'تم حفظ المكافأة/البدل بنجاح',
+'allowance_updated_success'=> 'تم تحديث المكافأة/البدل بنجاح',
+'allowance_deleted_success'=> 'تم حذف المكافأة/البدل بنجاح',
+'allowance_approved_success'=> 'تم اعتماد المكافأة/البدل بنجاح',
+'allowance_approve_confirm_msg'     => 'سيتم اعتماد المكافأه/البدل وحفظه، هل تريد المتابعة؟',
+
+// Allowance types (للعرض)
+'allowance_type_bonus'           => 'مكافأة',
+'allowance_type_incentive'       => 'حافز',
+'allowance_type_transportation'  => 'بدل مواصلات',
+'allowance_type_housing'         => 'بدل سكن',
+'allowance_type_meal'            => 'بدل وجبة',
+'allowance_type_other'           => 'أخرى',
+'overtime_desc'           => 'إدارة ساعات العمل الإضافي',
+'allowances_desc'           => 'إدارة المكافآت والبدلات',
+
 
 
 ];
