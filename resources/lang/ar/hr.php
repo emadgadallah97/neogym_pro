@@ -202,6 +202,65 @@ return [
 
 'employee_shift_overlap'             => 'يوجد تعارض مع وردية فعّالة أخرى لنفس الموظف والفرع ضمن نفس الفترة',
 'end_date_after_or_equal_start'      => 'تاريخ النهاية يجب أن يكون بعد/يساوي تاريخ البداية',
+// Advances
+'advances_list'                  => 'قائمة السلف',
+'add_advance'                    => 'إضافة سلفة',
+'edit_advance'                   => 'تعديل سلفة',
+
+'request_date'                   => 'تاريخ الطلب',
+'start_month'                    => 'بداية الخصم',
+'total_amount'                   => 'إجمالي السلفة',
+'monthly_installment'            => 'القسط الشهري',
+'installments_count'             => 'عدد الأقساط',
+'paid_amount'                    => 'المدفوع',
+'remaining_amount'               => 'المتبقي',
+
+'status_pending'                 => 'معلق',
+'status_approved'                => 'معتمد',
+'status_rejected'                => 'مرفوض',
+'status_completed'               => 'مكتمل',
+
+'advance_saved_success'          => 'تم حفظ السلفة بنجاح',
+'advance_updated_success'        => 'تم تحديث السلفة بنجاح',
+'advance_deleted_success'        => 'تم حذف السلفة بنجاح',
+
+'advance_approved_success'       => 'تم اعتماد السلفة وتوليد الأقساط',
+'advance_rejected_success'       => 'تم رفض السلفة',
+
+'approve_advance'                => 'اعتماد',
+'reject_advance'                 => 'رفض',
+
+'approve_confirm_title'          => 'تأكيد الاعتماد',
+'approve_confirm_msg'            => 'سيتم اعتماد السلفة وتوليد الأقساط، هل تريد المتابعة؟',
+'yes_approve'                    => 'نعم اعتماد',
+
+'reject_confirm_title'           => 'تأكيد الرفض',
+'reject_confirm_msg'             => 'هل تريد رفض هذه السلفة؟',
+'yes_reject'                     => 'نعم رفض',
+
+'advance_has_active'             => 'لا يمكن إنشاء سلفة جديدة قبل إكمال السلفة الحالية',
+'advance_has_paid_cannot_delete' => 'لا يمكن حذف سلفة لديها أقساط مدفوعة/مرتبطة برواتب',
+'advance_cannot_edit_status'     => 'لا يمكن تعديل سلفة في هذه الحالة',
+'advance_cannot_approve'         => 'لا يمكن اعتماد هذه السلفة',
+'advance_cannot_reject'          => 'لا يمكن رفض هذه السلفة',
+
+'start_month_format'             => 'صيغة شهر بداية الخصم غير صحيحة',
+
+'advance_total_less_than_paid'           => 'لا يمكن أن يكون إجمالي السلفة أقل مما تم خصمه بالفعل',
+'advance_installments_less_than_paid'    => 'عدد الأقساط لا يمكن أن يكون أقل من عدد الأقساط المدفوعة',
+'advance_remaining_count_invalid'        => 'عدد الأقساط المتبقية غير صالح',
+'advance_reschedule_hint'               => 'عند تعديل سلفة معتمدة سيتم إعادة جدولة الأقساط غير المدفوعة فقط.',
+
+// Installments UI
+'installments'                   => 'الأقساط',
+'view_installments'              => 'عرض الأقساط',
+'installment_month'              => 'الشهر',
+'installment_amount'             => 'قيمة القسط',
+'is_paid'                        => 'مدفوع؟',
+'paid'                           => 'مدفوع',
+'not_paid'                       => 'غير مدفوع',
+'paid_date'                      => 'تاريخ الدفع',
+'payroll_id'                     => 'Payroll',
 
 
 ];

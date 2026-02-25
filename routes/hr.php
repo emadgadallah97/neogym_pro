@@ -35,6 +35,12 @@ Route::group(
             Route::resource('employee_shifts', 'employee_shiftscontroller');
             //hr advances
             Route::resource('advances', 'advancescontroller');
+
+            Route::post('advances/{advance}/approve', 'advancescontroller@approve')->name('advances.approve');
+            Route::post('advances/{advance}/reject', 'advancescontroller@reject')->name('advances.reject');
+
+            // (اختياري لتحسين الفلاتر)
+            Route::get('advances/employees/by-branch', 'advancescontroller@employeesByBranch')->name('advances.employees.byBranch');
             //hr deductions
             Route::resource('deductions', 'deductionscontroller');
             //hr overtime
