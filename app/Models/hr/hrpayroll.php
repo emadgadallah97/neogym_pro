@@ -25,6 +25,7 @@ class HrPayroll extends Model
         'net_salary',
         'payment_date',
         'payment_method',
+        'salary_transfer_details',
         'payment_reference',
         'status',
         'notes',

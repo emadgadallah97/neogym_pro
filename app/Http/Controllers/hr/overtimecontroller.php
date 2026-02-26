@@ -67,19 +67,31 @@ class overtimecontroller extends Controller
     }
 
     // Ajax: employees by branch (primary only) + base_salary + default_hour_rate
+    // تحسين: لو أرسلت date سيتم حساب hour_rate بناءً على وردية اليوم (اختياري)
     public function employeesByBranch(Request $request)
     {
         $branchId = (int)$request->get('branch_id', 0);
+        $date = (string)$request->get('date', ''); // optional YYYY-MM-DD
+
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
 
-        $data = $employees->map(function ($e) {
+        $d = null;
+        if ($date) {
+            try { $d = Carbon::parse($date)->toDateString(); } catch (\Throwable $e) { $d = null; }
+        }
+        if (!$d) $d = Carbon::now()->toDateString();
+
+        $data = $employees->map(function ($e) use ($branchId, $d) {
             $base = (float)($e->base_salary ?? 0);
+            $shiftHours = HrOvertime::getEmployeeShiftHours((int)$e->id, $branchId, $d, 8.0);
+
             return [
                 'id' => $e->id,
                 'name' => $e->full_name ?? $e->getFullNameAttribute(),
                 'code' => $e->code,
                 'base_salary' => round($base, 2),
-                'hour_rate' => HrOvertime::calcHourRate($base),
+                'shift_hours' => round($shiftHours, 2),
+                'hour_rate' => HrOvertime::calcHourRate($base, $shiftHours, 2.0),
             ];
         });
 
@@ -135,7 +147,10 @@ class overtimecontroller extends Controller
 
             $hours = round((float)$data['hours'], 2);
 
-            $defaultRate = HrOvertime::calcHourRate((float)($emp->base_salary ?? 0));
+            // ✅ defaultRate based on shift hours
+            $shiftHours = HrOvertime::getEmployeeShiftHours($employeeId, $branchId, $date, 8.0);
+            $defaultRate = HrOvertime::calcHourRate((float)($emp->base_salary ?? 0), $shiftHours, 2.0);
+
             $rate = isset($data['hour_rate']) && $data['hour_rate'] !== null && $data['hour_rate'] !== ''
                 ? round((float)$data['hour_rate'], 2)
                 : $defaultRate;
@@ -208,7 +223,10 @@ class overtimecontroller extends Controller
 
             $hours = round((float)$data['hours'], 2);
 
-            $defaultRate = HrOvertime::calcHourRate((float)($emp->base_salary ?? 0));
+            // ✅ defaultRate based on shift hours
+            $shiftHours = HrOvertime::getEmployeeShiftHours($employeeId, $branchId, $date, 8.0);
+            $defaultRate = HrOvertime::calcHourRate((float)($emp->base_salary ?? 0), $shiftHours, 2.0);
+
             $rate = isset($data['hour_rate']) && $data['hour_rate'] !== null && $data['hour_rate'] !== ''
                 ? round((float)$data['hour_rate'], 2)
                 : $defaultRate;
@@ -299,7 +317,7 @@ class overtimecontroller extends Controller
     }
 
     // ─────────────────────────────────────────
-    // NEW: Generate overtime from attendance
+    // Generate overtime from attendance
     public function generateFromAttendance(Request $request)
     {
         $data = $request->validate([
@@ -308,9 +326,9 @@ class overtimecontroller extends Controller
             'date_to'   => 'required|date|after_or_equal:date_from',
         ]);
 
-        $branchId  = (int)$data['branch_id'];
-        $dateFrom  = Carbon::parse($data['date_from'])->toDateString();
-        $dateTo    = Carbon::parse($data['date_to'])->toDateString();
+        $branchId = (int)$data['branch_id'];
+        $dateFrom = Carbon::parse($data['date_from'])->toDateString();
+        $dateTo   = Carbon::parse($data['date_to'])->toDateString();
 
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
         $employeeIds = $employees->pluck('id')->toArray();
@@ -383,12 +401,9 @@ class overtimecontroller extends Controller
                     continue;
                 }
 
-                // Determine working day (sun..sat flags)
                 $isWorkingDay = $this->isWorkingDay($shift, $attDate);
 
-                // Actual in/out (prefer logs; fallback to attendance)
                 [$actualIn, $actualOut] = $this->getActualInOut($att);
-
                 if (!$actualIn || !$actualOut) {
                     $skippedNoTime++;
                     continue;
@@ -396,7 +411,6 @@ class overtimecontroller extends Controller
 
                 $workedMinutes = max(0, $actualIn->diffInMinutes($actualOut));
 
-                // Scheduled end (for working day calculation)
                 $scheduledStart = Carbon::parse($attDate . ' ' . $shift->start_time);
                 $scheduledEnd   = Carbon::parse($attDate . ' ' . $shift->end_time);
                 if ($scheduledEnd->lessThanOrEqualTo($scheduledStart)) {
@@ -406,14 +420,10 @@ class overtimecontroller extends Controller
                 $overtimeMinutes = 0;
 
                 if (!$isWorkingDay) {
-                    // Day off => all worked time is overtime
                     $overtimeMinutes = $workedMinutes;
                 } else {
-                    // Working day => overtime only after scheduled end time
                     if ($actualOut->greaterThan($scheduledEnd)) {
                         $overtimeMinutes = $scheduledEnd->diffInMinutes($actualOut);
-                    } else {
-                        $overtimeMinutes = 0;
                     }
                 }
 
@@ -426,7 +436,12 @@ class overtimecontroller extends Controller
 
                 $emp = $employees->firstWhere('id', $empId) ?: employee::find($empId);
                 $baseSalary = (float)($emp?->base_salary ?? 0);
-                $rate = ($baseSalary > 0) ? HrOvertime::calcHourRate($baseSalary) : 0.00;
+
+                // ✅ hour rate based on shift duration
+                $shiftHours = HrOvertime::calcShiftHours($attDate, (string)$shift->start_time, (string)$shift->end_time);
+                if ($shiftHours <= 0) $shiftHours = 8.0;
+
+                $rate = ($baseSalary > 0) ? HrOvertime::calcHourRate($baseSalary, $shiftHours, 2.0) : 0.00;
                 $total = round($overtimeHours * $rate, 2);
 
                 $appliedMonth = Carbon::parse($attDate)->startOfMonth()->toDateString();
@@ -553,7 +568,6 @@ class overtimecontroller extends Controller
     {
         $attDate = Carbon::parse($att->date)->toDateString();
 
-        // Try logs first
         $logs = HrAttendanceLog::where('attendance_id', $att->id)
             ->orderBy('punch_time')
             ->get();
@@ -575,12 +589,10 @@ class overtimecontroller extends Controller
             if ($inLog && $inLog->punch_time) $inTime = Carbon::parse($inLog->punch_time)->format('H:i:s');
             if ($outLog && $outLog->punch_time) $outTime = Carbon::parse($outLog->punch_time)->format('H:i:s');
 
-            // Fallback if punch_type not reliable: first punch as in, last as out
             if (!$inTime && $logs->first()?->punch_time) $inTime = Carbon::parse($logs->first()->punch_time)->format('H:i:s');
             if (!$outTime && $logs->last()?->punch_time) $outTime = Carbon::parse($logs->last()->punch_time)->format('H:i:s');
         }
 
-        // Fallback to attendance table times
         if (!$inTime && $att->check_in) {
             try { $inTime = Carbon::parse($att->check_in)->format('H:i:s'); } catch (\Throwable $e) {}
         }
@@ -593,7 +605,6 @@ class overtimecontroller extends Controller
         $actualIn  = Carbon::parse($attDate . ' ' . $inTime);
         $actualOut = Carbon::parse($attDate . ' ' . $outTime);
 
-        // Night shift / next day checkout
         if ($actualOut->lessThanOrEqualTo($actualIn)) {
             $actualOut->addDay();
         }
