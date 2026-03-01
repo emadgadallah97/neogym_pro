@@ -2,8 +2,8 @@
 
 namespace App\Services\attendances;
 
-use App\Models\attendances\Attendance;
-use App\Models\attendances\AttendanceGuest;
+use App\Models\attendances\attendance as Attendance;
+use App\Models\attendances\attendanceguest as AttendanceGuest;
 use App\Models\members\Member;
 use App\Models\sales\MemberSubscription;
 use App\Models\sales\MemberSubscriptionPtAddon;
@@ -14,6 +14,31 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceService
 {
+    private function t(string $key, string $fallback)
+    {
+        $v = trans($key);
+        return ($v === $key) ? $fallback : $v;
+    }
+
+    private function isDuplicateKey(QueryException $e): bool
+    {
+        $info = $e->errorInfo ?? null;
+        $sqlState = is_array($info) ? ($info[0] ?? null) : null;
+        $driverCode = is_array($info) ? ($info[1] ?? null) : null;
+
+        // MySQL: SQLSTATE 23000 + 1062
+        if ($sqlState === '23000' && (int)$driverCode === 1062) {
+            return true;
+        }
+
+        // Postgres: 23505
+        if (($sqlState === '23505') || ($e->getCode() === '23505')) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function scanCheckIn(string $memberCode, int $branchId, int $userId, bool $deductPt = true): array
     {
         $memberCode = trim($memberCode);
@@ -37,7 +62,12 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.member_not_found')];
                 }
 
-                // ✅ Prevent multiple check-in per day (active only)
+                // Member frozen check
+                if ((bool)($member->is_frozen_now ?? false)) {
+                    return ['ok' => false, 'message' => $this->t('attendances.member_frozen_now', 'عضوية العضو مجمدة حاليا')];
+                }
+
+                // Prevent multiple check-in per day (active only)
                 $already = Attendance::query()
                     ->where('member_id', $member->id)
                     ->where('attendance_date', $today)
@@ -48,9 +78,7 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.already_checked_in_today')];
                 }
 
-                // -----------------------------
-                // ✅ Subscription checks (fixed column names)
-                // -----------------------------
+                // Subscription checks
                 $baseQ = MemberSubscription::query()
                     ->where('member_id', $member->id);
 
@@ -64,7 +92,6 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.subscription_status_not_active')];
                 }
 
-                // ✅ Date range check
                 $inDateQ = (clone $activeQ)
                     ->whereNotNull('start_date')
                     ->whereNotNull('end_date')
@@ -90,7 +117,6 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.subscription_branch_not_allowed')];
                 }
 
-                // ✅ Pick the nearest end date (and lock it)
                 $sub = (clone $allowedBranchQ)
                     ->orderBy('end_date', 'asc')
                     ->lockForUpdate()
@@ -100,7 +126,6 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.no_active_subscription')];
                 }
 
-                // ✅ Plan check
                 $planId = (int)($sub->subscriptions_plan_id ?? 0);
                 $plan = subscriptions_plan::query()->where('id', $planId)->first();
 
@@ -108,7 +133,7 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.plan_not_found')];
                 }
 
-                // ✅ Allowed training days check
+                // Allowed training days check
                 $allowedDays = $this->normalizeDays($plan->allowed_training_days ?? null);
                 if (!empty($allowedDays) && !in_array($dayKey, $allowedDays, true)) {
                     return [
@@ -121,7 +146,7 @@ class AttendanceService
                     ];
                 }
 
-                // ✅ Deduct base
+                // Deduct base (always required)
                 $baseBefore = (int)($sub->sessions_remaining ?? 0);
                 if ($baseBefore <= 0) {
                     return ['ok' => false, 'message' => trans('attendances.subscription_sessions_finished')];
@@ -132,7 +157,7 @@ class AttendanceService
 
                 $baseAfter = (int)($sub->sessions_remaining ?? 0);
 
-                // ✅ PT deduction (optional, best-effort)
+                // PT deduction (optional, best-effort)
                 $ptAddonId = null;
                 $ptBefore = null;
                 $ptAfter = null;
@@ -157,34 +182,29 @@ class AttendanceService
                     }
                 }
 
-                // ✅ Create attendance row
-                try {
-                    $attendance = Attendance::create([
-                        'branch_id' => $branchId,
-                        'member_id' => $member->id,
-                        'attendance_date' => $today,
-                        'attendance_time' => $now->format('H:i:s'),
-                        'day_key' => $dayKey,
+                $attendance = Attendance::create([
+                    'branch_id' => $branchId,
+                    'member_id' => $member->id,
+                    'attendance_date' => $today,
+                    'attendance_time' => $now->format('H:i:s'),
+                    'day_key' => $dayKey,
 
-                        'member_subscription_id' => $sub->id,
-                        'pt_addon_id' => $ptAddonId,
+                    'member_subscription_id' => $sub->id,
+                    'pt_addon_id' => $ptAddonId,
 
-                        'is_base_deducted' => 1,
-                        'is_pt_deducted' => $isPtDeducted ? 1 : 0,
+                    'is_base_deducted' => 1,
+                    'is_pt_deducted' => $isPtDeducted ? 1 : 0,
 
-                        'base_sessions_before' => $baseBefore,
-                        'base_sessions_after' => $baseAfter,
-                        'pt_sessions_before' => $ptBefore,
-                        'pt_sessions_after' => $ptAfter,
+                    'base_sessions_before' => $baseBefore,
+                    'base_sessions_after' => $baseAfter,
+                    'pt_sessions_before' => $ptBefore,
+                    'pt_sessions_after' => $ptAfter,
 
-                        'checkin_method' => 'barcode',
-                        'recorded_by' => null,
+                    'checkin_method' => 'barcode',
+                    'recorded_by' => null,
 
-                        'user_add' => $userId,
-                    ]);
-                } catch (QueryException $e) {
-                    throw $e;
-                }
+                    'user_add' => $userId,
+                ]);
 
                 $msg = trans('attendances.scan_success');
                 if ($deductPt && !$isPtDeducted) {
@@ -208,7 +228,10 @@ class AttendanceService
                 ];
             }, 3);
         } catch (QueryException $e) {
-            return ['ok' => false, 'message' => trans('attendances.already_checked_in_today')];
+            if ($this->isDuplicateKey($e)) {
+                return ['ok' => false, 'message' => trans('attendances.already_checked_in_today')];
+            }
+            return ['ok' => false, 'message' => $this->t('attendances.db_error', 'حدث خطأ في قاعدة البيانات')];
         } catch (\Throwable $e) {
             return ['ok' => false, 'message' => trans('attendances.something_went_wrong')];
         }
@@ -309,7 +332,12 @@ class AttendanceService
                 $pt->sessions_remaining = (int)($pt->sessions_remaining ?? 0) + 1;
                 $pt->save();
 
+                // Remove PT linkage/details from attendance after refund
                 $att->is_pt_deducted = 0;
+                $att->pt_addon_id = null;
+                $att->pt_sessions_before = null;
+                $att->pt_sessions_after = null;
+
                 $att->pt_refunded_at = Carbon::now();
                 $att->pt_refunded_by = $userId;
                 $att->user_update = $userId;

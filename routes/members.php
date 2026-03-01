@@ -14,13 +14,12 @@ Route::group(
     function () {
         Route::group(['namespace' => 'members'], function () {
             //members
-             // إضافات الأعضاء (لازم قبل resource) [page:1]
-    Route::get('members/{member}/card', 'memberscontroller@card')->name('members.card');
-    Route::get('members/{member}/qr.png', 'memberscontroller@qrPng')->name('members.qr_png');
+            // إضافات الأعضاء (لازم قبل resource) [page:1]
+            Route::get('members/{member}/card', 'memberscontroller@card')->name('members.card');
+            Route::get('members/{member}/qr.png', 'memberscontroller@qrPng')->name('members.qr_png');
 
-    // resource
-    Route::resource('members', 'memberscontroller');
-
+            // resource
+            Route::resource('members', 'memberscontroller');
         });
     },
 );

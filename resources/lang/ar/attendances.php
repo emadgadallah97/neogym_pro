@@ -75,4 +75,12 @@ return [
     'guest_people_limit_reached' => 'تم الوصول للحد الأقصى لعدد الضيوف في هذه الزيارة.',
     'guest_times_limit_reached' => 'تم الوصول للحد الأقصى لمرات استخدام الضيوف لهذه الخطة.',
     'guest_added_success' => 'تم إضافة الضيف بنجاح.',
+
+    'remaining' => 'المتبقي',
+    'total' => 'الاجمالي',
+    'pt_deducted' => 'حضور حصه خاصة',
+    'guests' => 'الضيوف',
+
+    'notes' => 'ملاحظات',
+
 ];
