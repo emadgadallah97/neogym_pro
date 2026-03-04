@@ -5,9 +5,9 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="Description" content="نظام ادارة المستشفيات">
-    <meta name="Author" content="نظام ادرة المستشفيات">
-    <meta name="Keywords" content="المستشفيات" />
+    <meta name="Description" content="نظام ادارة الجيم">
+    <meta name="Author" content="نظام ادرة الجيم">
+    <meta name="Keywords" content="الجيم" />
     @include('layouts.head')
 </head>
 

@@ -60,5 +60,7 @@ return [
         'offers' => 'Offers',
     'coupons' => 'Coupons',
         'sales' => 'Sales',
+    'attendances' => 'attendances',
+    'accounting' => 'accounting',
 
 ];

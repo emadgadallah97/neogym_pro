@@ -11,7 +11,8 @@
 
 <!-- Bootstrap Css -->
 <!-- Icons Css -->
-
+  {{-- Font Awesome 6 — Local --}}
+<link rel="stylesheet" href="{{ asset('assets/libs/font-awesome/css/all.min.css') }}">
 <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" />
 <!-- App Css-->
 @if (App::getlocale() == 'ar')
@@ -38,6 +39,15 @@
 
 
 @yield('css')
+<style>
+    /* Fix Font Awesome override */
+    .fas, .far, .fab, .fal, .fa-solid, .fa-regular, .fa-brands {
+        font-family: "Font Awesome 6 Free" !important;
+    }
+    .fab, .fa-brands {
+        font-family: "Font Awesome 6 Brands" !important;
+    }
+</style>
 
 <script>
     window.onload = function() {

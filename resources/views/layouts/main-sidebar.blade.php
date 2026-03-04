@@ -134,6 +134,16 @@
                         <span data-key="t-widgets">{{ trans('main_trans.hr') }}</span>
                     </a>
                 </li>
+                {{--اداره علاقات العملاء--}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+                        @if (Route::currentRouteName() == 'crm.create' || Route::currentRouteName() == 'crm.index') active @endif"
+                        href="{{ url('/' . ($page = 'crm/dashboard')) }}">
+
+                        <i class="mdi mdi-handshake"></i>
+                        <span data-key="t-widgets">{{ trans('main_trans.crm') }}</span>
+                    </a>
+                </li>
                 <!--user management-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span
                         data-key="t-components">{{ trans('main_trans.user_management') }}</span></li>
