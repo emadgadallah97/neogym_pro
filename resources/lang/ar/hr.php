@@ -416,5 +416,22 @@ return [
     'halfday_amount' => 'قيمة نصف يوم',
     'attendance_total_amount' => 'إجمالي قيمة الحضور',
 
+    'approve_and_pay_title'       => 'اعتماد السلفة وتسجيل الصرف',
+    'approve_expense_modal_info'  => 'سيتم اعتماد السلفة وتوليد الأقساط وتسجيل سجل تلقائي في المصروفات.',
+    'confirm_approve_and_disburse'=> 'تأكيد الاعتماد والصرف',
+    'select_expense_type_required'=> 'يرجى اختيار نوع المصروف',
+    'expense_type'                => 'نوع المصروف',
+    'select_expense_type'         => 'اختر نوع المصروف',
+    'disbursed_by'                => 'القائم بالصرف',
+    'disbursed_by_hint'           => 'يتم تحميله تلقائياً بناءً على الفرع',
+
+
+'advance_approved_with_expense_success' => 'تم اعتماد السلفة وصرفها وتسجيل المصروف بنجاح',
+
+// Expense
+// 'advance_expense_description'           => 'سلفة موظف',
+
+'advance_expense_description' => 'سلفة موظف - :name',
+
 
 ];

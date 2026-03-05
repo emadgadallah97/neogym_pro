@@ -416,5 +416,23 @@ return [
     'halfday_amount' => 'Half Day Value',
     'attendance_total_amount' => 'Total Attendance Value',
 
+    'approve_and_pay_title'       => 'Approve Advance & Record Disbursement',
+    'approve_expense_modal_info'  => 'The advance will be approved, installments generated, and an expense record will be created automatically.',
+    'confirm_approve_and_disburse'=> 'Confirm Approval & Disbursement',
+    'select_expense_type_required'=> 'Please select an expense type',
+    'expense_type'                => 'Expense Type',
+    'select_expense_type'         => 'Select Expense Type',
+    'disbursed_by'                => 'Disbursed By',
+    'disbursed_by_hint'           => 'Loaded automatically based on branch',
+
+
+
+
+'advance_approved_with_expense_success' => 'Advance approved, disbursed, and expense recorded successfully',
+
+// Expense
+'advance_expense_description'           => 'Employee Advance',
+
+
 
 ];

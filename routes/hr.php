@@ -9,79 +9,86 @@ Auth::routes(['verify' => true]);
 
 Route::group(
     [
-
         'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath', 'auth', 'verified'],
     ],
     function () {
         Route::group(['namespace' => 'hr'], function () {
-            //hr programs
+
+            // ==================== HR Programs ====================
             Route::resource('hr', 'hrprogramscontroller');
 
-
-            //hr attendance
-            // routes/web.php (داخل مجموعة hr أو حسب تنظيم مشروعك)
-
-            Route::get('attendance/process', 'attendancecontroller@processIndex')->name('attendance.process.index');
-            Route::post('attendance/process/run', 'attendancecontroller@processRun')->name('attendance.process.run');
-
-            Route::get('attendance/employees/by-branch', 'attendancecontroller@employeesByBranch')->name('attendance.employees.byBranch');
-
-            // استقبال من الجهاز (اختياري الآن)
-            Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')->name('attendance.logs.receive');
+            // ==================== Attendance ====================
+            Route::get('attendance/process', 'attendancecontroller@processIndex')
+                ->name('attendance.process.index');
+            Route::post('attendance/process/run', 'attendancecontroller@processRun')
+                ->name('attendance.process.run');
+            Route::get('attendance/employees/by-branch', 'attendancecontroller@employeesByBranch')
+                ->name('attendance.employees.byBranch');
+            Route::post('attendance/logs/receive', 'attendancecontroller@receiveLog')
+                ->name('attendance.logs.receive');
             Route::resource('attendance', 'attendancecontroller');
 
-            //shifts
+            // ==================== Shifts ====================
             Route::resource('shifts', 'shiftscontroller');
-            //employee_shifts
+
+            // ==================== Employee Shifts ====================
             Route::resource('employee_shifts', 'employee_shiftscontroller');
-            //hr advances
+
+            // ==================== Advances ====================
+            Route::get('advances/employees/by-branch', 'advancescontroller@employeesByBranch')
+                ->name('advances.employees.byBranch');
+            Route::post('advances/{advance}/approve', 'advancescontroller@approve')
+                ->name('advances.approve');
+            Route::post('advances/{advance}/approve-with-expense', 'advancescontroller@approveWithExpense')
+                ->name('advances.approveWithExpense');
+            Route::post('advances/{advance}/reject', 'advancescontroller@reject')
+                ->name('advances.reject');
             Route::resource('advances', 'advancescontroller');
 
-            Route::post('advances/{advance}/approve', 'advancescontroller@approve')->name('advances.approve');
-            Route::post('advances/{advance}/reject', 'advancescontroller@reject')->name('advances.reject');
-
-            // (اختياري لتحسين الفلاتر)
-            Route::get('advances/employees/by-branch', 'advancescontroller@employeesByBranch')->name('advances.employees.byBranch');
-            //hr deductions
+            // ==================== Deductions ====================
+            Route::get('deductions/employees/by-branch', 'deductionscontroller@employeesByBranch')
+                ->name('deductions.employees.byBranch');
+            Route::post('deductions/{deduction}/approve', 'deductionscontroller@approve')
+                ->name('deductions.approve');
             Route::resource('deductions', 'deductionscontroller');
-            Route::post('deductions/{deduction}/approve', 'deductionscontroller@approve')->name('deductions.approve');
-            Route::get('deductions/employees/by-branch', 'deductionscontroller@employeesByBranch')->name('deductions.employees.byBranch');
 
-            //hr overtime
-            // Overtime
+            // ==================== Overtime ====================
+            Route::get('overtime/employees/by-branch', 'overtimecontroller@employeesByBranch')
+                ->name('overtime.employees.byBranch');
+            Route::post('overtime/generate/from-attendance', 'overtimecontroller@generateFromAttendance')
+                ->name('overtime.generateFromAttendance');
+            Route::post('overtime/{overtime}/approve', 'overtimecontroller@approve')
+                ->name('overtime.approve');
             Route::resource('overtime', 'overtimecontroller');
-            Route::post('overtime/{overtime}/approve', 'overtimecontroller@approve')->name('overtime.approve');
-            Route::get('overtime/employees/by-branch', 'overtimecontroller@employeesByBranch')->name('overtime.employees.byBranch');
-            Route::post('overtime/generate/from-attendance', 'overtimecontroller@generateFromAttendance')->name('overtime.generateFromAttendance');
-            // Allowances
-            Route::resource('allowances', 'allowancescontroller');
-            Route::post('allowances/{allowance}/approve', 'allowancescontroller@approve')->name('allowances.approve');
-            Route::get('allowances/employees/by-branch', 'allowancescontroller@employeesByBranch')->name('allowances.employees.byBranch');
-            //hr payrolls
-            // Payrolls
-            Route::get('payrolls', [payrollscontroller::class, 'index'])->name('payrolls.index');
 
+            // ==================== Allowances ====================
+            Route::get('allowances/employees/by-branch', 'allowancescontroller@employeesByBranch')
+                ->name('allowances.employees.byBranch');
+            Route::post('allowances/{allowance}/approve', 'allowancescontroller@approve')
+                ->name('allowances.approve');
+            Route::resource('allowances', 'allowancescontroller');
+
+            // ==================== Payrolls ====================
             Route::get('payrolls/employees/by-branch', [payrollscontroller::class, 'employeesByBranch'])
                 ->name('payrolls.employees.byBranch');
-
-            Route::post('payrolls/generate', [payrollscontroller::class, 'generate'])->name('payrolls.generate');
-            Route::post('payrolls/approve', [payrollscontroller::class, 'approveMonth'])->name('payrolls.approve');
-            Route::post('payrolls/pay', [payrollscontroller::class, 'payMonth'])->name('payrolls.pay');
-
-            // ✅ NEW: Cancel drafts (draft only)
+            Route::post('payrolls/generate', [payrollscontroller::class, 'generate'])
+                ->name('payrolls.generate');
+            Route::post('payrolls/approve', [payrollscontroller::class, 'approveMonth'])
+                ->name('payrolls.approve');
+            Route::post('payrolls/pay', [payrollscontroller::class, 'payMonth'])
+                ->name('payrolls.pay');
             Route::post('payrolls/cancel-drafts', [payrollscontroller::class, 'cancelDrafts'])
                 ->name('payrolls.cancelDrafts');
-
-            // ✅ NEW: Breakdown modal data (AJAX)
             Route::get('payrolls/breakdown', [payrollscontroller::class, 'breakdown'])
                 ->name('payrolls.breakdown');
+            Route::get('payrolls', [payrollscontroller::class, 'index'])
+                ->name('payrolls.index');
             Route::resource('payrolls', 'payrollscontroller');
 
-            //hr devices
+            // ==================== Devices ====================
             Route::resource('devices', 'devicescontroller');
         });
     },
 );
 
 Auth::routes();
-//Auth::routes(['register' => false]);

@@ -31,6 +31,7 @@ class Expense extends Model
         'useradd',
         'userupdate',
         'commission_settlement_id',
+        'hr_advance_id',
     ];
 
     protected $casts = [
@@ -81,5 +82,10 @@ class Expense extends Model
     public function settlement()
     {
         return $this->belongsTo(CommissionSettlement::class, 'commission_settlement_id');
+    }
+
+    public function advance()
+    {
+        return $this->belongsTo(\App\Models\hr\HrAdvance::class, 'hr_advance_id');
     }
 }
