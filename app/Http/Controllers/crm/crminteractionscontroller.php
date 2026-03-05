@@ -39,12 +39,12 @@ class CrmInteractionsController extends Controller
             $row = DB::table('crm_interactions')->where('id', $id)->first();
             return response()->json([
                 'success'     => true,
-                'message'     => 'تم حفظ التفاعل',
+                'message'     => trans('crm.save_interaction'),
                 'interaction' => $row,
             ]);
         }
 
-        return redirect()->back()->with('success', 'تم حفظ التفاعل');
+        return redirect()->back()->with('success', trans('crm.save_interaction'));
     }
 
     public function destroy(Request $request, $id)
@@ -52,9 +52,9 @@ class CrmInteractionsController extends Controller
         DB::table('crm_interactions')->where('id', $id)->delete();
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'تم حذف التفاعل']);
+            return response()->json(['success' => true, 'message' => trans('crm.followup_deleted_msg')]);
         }
 
-        return redirect()->back()->with('success', 'تم حذف التفاعل');
+        return redirect()->back()->with('success', trans('crm.followup_deleted_msg'));
     }
 }

@@ -5,16 +5,16 @@
 
 @if($followups->isEmpty())
     <div class="text-center py-5">
-        <h5 class="text-muted mb-1">لا توجد متابعات</h5>
-        <p class="text-muted small mb-0">جرّب تغيير الفلاتر أو إضافة متابعة جديدة</p>
+        <h5 class="text-muted mb-1">{{ trans('crm.no_followups') }}</h5>
+        <p class="text-muted small mb-0">{{ trans('crm.try_change_filters') }}</p>
     </div>
 @else
     <div class="px-4 pt-3 pb-2 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold">قائمة المتابعات</span>
-            <span class="text-muted small">{{ number_format($followups->total()) }} متابعة</span>
+            <span class="fw-bold">{{ trans('crm.followups_list') }}</span>
+            <span class="text-muted small">{{ number_format($followups->total()) }} {{ trans('crm.followup') }}</span>
         </div>
-        <small class="text-muted">صفحة {{ $followups->currentPage() }} / {{ $followups->lastPage() }}</small>
+        <small class="text-muted">{{ trans('crm.page_x_of_y', ['current' => $followups->currentPage(), 'last' => $followups->lastPage()]) }}</small>
     </div>
 
     <div class="table-responsive">
@@ -22,12 +22,12 @@
             <thead>
                 <tr>
                     <th class="ps-3" style="width:40px">#</th>
-                    <th style="min-width:200px">العضو</th>
-                    <th style="min-width:110px">الفرع</th>
-                    <th style="min-width:170px">النوع / الأولوية / الحالة</th>
-                    <th style="min-width:150px">موعد المتابعة</th>
-                    <th style="min-width:300px">ملاحظات</th>
-                    <th class="text-center pe-3" style="min-width:310px">إجراءات</th>
+                    <th style="min-width:200px">{{ trans('crm.th_member') }}</th>
+                    <th style="min-width:110px">{{ trans('crm.th_branch') }}</th>
+                    <th style="min-width:170px">{{ trans('crm.th_type_priority_status') }}</th>
+                    <th style="min-width:150px">{{ trans('crm.th_followup_date') }}</th>
+                    <th style="min-width:300px">{{ trans('crm.th_notes') }}</th>
+                    <th class="text-center pe-3" style="min-width:310px">{{ trans('crm.th_actions') }}</th>
                 </tr>
             </thead>
             <tbody id="fu-tbody">
@@ -50,7 +50,7 @@
                         'freeze'    => 'info',
                         'inactive'  => 'warning',
                         'debt'      => 'danger',
-                        'prospect'  => 'success',   // ✅ جديد
+                        'prospect'  => 'success',
                         default     => 'secondary',
                     };
 
@@ -87,7 +87,7 @@
                     if (!empty($memberCode)) {
                         $memberTextForSelect .= ' — ' . $memberCode;
                     } elseif ($memberIsProspect) {
-                        $memberTextForSelect .= ' — محتمل';
+                        $memberTextForSelect .= ' — ' . trans('crm.prospect_member');
                     }
                 @endphp
 
@@ -109,9 +109,9 @@
                             @if(!empty($memberCode))
                                 <span class="me-2">#{{ $memberCode }}</span>
                             @elseif($memberIsProspect)
-                                <span class="badge bg-success-subtle text-success border me-2">محتمل</span>
+                                <span class="badge bg-success-subtle text-success border me-2">{{ trans('crm.prospect_member') }}</span>
                             @else
-                                <span class="badge bg-light text-muted border me-2">بدون كود</span>
+                                <span class="badge bg-light text-muted border me-2">{{ trans('crm.no_code') }}</span>
                             @endif
 
                             @if($memberPhone)<span>{{ $memberPhone }}</span>@endif
@@ -127,7 +127,7 @@
                             <span class="badge bg-{{ $typeBadge }}">{{ $fu->type_label }}</span>
                             <span class="badge bg-{{ $prioBadge }}">{{ $fu->priority_label }}</span>
                             <span class="badge bg-{{ $statusBadge }}">
-                                {{ $fu->status === 'pending' && $isOverdue ? 'متأخرة' : $fu->status_label }}
+                                {{ $fu->status === 'pending' && $isOverdue ? trans('crm.late_badge') : $fu->status_label }}
                             </span>
                         </div>
                     </td>
@@ -145,7 +145,7 @@
                         {{ $fu->notes ? Str::limit($fu->notes, 120) : '—' }}
                         @if($fu->result)
                             <div class="fu-muted mt-1">
-                                <span class="badge bg-light text-dark border">النتيجة</span>
+                                <span class="badge bg-light text-dark border">{{ trans('crm.result_badge') }}</span>
                                 {{ $fu->result }}
                             </div>
                         @endif
@@ -157,10 +157,10 @@
                             {{-- تمت --}}
                             @if($fu->status === 'pending')
                                 <button type="button" class="btn btn-success btn-sm" onclick="fuMarkDone({{ $fu->id }})">
-                                    تمت
+                                    {{ trans('crm.done_btn') }}
                                 </button>
                             @else
-                                <button class="btn btn-outline-success btn-sm" disabled>تمت</button>
+                                <button class="btn btn-outline-success btn-sm" disabled>{{ trans('crm.done_btn') }}</button>
                             @endif
 
                             {{-- تفاعل --}}
@@ -168,7 +168,7 @@
                                     class="btn btn-outline-primary btn-sm"
                                     data-bs-toggle="collapse"
                                     data-bs-target="#fuInt{{ $fu->id }}">
-                                تفاعل
+                                {{ trans('crm.interaction') }}
                                 @if($intCount > 0)
                                     <span class="badge bg-info text-dark ms-1">{{ $intCount }}</span>
                                 @endif
@@ -188,12 +188,12 @@
                                     data-notes="{{ e($fu->notes) }}"
                                     data-result="{{ e($fu->result) }}"
                                     onclick="fuOpenEditModal(this)">
-                                تعديل
+                                {{ trans('crm.edit') }}
                             </button>
 
                             {{-- حذف --}}
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="fuDeleteFollowup({{ $fu->id }})">
-                                حذف
+                                {{ trans('crm.delete') }}
                             </button>
                         </div>
 
@@ -208,54 +208,54 @@
                                      data-followup="{{ $fu->id }}">
 
                                     <div class="col-md-3">
-                                        <label class="form-label small fw-semibold mb-1">القناة</label>
+                                        <label class="form-label small fw-semibold mb-1">{{ trans('crm.channel') }}</label>
                                         <select class="form-select form-select-sm fu-int-channel">
-                                            <option value="call">مكالمة</option>
-                                            <option value="whatsapp">واتساب</option>
-                                            <option value="visit">زيارة</option>
-                                            <option value="email">إيميل</option>
+                                            <option value="call">{{ trans('crm.ch_call') }}</option>
+                                            <option value="whatsapp">{{ trans('crm.ch_whatsapp') }}</option>
+                                            <option value="visit">{{ trans('crm.ch_visit') }}</option>
+                                            <option value="email">{{ trans('crm.ch_email') }}</option>
                                             <option value="sms">SMS</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-2">
-                                        <label class="form-label small fw-semibold mb-1">الاتجاه</label>
+                                        <label class="form-label small fw-semibold mb-1">{{ trans('crm.direction') }}</label>
                                         <select class="form-select form-select-sm fu-int-direction">
-                                            <option value="outbound">صادر</option>
-                                            <option value="inbound">وارد</option>
+                                            <option value="outbound">{{ trans('crm.dir_outbound') }}</option>
+                                            <option value="inbound">{{ trans('crm.dir_inbound') }}</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-3">
-                                        <label class="form-label small fw-semibold mb-1">النتيجة</label>
+                                        <label class="form-label small fw-semibold mb-1">{{ trans('crm.int_result') }}</label>
                                         <select class="form-select form-select-sm fu-int-result">
-                                            <option value="answered">تم الرد</option>
-                                            <option value="no_answer">لا يرد</option>
-                                            <option value="interested">مهتم</option>
-                                            <option value="not_interested">غير مهتم</option>
+                                            <option value="answered">{{ trans('crm.res_answered') }}</option>
+                                            <option value="no_answer">{{ trans('crm.res_no_answer') }}</option>
+                                            <option value="interested">{{ trans('crm.res_interested') }}</option>
+                                            <option value="not_interested">{{ trans('crm.res_not_interested') }}</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-4">
-                                        <label class="form-label small fw-semibold mb-1">التاريخ</label>
+                                        <label class="form-label small fw-semibold mb-1">{{ trans('crm.date') }}</label>
                                         <input type="datetime-local" class="form-control form-control-sm fu-int-date">
                                     </div>
 
                                     <div class="col-12">
-                                        <label class="form-label small fw-semibold mb-1">ملاحظات</label>
-                                        <textarea class="form-control form-control-sm fu-int-notes" rows="2" placeholder="ماذا حدث؟"></textarea>
+                                        <label class="form-label small fw-semibold mb-1">{{ trans('crm.notes') }}</label>
+                                        <textarea class="form-control form-control-sm fu-int-notes" rows="2" placeholder="{{ trans('crm.what_happened_ph') }}"></textarea>
                                     </div>
 
                                     <div class="col-12 d-flex gap-2">
                                         <button type="button" class="btn btn-primary btn-sm"
                                                 onclick="fuSaveInteraction({{ $fu->id }}, this)">
-                                            <i class="fas fa-save me-1"></i> حفظ التفاعل
+                                            <i class="fas fa-save me-1"></i> {{ trans('crm.save_interaction') }}
                                         </button>
 
                                         @if($fu->status === 'pending')
                                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                                     onclick="fuCancelFollowup({{ $fu->id }})">
-                                                إلغاء المتابعة
+                                                {{ trans('crm.cancel_followup_btn') }}
                                             </button>
                                         @endif
                                     </div>
@@ -264,17 +264,17 @@
                                 {{-- Interactions list --}}
                                 @if($ints->isNotEmpty())
                                     <hr class="my-2">
-                                    <div class="fu-muted fw-semibold mb-2">آخر التفاعلات</div>
+                                    <div class="fu-muted fw-semibold mb-2">{{ trans('crm.last_interactions') }}</div>
                                     <div class="table-responsive">
                                         <table class="fu-table" style="font-size:0.82rem">
                                             <thead>
                                                 <tr>
-                                                    <th>وقت</th>
-                                                    <th>قناة</th>
-                                                    <th>اتجاه</th>
-                                                    <th>نتيجة</th>
-                                                    <th>ملاحظات</th>
-                                                    <th class="text-center">إلغاء</th>
+                                                    <th>{{ trans('crm.th_time') }}</th>
+                                                    <th>{{ trans('crm.th_channel') }}</th>
+                                                    <th>{{ trans('crm.th_direction') }}</th>
+                                                    <th>{{ trans('crm.th_result') }}</th>
+                                                    <th>{{ trans('crm.th_notes') }}</th>
+                                                    <th class="text-center">{{ trans('crm.th_int_cancel') }}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -289,7 +289,7 @@
                                                             <button type="button"
                                                                     class="btn btn-outline-danger btn-sm"
                                                                     onclick="fuDeleteInteraction({{ $it->id }})">
-                                                                إلغاء
+                                                                {{ trans('crm.th_int_cancel') }}
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -298,7 +298,7 @@
                                         </table>
                                     </div>
                                 @else
-                                    <div class="text-muted small mb-0">لا توجد تفاعلات مسجّلة لهذه المتابعة</div>
+                                    <div class="text-muted small mb-0">{{ trans('crm.no_interactions') }}</div>
                                 @endif
 
                             </div>
@@ -313,8 +313,7 @@
     @if($followups->hasPages())
         <div class="fu-pagination px-4 py-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
             <small class="text-muted">
-                عرض {{ $followups->firstItem() }}–{{ $followups->lastItem() }}
-                من {{ number_format($followups->total()) }} متابعة
+                {{ trans('crm.showing_x_to_y', ['from' => $followups->firstItem(), 'to' => $followups->lastItem(), 'total' => number_format($followups->total())]) }}
             </small>
             <div>
                 {!! $followups->appends(request()->except('page','partial'))->onEachSide(1)->links('pagination::bootstrap-5') !!}

@@ -195,7 +195,7 @@ public function store(Request $request)
     if ($request->ajax()) {
         return response()->json([
             'success' => true,
-            'message' => 'تم حفظ المتابعة بنجاح',
+            'message' => trans('crm.followup_saved_msg'),
             'id'      => $fu->id,
 
             // ✅ إرجاع بيانات المتابعة للـ timeline في show
@@ -212,7 +212,7 @@ public function store(Request $request)
         ]);
     }
 
-    return redirect()->back()->with('success', 'تم حفظ المتابعة بنجاح');
+    return redirect()->back()->with('success', trans('crm.followup_saved_msg'));
 }
 
 public function update(Request $request, $id)
@@ -239,11 +239,11 @@ public function update(Request $request, $id)
     if ($request->ajax()) {
         return response()->json([
             'success' => true,
-            'message' => 'تم تحديث المتابعة',
+            'message' => trans('crm.followup_updated_msg'),
         ]);
     }
 
-    return redirect()->back()->with('success', 'تم تحديث المتابعة');
+    return redirect()->back()->with('success', trans('crm.followup_updated_msg'));
 }
 
 
@@ -253,10 +253,10 @@ public function update(Request $request, $id)
         $fu->delete();
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'تم حذف المتابعة']);
+            return response()->json(['success' => true, 'message' => trans('crm.followup_deleted_msg')]);
         }
 
-        return redirect()->back()->with('success', 'تم حذف المتابعة');
+        return redirect()->back()->with('success', trans('crm.followup_deleted_msg'));
     }
 
     public function markDone(Request $request, $id)
@@ -268,9 +268,9 @@ public function update(Request $request, $id)
         $fu->save();
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'تم إنهاء المتابعة']);
+            return response()->json(['success' => true, 'message' => trans('crm.followup_done_msg')]);
         }
 
-        return redirect()->back()->with('success', 'تم إنهاء المتابعة');
+        return redirect()->back()->with('success', trans('crm.followup_done_msg'));
     }
 }

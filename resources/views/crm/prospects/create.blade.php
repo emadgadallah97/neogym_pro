@@ -1,6 +1,6 @@
 @extends('layouts.master_table')
 
-@section('title', trans('crm.new_prospect'))
+@section('title', trans('crm.new_prospect') . ' — CRM')
 
 @section('content')
     {{-- Page Title --}}
@@ -37,7 +37,7 @@
                         <div class="card-header bg-white border-0 pt-3">
                             <h6 class="fw-bold mb-0">
                                 <i class="fas fa-user text-primary me-2"></i>
-                                البيانات الأساسية
+                                {{ trans('crm.basic_info') }}
                             </h6>
                         </div>
                         <div class="card-body">
@@ -46,11 +46,11 @@
                                 {{-- الفرع --}}
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold">
-                                        الفرع <span class="text-danger">*</span>
+                                        {{ trans('crm.branch') }} <span class="text-danger">*</span>
                                     </label>
                                     <select name="branch_id" class="form-select @error('branch_id') is-invalid @enderror"
                                         required>
-                                        <option value="">-- اختر الفرع --</option>
+                                        <option value="">{{ trans('crm.select_branch') }}</option>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}"
                                                 {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -66,11 +66,11 @@
                                 {{-- الاسم الأول --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
-                                        الاسم الأول <span class="text-danger">*</span>
+                                        {{ trans('crm.first_name') }} <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" name="first_name" value="{{ old('first_name') }}"
                                         class="form-control @error('first_name') is-invalid @enderror"
-                                        placeholder="أدخل الاسم الأول" required>
+                                        placeholder="{{ trans('crm.first_name') }}" required>
                                     @error('first_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -79,11 +79,11 @@
                                 {{-- الاسم الأخير --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
-                                        الاسم الأخير <span class="text-danger">*</span>
+                                        {{ trans('crm.last_name') }} <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" name="last_name" value="{{ old('last_name') }}"
                                         class="form-control @error('last_name') is-invalid @enderror"
-                                        placeholder="أدخل الاسم الأخير" required>
+                                        placeholder="{{ trans('crm.last_name') }}" required>
                                     @error('last_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -91,12 +91,12 @@
 
                                 {{-- الجنس --}}
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">الجنس</label>
+                                    <label class="form-label fw-semibold">{{ trans('crm.gender') }}</label>
                                     <select name="gender" class="form-select @error('gender') is-invalid @enderror">
-                                        <option value="">-- غير محدد --</option>
-                                        <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>ذكر
+                                        <option value="">-- {{ trans('crm.gender_unspecified') }} --</option>
+                                        <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>{{ trans('crm.gender_male') }}
                                         </option>
-                                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>أنثى
+                                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>{{ trans('crm.gender_female') }}
                                         </option>
                                     </select>
                                     @error('gender')
@@ -107,11 +107,11 @@
                                 {{-- العنوان --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
-                                        العنوان <span class="text-danger">*</span>
+                                        {{ trans('crm.address') }} <span class="text-danger">*</span>
                                     </label>
                                     <input type="text" name="address" value="{{ old('address') }}"
                                         class="form-control @error('address') is-invalid @enderror"
-                                        placeholder="أدخل العنوان" required>
+                                        placeholder="{{ trans('crm.address') }}" required>
                                     @error('address')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -126,7 +126,7 @@
                         <div class="card-header bg-white border-0 pt-3">
                             <h6 class="fw-bold mb-0">
                                 <i class="fas fa-phone text-success me-2"></i>
-                                بيانات التواصل
+                                {{ trans('crm.contact_info') }}
                             </h6>
                         </div>
                         <div class="card-body">
@@ -135,7 +135,7 @@
                                 {{-- الهاتف --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">
-                                        رقم الهاتف <span class="text-danger">*</span>
+                                        {{ trans('crm.phone') }} <span class="text-danger">*</span>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text">
@@ -152,7 +152,7 @@
 
                                 {{-- هاتف 2 --}}
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">رقم هاتف إضافي</label>
+                                    <label class="form-label fw-semibold">{{ trans('crm.phone_extra') }}</label>
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="fas fa-phone"></i>
@@ -168,7 +168,7 @@
 
                                 {{-- واتساب --}}
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">واتساب</label>
+                                    <label class="form-label fw-semibold">{{ trans('crm.whatsapp') }}</label>
                                     <div class="input-group">
                                         <span class="input-group-text text-success">
                                             <i class="fab fa-whatsapp"></i>
@@ -184,7 +184,7 @@
 
                                 {{-- البريد الإلكتروني --}}
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">البريد الإلكتروني</label>
+                                    <label class="form-label fw-semibold">{{ trans('crm.email') }}</label>
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="fas fa-envelope"></i>
@@ -211,12 +211,12 @@
                         <div class="card-header bg-white border-0 pt-3">
                             <h6 class="fw-bold mb-0">
                                 <i class="fas fa-sticky-note text-warning me-2"></i>
-                                ملاحظات
+                                {{ trans('crm.notes') }}
                             </h6>
                         </div>
                         <div class="card-body">
                             <textarea name="notes" rows="5" class="form-control @error('notes') is-invalid @enderror"
-                                placeholder="أي معلومات إضافية عن العضو المحتمل...">{{ old('notes') }}</textarea>
+                                placeholder="{{ trans('crm.notes_placeholder') }}">{{ old('notes') }}</textarea>
                             @error('notes')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -232,7 +232,7 @@
                                     {{ old('create_followup') ? 'checked' : '' }}>
                                 <label class="form-check-label fw-bold mb-0" for="createFollowupToggle">
                                     <i class="fas fa-calendar-check text-primary me-1"></i>
-                                    جدولة متابعة أولى
+                                    {{ trans('crm.schedule_first_followup') }}
                                 </label>
                             </div>
                         </div>
@@ -242,12 +242,12 @@
                                 {{-- نوع المتابعة --}}
                                 <div class="col-12">
                                     <label class="form-label small fw-semibold">
-                                        نوع المتابعة <span class="text-danger">*</span>
+                                        {{ trans('crm.followup_type') }} <span class="text-danger">*</span>
                                     </label>
                                     <select name="followup_type"
                                         class="form-select form-select-sm @error('followup_type') is-invalid @enderror"
                                         id="followupType">
-                                        <option value="">-- اختر --</option>
+                                        <option value="">{{ trans('crm.select_type') }}</option>
                                         @foreach ($followupTypes as $value => $label)
                                             <option value="{{ $value }}"
                                                 {{ old('followup_type') === $value ? 'selected' : '' }}>
@@ -262,7 +262,7 @@
 
                                 {{-- تاريخ ووقت المتابعة --}}
                                 <div class="col-12">
-                                    <label class="form-label small fw-semibold">موعد المتابعة (تاريخ + وقت)</label>
+                                    <label class="form-label small fw-semibold">{{ trans('crm.followup_datetime') }}</label>
                                     <input type="datetime-local" name="followup_datetime"
                                         value="{{ old('followup_datetime', \Carbon\Carbon::tomorrow()->setTime(10, 0)->format('Y-m-d\TH:i')) }}"
                                         min="{{ \Carbon\Carbon::now()->format('Y-m-d\TH:i') }}"
@@ -270,15 +270,15 @@
                                     @error('followup_datetime')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="text-muted">مثال: 2026-03-04 16:20</small>
+                                    <small class="text-muted">{{ trans('crm.followup_datetime') }}: 2026-03-04 16:20</small>
                                 </div>
 
 
                                 {{-- ملاحظات --}}
                                 <div class="col-12">
-                                    <label class="form-label small fw-semibold">ملاحظات المتابعة</label>
+                                    <label class="form-label small fw-semibold">{{ trans('crm.followup_notes') }}</label>
                                     <textarea name="followup_notes" rows="2" class="form-control form-control-sm"
-                                        placeholder="تفاصيل المتابعة...">{{ old('followup_notes') }}</textarea>
+                                        placeholder="{{ trans('crm.followup_notes_ph') }}">{{ old('followup_notes') }}</textarea>
                                 </div>
 
                             </div>
@@ -293,11 +293,11 @@
                         <div class="card-body d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-1"></i>
-                                حفظ العضو المحتمل
+                                {{ trans('crm.save_prospect') }}
                             </button>
                             <a href="{{ route('crm.prospects.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-1"></i>
-                                إلغاء
+                                {{ trans('crm.cancel') }}
                             </a>
                         </div>
                     </div>

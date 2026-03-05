@@ -1,7 +1,7 @@
 {{-- resources/views/crm/followups/index.blade.php --}}
 @extends('layouts.master_table')
 
-@section('title', 'المتابعات — CRM')
+@section('title', trans('crm.followups_title') . ' — CRM')
 
 @section('css')
 <style>
@@ -99,13 +99,13 @@
                     <li class="breadcrumb-item">
                         <a href="{{ route('crm.dashboard') }}" class="text-decoration-none">CRM</a>
                     </li>
-                    <li class="breadcrumb-item active">المتابعات</li>
+                    <li class="breadcrumb-item active">{{ trans('crm.followups_breadcrumb') }}</li>
                 </ol>
             </nav>
-            <h4 class="fw-bold mb-0">المتابعات</h4>
+            <h4 class="fw-bold mb-0">{{ trans('crm.followups_title') }}</h4>
         </div>
         <button type="button" class="btn btn-warning btn-sm" onclick="fuOpenCreateModal()">
-            <i class="fas fa-plus me-1"></i> إضافة متابعة
+            <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup') }}
         </button>
     </div>
 
@@ -127,17 +127,17 @@
 
                 {{-- بحث --}}
                 <div class="col-md-3">
-                    <label class="form-label small fw-semibold mb-0">بحث</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.search') }}</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search fa-xs text-muted"></i>
                         </span>
                         <input type="text" name="search" class="form-control border-start-0"
-                               placeholder="اسم / كود / هاتف..." value="{{ $search }}">
+                               placeholder="{{ trans('crm.search_placeholder') }}" value="{{ $search }}">
                         @if($search)
                             <button type="button" class="btn btn-outline-secondary"
                                     onclick="this.previousElementSibling.value='';document.getElementById('fuFilterForm').dispatchEvent(new Event('submit'));">
-                                مسح
+                                {{ trans('crm.clear') }}
                             </button>
                         @endif
                     </div>
@@ -145,9 +145,9 @@
 
                 {{-- الفرع --}}
                 <div class="col-md-2">
-                    <label class="form-label small fw-semibold mb-0">الفرع</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.branch') }}</label>
                     <select name="branch_id" class="form-select">
-                        <option value="">جميع الفروع</option>
+                        <option value="">{{ trans('crm.all_branches') }}</option>
                         @foreach($branches as $br)
                             <option value="{{ $br->id }}" {{ (string)$branchId === (string)$br->id ? 'selected' : '' }}>
                                 {{ is_array($br->name) ? ($br->name[app()->getLocale()] ?? $br->name['ar'] ?? '') : $br->name }}
@@ -158,9 +158,9 @@
 
                 {{-- النوع --}}
                 <div class="col-md-2">
-                    <label class="form-label small fw-semibold mb-0">النوع</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.type') }}</label>
                     <select name="type" class="form-select">
-                        <option value="">كل الأنواع</option>
+                        <option value="">{{ trans('crm.all_types') }}</option>
                         @foreach($typeLabels as $k => $v)
                             <option value="{{ $k }}" {{ $type === $k ? 'selected' : '' }}>{{ $v }}</option>
                         @endforeach
@@ -169,9 +169,9 @@
 
                 {{-- الأولوية --}}
                 <div class="col-md-2">
-                    <label class="form-label small fw-semibold mb-0">الأولوية</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.priority') }}</label>
                     <select name="priority" class="form-select">
-                        <option value="">كل الأولويات</option>
+                        <option value="">{{ trans('crm.all_priorities') }}</option>
                         @foreach($priorityLabels as $k => $v)
                             <option value="{{ $k }}" {{ $priority === $k ? 'selected' : '' }}>{{ $v }}</option>
                         @endforeach
@@ -180,14 +180,14 @@
 
                 {{-- موعد المتابعة (من) --}}
                 <div class="col-md-2">
-                    <label class="form-label small fw-semibold mb-0">موعد المتابعة (من)</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.followup_date_from') }}</label>
                     <input type="date" name="next_from" class="form-control"
                            value="{{ $nextFrom ?? '' }}">
                 </div>
 
                 {{-- موعد المتابعة (إلى) --}}
                 <div class="col-md-2">
-                    <label class="form-label small fw-semibold mb-0">موعد المتابعة (إلى)</label>
+                    <label class="form-label small fw-semibold mb-0">{{ trans('crm.followup_date_to') }}</label>
                     <input type="date" name="next_to" class="form-control"
                            value="{{ $nextTo ?? '' }}">
                 </div>
@@ -195,7 +195,7 @@
                 {{-- أزرار --}}
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fas fa-search me-1"></i> تطبيق
+                        <i class="fas fa-search me-1"></i> {{ trans('crm.apply') }}
                     </button>
                     @if($search || $branchId || $type || $priority || ($quick && $quick !== 'all') || ($nextFrom ?? null) || ($nextTo ?? null))
                         <a href="{{ route('crm.followups.index') }}"
@@ -222,7 +222,7 @@
 {{-- Loading --}}
 <div id="fu-loading">
     <div class="box">
-        <i class="fas fa-circle-notch fa-spin me-2"></i>جاري التحميل...
+        <i class="fas fa-circle-notch fa-spin me-2"></i>{{ trans('crm.loading') }}
     </div>
 </div>
 
@@ -273,11 +273,11 @@
     let fuConfirmCb = null;
     window.fuConfirm = function(opts){
         opts = opts || {};
-        document.getElementById('fuConfirmTitle').textContent = opts.title || 'تأكيد';
-        document.getElementById('fuConfirmBody').textContent  = opts.body  || 'هل أنت متأكد؟';
+        document.getElementById('fuConfirmTitle').textContent = opts.title || '{{ trans('crm.confirm') }}';
+        document.getElementById('fuConfirmBody').textContent  = opts.body  || '{{ trans('crm.are_you_sure') }}';
 
         const ok = document.getElementById('fuConfirmOk');
-        ok.textContent = opts.okText || 'تأكيد';
+        ok.textContent = opts.okText || '{{ trans('crm.confirm') }}';
         ok.className = 'btn btn-sm ' + (opts.okClass || 'btn-primary');
 
         fuConfirmCb = typeof opts.onConfirm === 'function' ? opts.onConfirm : null;
@@ -320,7 +320,7 @@
             }).then(r => r.json());
 
             if (!res || !res.tabs_html || !res.table_html) {
-                toast('تعذّر تحميل البيانات', 'error');
+                toast('{{ trans('crm.save_failed_retry') }}', 'error');
                 showLoading(false);
                 return;
             }
@@ -331,7 +331,7 @@
             if (pushState) window.history.pushState({}, '', url);
 
         } catch(e) {
-            toast('تعذّر الاتصال بالخادم', 'error');
+            toast('Error connecting to server', 'error');
         }
         showLoading(false);
     }
@@ -408,66 +408,66 @@
         ajaxJson(url, payload, method).then(function(res){
             showLoading(false);
             if (res && res.success){
-                toast(res.message || 'تم الحفظ', 'success');
+                toast(res.message || '{{ trans('crm.followup_saved_msg') }}', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('fuModal'))?.hide();
                 fuReloadCurrent();
             } else {
-                toast('تعذّر الحفظ', 'error');
+                toast('{{ trans('crm.save_failed_retry') }}', 'error');
             }
         }).catch(function(){
             showLoading(false);
-            toast('تعذّر الاتصال بالخادم', 'error');
+            toast('Error connecting to server', 'error');
         });
     });
 
     // ── Followup actions ───────────────────────────────────
     window.fuMarkDone = function(id){
         fuConfirm({
-            title: 'إنهاء المتابعة',
-            body:  'هل تريد إنهاء هذه المتابعة؟',
-            okText: 'إنهاء',
+            title: '{{ trans('crm.confirm_finish') }}',
+            body:  '{{ trans('crm.confirm_finish_body') }}',
+            okText: '{{ trans('crm.finish_btn') }}',
             okClass: 'btn-success',
             onConfirm: function(){
                 showLoading(true);
                 ajaxJson(URL_DONE.replace('__ID__', id), {}, 'POST').then(function(res){
                     showLoading(false);
-                    if (res && res.success){ toast(res.message || 'تمت العملية', 'success'); fuReloadCurrent(); }
-                    else toast('حدث خطأ', 'error');
-                }).catch(()=>{ showLoading(false); toast('تعذّر الاتصال', 'error'); });
+                    if (res && res.success){ toast(res.message || '{{ trans('crm.followup_done_msg') }}', 'success'); fuReloadCurrent(); }
+                    else toast('Error', 'error');
+                }).catch(()=>{ showLoading(false); toast('Error connecting to server', 'error'); });
             }
         });
     };
 
     window.fuCancelFollowup = function(id){
         fuConfirm({
-            title: 'إلغاء المتابعة',
-            body:  'هل تريد إلغاء هذه المتابعة؟',
-            okText: 'إلغاء المتابعة',
+            title: '{{ trans('crm.confirm_cancel') }}',
+            body:  '{{ trans('crm.confirm_cancel_body') }}',
+            okText: '{{ trans('crm.cancel_followup_btn') }}',
             okClass: 'btn-outline-secondary',
             onConfirm: function(){
                 showLoading(true);
                 ajaxJson(URL_UPDATE.replace('__ID__', id), { status: 'cancelled' }, 'PUT').then(function(res){
                     showLoading(false);
-                    if (res && res.success){ toast(res.message || 'تم الإلغاء', 'success'); fuReloadCurrent(); }
-                    else toast('حدث خطأ', 'error');
-                }).catch(()=>{ showLoading(false); toast('تعذّر الاتصال', 'error'); });
+                    if (res && res.success){ toast(res.message || '{{ trans('crm.followup_updated_msg') }}', 'success'); fuReloadCurrent(); }
+                    else toast('Error', 'error');
+                }).catch(()=>{ showLoading(false); toast('Error connecting to server', 'error'); });
             }
         });
     };
 
     window.fuDeleteFollowup = function(id){
         fuConfirm({
-            title: 'حذف المتابعة',
-            body:  'سيتم حذف المتابعة نهائياً، هل أنت متأكد؟',
-            okText: 'حذف',
+            title: '{{ trans('crm.confirm_delete') }}',
+            body:  '{{ trans('crm.confirm_delete_body') }}',
+            okText: '{{ trans('crm.delete') }}',
             okClass: 'btn-danger',
             onConfirm: function(){
                 showLoading(true);
                 ajaxJson(URL_DESTROY.replace('__ID__', id), {}, 'DELETE').then(function(res){
                     showLoading(false);
-                    if (res && res.success){ toast(res.message || 'تم الحذف', 'success'); fuReloadCurrent(); }
-                    else toast('حدث خطأ', 'error');
-                }).catch(()=>{ showLoading(false); toast('تعذّر الاتصال', 'error'); });
+                    if (res && res.success){ toast(res.message || '{{ trans('crm.followup_deleted_msg') }}', 'success'); fuReloadCurrent(); }
+                    else toast('Error', 'error');
+                }).catch(()=>{ showLoading(false); toast('Error connecting to server', 'error'); });
             }
         });
     };
@@ -492,32 +492,32 @@
         ajaxJson(URL_INT_STORE, payload, 'POST').then(function(res){
             btn.disabled = false;
             if (res && res.success){
-                toast(res.message || 'تم حفظ التفاعل', 'success');
+                toast(res.message || '{{ trans('crm.save_interaction') }}', 'success');
                 fuReloadCurrent();
                 box.querySelector('.fu-int-notes').value = '';
                 box.querySelector('.fu-int-date').value  = '';
             } else {
-                toast('تعذّر حفظ التفاعل', 'error');
+                toast('Error', 'error');
             }
         }).catch(function(){
             btn.disabled = false;
-            toast('تعذّر الاتصال بالخادم', 'error');
+            toast('Error connecting to server', 'error');
         });
     };
 
     window.fuDeleteInteraction = function(id){
         fuConfirm({
-            title: 'إلغاء/حذف تفاعل',
-            body:  'هل تريد حذف هذا التفاعل؟',
-            okText: 'حذف التفاعل',
+            title: '{{ trans('crm.confirm_int_delete') }}',
+            body:  '{{ trans('crm.confirm_int_delete_body') }}',
+            okText: '{{ trans('crm.delete_int_btn') }}',
             okClass: 'btn-danger',
             onConfirm: function(){
                 showLoading(true);
                 ajaxJson(URL_INT_DESTROY.replace('__ID__', id), {}, 'DELETE').then(function(res){
                     showLoading(false);
-                    if (res && res.success){ toast(res.message || 'تم حذف التفاعل', 'success'); fuReloadCurrent(); }
-                    else toast('حدث خطأ', 'error');
-                }).catch(()=>{ showLoading(false); toast('تعذّر الاتصال', 'error'); });
+                    if (res && res.success){ toast(res.message || '{{ trans('crm.followup_deleted_msg') }}', 'success'); fuReloadCurrent(); }
+                    else toast('Error', 'error');
+                }).catch(()=>{ showLoading(false); toast('Error connecting to server', 'error'); });
             }
         });
     };
@@ -529,7 +529,7 @@
 
         document.getElementById('fuMethod').innerHTML =
             '<input type="hidden" name="_method" value="PUT">';
-        document.getElementById('fuTitle').textContent = 'تعديل متابعة';
+        document.getElementById('fuTitle').textContent = '{{ trans('crm.edit_followup') }}';
 
         document.getElementById('fu_branch_id').value      = btn.dataset.branchId  || '';
         document.getElementById('fu_type').value           = btn.dataset.type       || 'general';
@@ -541,7 +541,7 @@
 
         const memberEl = document.getElementById('fu_member_id');
         memberEl.disabled = false;
-        document.getElementById('fu_member_hint').textContent = 'ابحث بالاسم أو الكود أو الهاتف';
+        document.getElementById('fu_member_hint').textContent = '{{ trans('crm.member_hint') }}';
 
         if (btn.dataset.memberId && typeof jQuery !== 'undefined' && jQuery.fn.select2) {
             const opt = new Option(
@@ -560,11 +560,11 @@
         delete formEl.dataset.currentId;
 
         document.getElementById('fuMethod').innerHTML  = '';
-        document.getElementById('fuTitle').textContent = 'إضافة متابعة جديدة';
+        document.getElementById('fuTitle').textContent = '{{ trans('crm.add_new_followup') }}';
 
         document.getElementById('fu_branch_id').value      = '';
         document.getElementById('fu_member_id').disabled   = true;
-        document.getElementById('fu_member_hint').textContent = 'اختر الفرع أولاً لتفعيل البحث';
+        document.getElementById('fu_member_hint').textContent = '{{ trans('crm.choose_first_branch_hint') }}';
         document.getElementById('fu_type').value           = 'general';
         document.getElementById('fu_status').value         = 'pending';
         document.getElementById('fu_priority').value       = 'medium';

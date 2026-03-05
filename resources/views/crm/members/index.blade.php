@@ -1,7 +1,7 @@
 {{-- resources/views/crm/members/index.blade.php --}}
 @extends('layouts.master_table')
 
-@section('title', 'الشرائح الذكية — CRM')
+@section('title', trans('crm.smart_segments_title') . ' — CRM')
 
 @section('css')
 <style>
@@ -88,10 +88,10 @@
                     <li class="breadcrumb-item">
                         <a href="{{ route('crm.dashboard') }}" class="text-decoration-none">CRM</a>
                     </li>
-                    <li class="breadcrumb-item active">الشرائح الذكية</li>
+                    <li class="breadcrumb-item active">{{ trans('crm.smart_segments_title') }}</li>
                 </ol>
             </nav>
-            <h4 class="fw-bold mb-0">الشرائح الذكية</h4>
+            <h4 class="fw-bold mb-0">{{ trans('crm.smart_segments_title') }}</h4>
         </div>
     </div>
 
@@ -102,7 +102,7 @@
         <div id="seg-loading">
             <div class="bg-white rounded shadow-sm px-4 py-3 d-flex align-items-center gap-2">
                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                <span class="text-muted small fw-semibold">جاري التحميل...</span>
+                <span class="text-muted small fw-semibold">{{ trans('crm.loading_data') }}</span>
             </div>
         </div>
 
@@ -118,7 +118,7 @@
                     <li class="nav-item">
                         <a href="{{ route('crm.members.index', array_merge(request()->only('search','branch_id'), ['segment' => 'all'])) }}"
                            class="seg-nav-link nav-link py-2 px-3 {{ $isAllActive ? 'active bg-dark' : 'text-muted' }}">
-                            <i class="fas fa-users me-1"></i> جميع الأعضاء
+                            <i class="fas fa-users me-1"></i> {{ trans('crm.seg_all') }}
                             @if(($segmentCounts['all'] ?? 0) > 0)
                                 <span class="badge ms-1 {{ $isAllActive ? 'bg-white text-dark' : 'bg-dark' }}">
                                     {{ number_format($segmentCounts['all']) }}
@@ -158,18 +158,18 @@
 
                     <div class="col-md-5">
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">بحث</span>
+                            <span class="input-group-text bg-white border-end-0">{{ trans('crm.search') }}</span>
                             <input type="text"
                                    name="search"
                                    id="seg-search-input"
                                    class="form-control border-start-0"
-                                   placeholder="ابحث بالاسم / الكود / الهاتف..."
+                                   placeholder="{{ trans('crm.search_name_phone') }}"
                                    value="{{ $search }}">
                             @if($search)
                                 <button type="button"
                                         class="btn btn-outline-secondary"
                                         onclick="this.previousElementSibling.value='';document.getElementById('seg-search-form').requestSubmit()">
-                                    مسح
+                                    {{ trans('crm.clear') }}
                                 </button>
                             @endif
                         </div>
@@ -177,7 +177,7 @@
 
                     <div class="col-md-3">
                         <select name="branch_id" class="form-select">
-                            <option value="">جميع الفروع</option>
+                            <option value="">{{ trans('crm.all_branches') }}</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
                                     {{ is_array($branch->name)
@@ -189,13 +189,13 @@
                     </div>
 
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">تطبيق</button>
+                        <button type="submit" class="btn btn-primary w-100">{{ trans('crm.apply') }}</button>
                     </div>
 
                     @if($search || $branchId)
                         <div class="col-md-2">
                             <a href="{{ route('crm.members.index', ['segment' => $segment]) }}"
-                               class="seg-ajax-link btn btn-outline-secondary w-100">إعادة تعيين</a>
+                               class="seg-ajax-link btn btn-outline-secondary w-100">{{ trans('crm.reset') }}</a>
                         </div>
                     @endif
                 </form>
@@ -208,24 +208,24 @@
             <div class="card-header bg-white border-0 pt-3 pb-2 d-flex align-items-center justify-content-between">
                 @php
                     $segColor = $segment === 'all' ? 'dark' : ($segmentsMeta[$segment]['color'] ?? 'secondary');
-                    $segLabel = $segment === 'all' ? 'جميع الأعضاء' : ($segmentsMeta[$segment]['label'] ?? '');
+                    $segLabel = $segment === 'all' ? trans('crm.seg_all') : ($segmentsMeta[$segment]['label'] ?? '');
                 @endphp
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-{{ $segColor }} {{ $segColor==='warning'?'text-dark':'' }} rounded-pill px-3 py-2">
                         {{ $segLabel }}
                     </span>
-                    <span class="text-muted small">{{ number_format($members->total()) }} عضو</span>
+                    <span class="text-muted small">{{ number_format($members->total()) }} {{ trans('crm.member') }}</span>
                 </div>
-                <small class="text-muted">صفحة {{ $members->currentPage() }} / {{ $members->lastPage() }}</small>
+                <small class="text-muted">{{ trans('crm.members_page_x_of_y', ['current' => $members->currentPage(), 'last' => $members->lastPage()]) }}</small>
             </div>
 
             <div class="card-body p-0">
 
                 @if($members->isEmpty())
                     <div class="text-center py-5">
-                        <h5 class="text-muted mb-1">لا توجد نتائج في هذه الشريحة</h5>
+                        <h5 class="text-muted mb-1">{{ trans('crm.no_results_segment') }}</h5>
                         <p class="text-muted small mb-0">
-                            {{ ($search || $branchId) ? 'جرّب تغيير معايير البحث' : 'جميع الأعضاء في هذه الفئة بخير' }}
+                            {{ ($search || $branchId) ? trans('crm.try_search_criteria') : trans('crm.all_members_fine') }}
                         </p>
                     </div>
                 @else
@@ -235,23 +235,23 @@
                             <thead>
                                 <tr>
                                     <th class="ps-3" style="width:40px">#</th>
-                                    <th style="min-width:190px">العضو</th>
-                                    <th style="min-width:130px">الهاتف</th>
-                                    <th style="min-width:110px">الفرع</th>
+                                    <th style="min-width:190px">{{ trans('crm.th_member') }}</th>
+                                    <th style="min-width:130px">{{ trans('crm.phone') }}</th>
+                                    <th style="min-width:110px">{{ trans('crm.th_branch') }}</th>
                                     <th style="min-width:160px">
                                         @switch($segment)
                                             @case('expiring7')
-                                            @case('expiring30') الاشتراك / الانتهاء @break
-                                            @case('expired')    آخر اشتراك          @break
-                                            @case('frozen')     فترة التجميد        @break
-                                            @case('inactive')   منذ آخر حضور        @break
-                                            @case('new')        تاريخ الانضمام      @break
-                                            @case('debt')       المبلغ المستحق      @break
-                                            @default            الاشتراك الحالي
+                                            @case('expiring30') {{ trans('crm.th_subscription_expiry') }} @break
+                                            @case('expired')    {{ trans('crm.th_last_sub') }}             @break
+                                            @case('frozen')     {{ trans('crm.th_freeze_period') }}        @break
+                                            @case('inactive')   {{ trans('crm.th_since_last_visit') }}     @break
+                                            @case('new')        {{ trans('crm.th_join_date') }}             @break
+                                            @case('debt')       {{ trans('crm.th_due_amount') }}            @break
+                                            @default            {{ trans('crm.th_current_sub') }}
                                         @endswitch
                                     </th>
-                                    <th style="min-width:110px">آخر زيارة</th>
-                                    <th class="text-center pe-3" style="min-width:240px">إجراءات</th>
+                                    <th style="min-width:110px">{{ trans('crm.th_last_visit') }}</th>
+                                    <th class="text-center pe-3" style="min-width:240px">{{ trans('crm.th_actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -262,13 +262,14 @@
                                         $planNameDisplay = $sub->plan_name_display ?? '—';
                                         $waRaw           = $member->whatsapp ?: ($member->phone ?? '');
                                         $waNumber        = preg_replace('/[^0-9]/', '', $waRaw);
+                                        $name = $member->first_name ?? '';
                                         $waText = match($segment) {
-                                            'expiring7','expiring30' => 'مرحباً ' . ($member->first_name ?? '') . '، اشتراكك سينتهي قريباً. يسعدنا التجديد.',
-                                            'expired'               => 'مرحباً ' . ($member->first_name ?? '') . '، انتهى اشتراكك ونسعد بعودتك.',
-                                            'inactive'              => 'مرحباً ' . ($member->first_name ?? '') . '، اشتقنا إليك في النادي.',
-                                            'debt'                  => 'مرحباً ' . ($member->first_name ?? '') . '، يرجى مراجعة النادي لتسوية المبلغ المستحق.',
-                                            'frozen'                => 'مرحباً ' . ($member->first_name ?? '') . '، اشتراكك مجمّد. يسعدنا مساعدتك.',
-                                            default                 => 'مرحباً ' . ($member->first_name ?? '') . '، نتمنى لك يوماً سعيداً.',
+                                            'expiring7','expiring30' => trans('crm.wa_text_expiring', ['name' => $name]),
+                                            'expired'               => trans('crm.wa_text_expired',  ['name' => $name]),
+                                            'inactive'              => trans('crm.wa_text_inactive', ['name' => $name]),
+                                            'debt'                  => trans('crm.wa_text_debt',     ['name' => $name]),
+                                            'frozen'                => trans('crm.wa_text_frozen',   ['name' => $name]),
+                                            default                 => trans('crm.wa_text_default',  ['name' => $name]),
                                         };
                                     @endphp
 
@@ -329,7 +330,7 @@
                                                             {{ $planNameDisplay }}
                                                         </div>
                                                         <span class="badge {{ $daysLeft <= 0 ? 'bg-danger' : ($daysLeft <= 7 ? 'bg-warning text-dark' : 'bg-info') }}">
-                                                            {{ $daysLeft <= 0 ? 'ينتهي اليوم' : 'بعد '.$daysLeft.' يوم' }}
+                                                            {{ $daysLeft <= 0 ? trans('crm.ends_today') : trans('crm.after_x_days', ['count' => $daysLeft]) }}
                                                         </span>
                                                         <div class="text-muted mt-1" style="font-size:0.8rem">{{ $endDate->format('d/m/Y') }}</div>
                                                     @else
@@ -354,7 +355,7 @@
                                                             {{ \Carbon\Carbon::parse($member->freeze_from)->format('d/m/Y') }} ← {{ \Carbon\Carbon::parse($member->freeze_to)->format('d/m/Y') }}
                                                         </span>
                                                     @else
-                                                        <span class="badge bg-secondary">مجمّد</span>
+                                                        <span class="badge bg-secondary">{{ trans('crm.frozen_badge') }}</span>
                                                     @endif
                                                     @break
 
@@ -362,13 +363,13 @@
                                                     @if($lastAtt)
                                                         @php $daysSince = (int)\Carbon\Carbon::parse($lastAtt->attendance_date)->diffInDays(now()); @endphp
                                                         <span class="badge {{ $daysSince >= 30 ? 'bg-danger' : 'bg-warning text-dark' }}">
-                                                            منذ {{ $daysSince }} يوم
+                                                            {{ trans('crm.since_x_days', ['count' => $daysSince]) }}
                                                         </span>
                                                         <div class="text-muted mt-1" style="font-size:0.8rem">
                                                             {{ \Carbon\Carbon::parse($lastAtt->attendance_date)->format('d/m/Y') }}
                                                         </div>
                                                     @else
-                                                        <span class="badge bg-dark">لم يحضر</span>
+                                                        <span class="badge bg-dark">{{ trans('crm.never_attended') }}</span>
                                                     @endif
                                                     @break
 
@@ -380,7 +381,7 @@
                                                     @php $debtInfo = $unpaidAmounts->get($member->id); @endphp
                                                     @if($debtInfo)
                                                         <span class="fw-bold text-danger">{{ number_format($debtInfo->unpaid_total, 2) }}</span>
-                                                        <div class="text-muted" style="font-size:0.8rem">{{ $debtInfo->unpaid_count }} فاتورة</div>
+                                                        <div class="text-muted" style="font-size:0.8rem">{{ trans('crm.invoices_count', ['count' => $debtInfo->unpaid_count]) }}</div>
                                                     @else
                                                         <span class="text-muted">—</span>
                                                     @endif
@@ -397,7 +398,7 @@
                                                             {{ $planNameDisplay }}
                                                         </div>
                                                         <span class="badge {{ $sub->status === 'active' ? ($daysLeft <= 7 ? 'bg-warning text-dark' : 'bg-success') : 'bg-secondary' }}">
-                                                            {{ $sub->status === 'active' ? ($daysLeft <= 0 ? 'ينتهي اليوم' : 'نشط') : 'منتهي' }}
+                                                            {{ $sub->status === 'active' ? ($daysLeft <= 0 ? trans('crm.ends_today') : trans('crm.active_badge')) : trans('crm.expired_badge') }}
                                                         </span>
                                                     @else
                                                         <span class="text-muted">—</span>
@@ -422,15 +423,15 @@
                                                     <a class="btn btn-success btn-sm"
                                                        target="_blank"
                                                        href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waText) }}">
-                                                        واتساب
+                                                        {{ trans('crm.whatsapp_btn') }}
                                                     </a>
                                                 @else
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled>واتساب</button>
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled>{{ trans('crm.whatsapp_btn') }}</button>
                                                 @endif
 
                                                 <a href="{{ route('crm.members.show', $member->id) }}"
                                                    class="btn btn-outline-primary btn-sm">
-                                                    عرض
+                                                    {{ trans('crm.view_btn') }}
                                                 </a>
 
                                                 <button type="button"
@@ -440,7 +441,7 @@
                                                         data-mbranch="{{ $member->branch_id }}"
                                                         data-mseg="{{ $segment }}"
                                                         onclick="segOpenFollowup(this)">
-                                                    متابعة
+                                                    {{ trans('crm.followup_btn') }}
                                                 </button>
                                             </div>
                                         </td>
@@ -453,8 +454,7 @@
                     @if($members->hasPages())
                         <div class="seg-pager px-4 py-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <small class="text-muted">
-                                عرض {{ $members->firstItem() }}–{{ $members->lastItem() }}
-                                من {{ number_format($members->total()) }} عضو
+                                {{ trans('crm.members_show_x_to_y', ['from' => $members->firstItem(), 'to' => $members->lastItem(), 'total' => number_format($members->total())]) }}
                             </small>
                             <div id="seg-pagination">
                                 {{ $members->onEachSide(1)->links('pagination::bootstrap-5') }}
@@ -479,7 +479,7 @@
         <div class="modal-content" dir="rtl">
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-bold">
-                    <i class="fas fa-comments me-2 text-warning"></i>إضافة متابعة جديدة
+                    <i class="fas fa-comments me-2 text-warning"></i>{{ trans('crm.add_followup_modal_title') }}
                 </h6>
                 <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
@@ -493,54 +493,54 @@
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold small">نوع المتابعة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.followup_type') }}</label>
                         <select id="sfType" class="form-select form-select-sm" required>
-                            <option value="renewal">تجديد اشتراك</option>
-                            <option value="inactive">عضو غير نشط</option>
-                            <option value="freeze">إلغاء تجميد</option>
-                            <option value="debt">تحصيل مديونية</option>
-                            <option value="general">متابعة عامة</option>
+                            <option value="renewal">{{ trans('crm.type_renewal') }}</option>
+                            <option value="inactive">{{ trans('crm.type_inactive') }}</option>
+                            <option value="freeze">{{ trans('crm.type_freeze') }}</option>
+                            <option value="debt">{{ trans('crm.type_debt') }}</option>
+                            <option value="general">{{ trans('crm.type_general') }}</option>
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold small">الأولوية</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.priority') }}</label>
                         <select id="sfPriority" class="form-select form-select-sm" required>
-                            <option value="high">عالية</option>
-                            <option value="medium" selected>متوسطة</option>
-                            <option value="low">منخفضة</option>
+                            <option value="high">{{ trans('crm.priority_high') }}</option>
+                            <option value="medium" selected>{{ trans('crm.priority_medium') }}</option>
+                            <option value="low">{{ trans('crm.priority_low') }}</option>
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold small">الحالة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.type') }}</label>
                         <select id="sfStatus" class="form-select form-select-sm">
-                            <option value="pending" selected>قيد المتابعة</option>
-                            <option value="done">منتهية</option>
+                            <option value="pending" selected>{{ trans('crm.status_pending') }}</option>
+                            <option value="done">{{ trans('crm.status_done') }}</option>
                         </select>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">موعد المتابعة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.followup_date_label') }}</label>
                         <input type="datetime-local"
                                id="sfNextAction"
                                class="form-control form-control-sm">
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">ملاحظات</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.notes') }}</label>
                         <textarea id="sfNotes"
                                   class="form-control form-control-sm"
                                   rows="3"
-                                  placeholder="أكتب ملاحظاتك هنا..."></textarea>
+                                  placeholder="{{ trans('crm.notes_ph') }}"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ trans('crm.cancel') }}</button>
                 <button type="button" class="btn btn-warning btn-sm" id="sfSaveBtn" onclick="segSaveFollowup()">
-                    <i class="fas fa-save me-1"></i> حفظ
+                    <i class="fas fa-save me-1"></i> {{ trans('crm.save') }}
                 </button>
             </div>
         </div>
@@ -663,7 +663,7 @@
 
         const saveBtn = document.getElementById('sfSaveBtn');
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
+        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> {{ trans('crm.save') }}';
 
         new bootstrap.Modal(document.getElementById('segFollowupDlg')).show();
     };
@@ -673,7 +673,7 @@
         const btn = document.getElementById('sfSaveBtn');
 
         if (!_currentMemberId) {
-            toast('تعذّر تحديد العضو', 'error');
+            toast('{{ trans('crm.cannot_identify_member') }}', 'error');
             return;
         }
 
@@ -684,7 +684,7 @@
         const notes    = document.getElementById('sfNotes').value.trim();
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> جاري الحفظ...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> {{ trans('crm.saving') }}';
 
         fetch(STORE_URL, {
             method: 'POST',
@@ -708,13 +708,13 @@
         .then(r => r.json())
         .then(function (res) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
+            btn.innerHTML = '<i class="fas fa-save me-1"></i> {{ trans('crm.save') }}';
 
             if (res && res.success) {
-                toast('تم حفظ المتابعة بنجاح ✓', 'success');
+                toast('{{ trans('crm.followup_saved') }}', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('segFollowupDlg'))?.hide();
             } else {
-                let errMsg = 'تعذّر الحفظ، حاول مجدداً';
+                let errMsg = '{{ trans('crm.save_failed_retry') }}';
                 if (res && res.errors) {
                     errMsg = Object.values(res.errors).flat().join(' | ');
                 } else if (res && res.message) {
@@ -725,8 +725,8 @@
         })
         .catch(function () {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
-            toast('تعذّر الاتصال بالخادم', 'error');
+            btn.innerHTML = '<i class="fas fa-save me-1"></i> {{ trans('crm.save') }}';
+            toast('Error connecting to server', 'error');
         });
     };
 

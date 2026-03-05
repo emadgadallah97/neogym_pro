@@ -1,7 +1,7 @@
 {{-- resources/views/crm/members/show.blade.php --}}
 @extends('layouts.master_table')
 
-@section('title', 'ملف العضو — ' . $member->full_name)
+@section('title', trans('crm.member_profile_title') . ' — ' . $member->full_name)
 
 @section('css')
 <style>
@@ -147,7 +147,7 @@
                 <a href="{{ route('crm.dashboard') }}" class="text-decoration-none">CRM</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="{{ route('crm.members.index') }}" class="text-decoration-none">الشرائح الذكية</a>
+                <a href="{{ route('crm.members.index') }}" class="text-decoration-none">{{ trans('crm.smart_segments_title') }}</a>
             </li>
             <li class="breadcrumb-item active">{{ $member->full_name }}</li>
         </ol>
@@ -173,10 +173,10 @@
                         <h5 class="fw-bold mb-0">{{ $member->full_name }}</h5>
                         @php
                             $statusMap = [
-                                'active'   => ['success',   'نشط'],
-                                'inactive' => ['secondary', 'غير نشط'],
-                                'frozen'   => ['info',      'مجمّد'],
-                                'expired'  => ['danger',    'منتهي'],
+                                'active'   => ['success',   trans('crm.active_badge')],
+                                'inactive' => ['secondary', trans('crm.status_inactive')],
+                                'frozen'   => ['info',      trans('crm.frozen_badge')],
+                                'expired'  => ['danger',    trans('crm.expired_badge')],
                             ];
                             [$sc, $sl] = $statusMap[$member->status] ?? ['secondary', $member->status];
                         @endphp
@@ -197,7 +197,7 @@
                             </span>
                         @endif
                         @if($member->join_date)
-                            <span><i class="fas fa-calendar me-1"></i>انضم {{ $member->join_date->format('d/m/Y') }}</span>
+                            <span><i class="fas fa-calendar me-1"></i>{{ trans('crm.joined_date', ['date' => $member->join_date->format('d/m/Y')]) }}</span>
                         @endif
                     </div>
                 </div>
@@ -207,23 +207,23 @@
                     @if($member->whatsapp || $member->phone)
                         @php
                             $waNum = preg_replace('/[^0-9]/', '', $member->whatsapp ?: $member->phone);
-                            $waMsg = urlencode('مرحباً ' . ($member->first_name ?? '') . '، نتمنى لك يوماً سعيداً.');
+                            $waMsg = urlencode(trans('crm.wa_text_default', ['name' => $member->first_name ?? '']));
                         @endphp
                         <a href="https://wa.me/{{ $waNum }}?text={{ $waMsg }}"
                            target="_blank"
                            class="btn btn-success btn-sm">
-                            <i class="fab fa-whatsapp me-1"></i> واتساب
+                            <i class="fab fa-whatsapp me-1"></i> {{ trans('crm.whatsapp_btn') }}
                         </a>
                     @endif
 
                     <button type="button"
                             class="btn btn-warning btn-sm"
                             onclick="mpOpenFollowup()">
-                        <i class="fas fa-plus me-1"></i> متابعة جديدة
+                        <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup_modal_title') }}
                     </button>
 
                     <a href="{{ route('crm.members.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-arrow-right me-1"></i> رجوع
+                        <i class="fas fa-arrow-right me-1"></i> {{ trans('crm.back_btn') }}
                     </a>
                 </div>
             </div>
@@ -235,19 +235,19 @@
         <div class="col-6 col-md-3">
             <div class="mp-stat h-100">
                 <div class="stat-value ">{{ $attendanceStats->total_days }}</div>
-                <div class="stat-label">إجمالي أيام الحضور</div>
+                <div class="stat-label">{{ trans('crm.total_attendance_days') }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="mp-stat h-100">
                 <div class="stat-value text-success">{{ $attendanceStats->this_month }}</div>
-                <div class="stat-label">حضور هذا الشهر</div>
+                <div class="stat-label">{{ trans('crm.this_month_attendance') }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="mp-stat h-100">
                 <div class="stat-value text-info">{{ $attendanceStats->avg_per_week }}</div>
-                <div class="stat-label">متوسط زيارات / أسبوع</div>
+                <div class="stat-label">{{ trans('crm.avg_visits_week') }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
@@ -257,8 +257,8 @@
                 </div>
                 <div class="stat-label">
                     {{ $financialStats->unpaid_count > 0
-                        ? 'مبلغ معلق ('.$financialStats->unpaid_count.' فاتورة)'
-                        : 'لا توجد فواتير معلقة' }}
+                        ? trans('crm.pending_amount_x', ['count' => $financialStats->unpaid_count])
+                        : trans('crm.no_pending_invoices') }}
                 </div>
             </div>
         </div>
@@ -272,7 +272,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mp-section-title">
-                        <i class="fas fa-id-card me-2 text-primary"></i>الاشتراك الحالي
+                        <i class="fas fa-id-card me-2 text-primary"></i>{{ trans('crm.current_subscription') }}
                     </div>
 
                     @if($activeSub)
@@ -300,7 +300,7 @@
                                         <span class="info-val">
                                             {{ $endDate->format('d/m/Y') }}
                                             <span class="badge ms-1 {{ $daysLeft <= 0 ? 'bg-danger' : ($daysLeft <= 7 ? 'bg-warning text-dark' : 'bg-success') }}">
-                                                {{ $daysLeft <= 0 ? 'انتهى' : 'بعد '.$daysLeft.' يوم' }}
+                                                {{ $daysLeft <= 0 ? trans('crm.ended') : trans('crm.after_x_days', ['count' => $daysLeft]) }}
                                             </span>
                                         </span>
                                     </li>
@@ -324,7 +324,7 @@
                                 @if($activeSub->sessions_count > 0)
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between small mb-1">
-                                            <span class="text-muted">الجلسات المتبقية</span>
+                                            <span class="text-muted">{{ trans('crm.remaining_sessions') }}</span>
                                             <span class="fw-semibold">
                                                 {{ $activeSub->sessions_remaining ?? 0 }} / {{ $activeSub->sessions_count }}
                                             </span>
@@ -333,14 +333,14 @@
                                             <div class="progress-bar {{ $sessPct < 25 ? 'bg-danger' : ($sessPct < 50 ? 'bg-warning' : 'bg-success') }}"
                                                  style="width: {{ $sessPct }}%"></div>
                                         </div>
-                                        <div class="text-muted small mt-1">استُخدم {{ $sessUsed }} جلسة</div>
+                                        <div class="text-muted small mt-1">{{ trans('crm.sessions_used', ['count' => $sessUsed]) }}</div>
                                     </div>
                                 @endif
 
                                 @if($ptAddon)
                                     <div class="alert alert-light border-start border-warning border-3 py-2 px-3 mb-0">
                                         <div class="fw-semibold small mb-1">
-                                            <i class="fas fa-dumbbell me-1 text-warning"></i>مدرب شخصي
+                                            <i class="fas fa-dumbbell me-1 text-warning"></i>{{ trans('crm.personal_trainer') }}
                                         </div>
                                         <ul class="mp-info-list" style="font-size:0.8rem">
                                             <li>
@@ -352,7 +352,7 @@
                                                 <span class="info-val">{{ $ptAddon->sessions_remaining ?? 0 }} / {{ $ptAddon->sessions_count ?? 0 }}</span>
                                             </li>
                                             <li>
-                                                <span class="info-key">سعر الجلسة</span>
+                                                <span class="info-key">{{ trans('crm.session_price') }}</span>
                                                 <span class="info-val">{{ number_format($ptAddon->session_price ?? 0, 2) }}</span>
                                             </li>
                                         </ul>
@@ -363,7 +363,7 @@
                     @else
                         <div class="text-center py-4">
                             <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
-                            <p class="text-muted mb-0">لا يوجد اشتراك نشط حالياً</p>
+                            <p class="text-muted mb-0">{{ trans('crm.no_active_subscription') }}</p>
                         </div>
                     @endif
                 </div>
@@ -375,57 +375,57 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mp-section-title">
-                        <i class="fas fa-user me-2 text-secondary"></i>البيانات الشخصية
+                        <i class="fas fa-user me-2 text-secondary"></i>{{ trans('crm.personal_info') }}
                     </div>
                     <ul class="mp-info-list">
                         @if($member->gender)
                             <li>
-                                <span class="info-key">الجنس</span>
-                                <span class="info-val">{{ $member->gender === 'male' ? 'ذكر' : 'أنثى' }}</span>
+                                <span class="info-key">{{ trans('crm.gender') }}</span>
+                                <span class="info-val">{{ $member->gender === 'male' ? trans('crm.gender_male') : trans('crm.gender_female') }}</span>
                             </li>
                         @endif
                         @if($member->birth_date)
                             <li>
-                                <span class="info-key">تاريخ الميلاد</span>
+                                <span class="info-key">{{ trans('crm.birth_date') }}</span>
                                 <span class="info-val">
                                     {{ $member->birth_date->format('d/m/Y') }}
-                                    <small class="text-muted">({{ $member->birth_date->age }} سنة)</small>
+                                    <small class="text-muted">({{ trans('crm.age_years', ['age' => $member->birth_date->age]) }})</small>
                                 </span>
                             </li>
                         @endif
                         @if($member->phone2)
                             <li>
-                                <span class="info-key">هاتف 2</span>
+                                <span class="info-key">{{ trans('crm.phone_extra') }}</span>
                                 <span class="info-val">{{ $member->phone2 }}</span>
                             </li>
                         @endif
                         @if($member->email)
                             <li>
-                                <span class="info-key">البريد</span>
+                                <span class="info-key">{{ trans('crm.email') }}</span>
                                 <span class="info-val" style="word-break:break-all">{{ $member->email }}</span>
                             </li>
                         @endif
                         @if($member->height)
                             <li>
-                                <span class="info-key">الطول / الوزن</span>
-                                <span class="info-val">{{ $member->height }} سم / {{ $member->weight }} كغ</span>
+                                <span class="info-key">{{ trans('crm.height_weight') }}</span>
+                                <span class="info-val">{{ trans('crm.height_weight_val', ['h' => $member->height, 'w' => $member->weight]) }}</span>
                             </li>
                         @endif
                         @if($member->medical_conditions)
                             <li>
-                                <span class="info-key">حالات طبية</span>
+                                <span class="info-key">{{ trans('crm.medical_conditions') }}</span>
                                 <span class="info-val text-danger">{{ $member->medical_conditions }}</span>
                             </li>
                         @endif
-                        <li>
-                            <span class="info-key">إجمالي مدفوع</span>
+                            <li>
+                                <span class="info-key">{{ trans('crm.total_paid') }}</span>
                             <span class="info-val text-success fw-bold">
                                 {{ number_format($financialStats->total_paid, 2) }}
                             </span>
                         </li>
                         @if($attendanceStats->last_visit)
                             <li>
-                                <span class="info-key">آخر زيارة</span>
+                                <span class="info-key">{{ trans('crm.th_last_visit') }}</span>
                                 <span class="info-val">
                                     {{ \Carbon\Carbon::parse($attendanceStats->last_visit)->format('d/m/Y') }}
                                     <small class="text-muted d-block">{{ \Carbon\Carbon::parse($attendanceStats->last_visit)->diffForHumans() }}</small>
@@ -447,33 +447,33 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mp-section-title">
-                        <i class="fas fa-history me-2 text-info"></i>تاريخ الاشتراكات
+                        <i class="fas fa-history me-2 text-info"></i>{{ trans('crm.subscription_history') }}
                         <span class="badge bg-light text-dark fw-normal ms-1">{{ $allSubscriptions->count() }}</span>
                     </div>
 
                     @if($allSubscriptions->isEmpty())
-                        <p class="text-muted text-center py-3 mb-0">لا توجد اشتراكات مسجّلة</p>
+                        <p class="text-muted text-center py-3 mb-0">{{ trans('crm.no_subscriptions') }}</p>
                     @else
                         <div class="table-responsive">
                             <table class="mp-mini-table">
                                 <thead>
                                     <tr>
-                                        <th>الباقة</th>
-                                        <th>البداية</th>
-                                        <th>الانتهاء</th>
-                                        <th>الجلسات</th>
-                                        <th>الإجمالي</th>
-                                        <th>الحالة</th>
+                                    <th>{{ trans('crm.plan') }}</th>
+                                        <th>{{ trans('crm.start_date') }}</th>
+                                        <th>{{ trans('crm.end_date') }}</th>
+                                        <th>{{ trans('crm.sessions') }}</th>
+                                        <th>{{ trans('crm.total') }}</th>
+                                        <th>{{ trans('crm.type') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($allSubscriptions as $sub)
                                         @php
-                                            $subStatusMap = [
-                                                'active'    => ['success',   'نشط'],
-                                                'expired'   => ['danger',    'منتهي'],
-                                                'cancelled' => ['secondary', 'ملغى'],
-                                                'frozen'    => ['info',      'مجمّد'],
+                                        $subStatusMap = [
+                                                'active'    => ['success',   trans('crm.active_badge')],
+                                                'expired'   => ['danger',    trans('crm.expired_badge')],
+                                                'cancelled' => ['secondary', trans('crm.cancelled_badge')],
+                                                'frozen'    => ['info',      trans('crm.frozen_badge')],
                                             ];
                                             [$ssc, $ssl] = $subStatusMap[$sub->status] ?? ['secondary', $sub->status];
                                         @endphp
@@ -504,15 +504,15 @@
                     @if($unpaidInvoices->isNotEmpty())
                         <div class="mt-3">
                             <div class="mp-section-title text-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>فواتير معلقة
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ trans('crm.pending_invoices_title') }}
                             </div>
                             <div class="table-responsive">
                                 <table class="mp-mini-table">
                                     <thead>
                                         <tr>
-                                            <th>رقم الفاتورة</th>
-                                            <th>المبلغ</th>
-                                            <th>التاريخ</th>
+                                            <th>{{ trans('crm.invoice_no') }}</th>
+                                            <th>{{ trans('crm.amount') }}</th>
+                                            <th>{{ trans('crm.date') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -537,20 +537,20 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mp-section-title">
-                        <i class="fas fa-calendar-check me-2 text-success"></i>آخر زيارات
+                        <i class="fas fa-calendar-check me-2 text-success"></i>{{ trans('crm.recent_visits') }}
                         <span class="badge bg-light text-dark fw-normal ms-1">{{ $recentAttendances->count() }}</span>
                     </div>
 
                     @if($recentAttendances->isEmpty())
-                        <p class="text-muted text-center py-3 mb-0">لا توجد زيارات مسجّلة</p>
+                        <p class="text-muted text-center py-3 mb-0">{{ trans('crm.no_visits_recorded') }}</p>
                     @else
                         <div style="max-height: 340px; overflow-y: auto;">
                             <table class="mp-mini-table">
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>التاريخ</th>
-                                        <th>منذ</th>
+                                        <th>{{ trans('crm.th_date') }}</th>
+                                        <th>{{ trans('crm.th_since') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -576,18 +576,18 @@
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="mp-section-title mb-0">
-                    <i class="fas fa-comments me-2 text-warning"></i>سجل المتابعات CRM
+                    <i class="fas fa-comments me-2 text-warning"></i>{{ trans('crm.crm_followup_log') }}
                     <span class="badge bg-light text-dark fw-normal ms-1" id="mpFollowupCount">{{ $followups->count() }}</span>
                 </div>
                 <button type="button" class="btn btn-warning btn-sm" onclick="mpOpenFollowup()">
-                    <i class="fas fa-plus me-1"></i> متابعة جديدة
+                    <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup_modal_title') }}
                 </button>
             </div>
 
             {{-- Empty state --}}
             <div id="mpEmptyState" class="{{ $followups->count() > 0 ? 'd-none' : '' }} text-center py-4">
                 <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
-                <p class="text-muted mb-0">لا توجد متابعات مسجّلة لهذا العضو</p>
+                <p class="text-muted mb-0">{{ trans('crm.no_followups_for_member') }}</p>
             </div>
 
             {{-- Timeline --}}
@@ -607,7 +607,7 @@
                             'cancelled' => 'secondary',
                             default     => $isOverdue ? 'danger' : 'primary',
                         };
-                        $statusLabel = ($fu->status === 'pending' && $isOverdue) ? 'متأخرة' : $fu->status_label;
+                        $statusLabel = ($fu->status === 'pending' && $isOverdue) ? trans('crm.overdue') : $fu->status_label;
                     @endphp
                     <div class="mp-tl-item">
                         <div class="mp-tl-dot" style="background: {{ $dotColor }}"></div>
@@ -629,7 +629,7 @@
                                 @if($fu->next_action_at)
                                     <span>
                                         <i class="fas fa-clock me-1"></i>
-                                        موعد المتابعة: {{ $fu->next_action_at->format('d/m/Y H:i') }}
+                                        {{ trans('crm.followup_date_label') }}: {{ $fu->next_action_at->format('d/m/Y H:i') }}
                                     </span>
                                 @endif
                                 @if($fu->result)
@@ -659,7 +659,7 @@
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-bold">
                     <i class="fas fa-comments me-2 text-warning"></i>
-                    إضافة متابعة — {{ $member->full_name }}
+                    {{ trans('crm.add_followup_modal_title') }} — {{ $member->full_name }}
                 </h6>
                 <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
@@ -669,55 +669,55 @@
                 <div class="row g-3">
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold small">نوع المتابعة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.followup_type') }}</label>
                         <select id="mp_type" class="form-select form-select-sm">
-                            <option value="renewal">تجديد اشتراك</option>
-                            <option value="inactive">عضو غير نشط</option>
-                            <option value="freeze">إلغاء تجميد</option>
-                            <option value="debt">تحصيل مديونية</option>
-                            <option value="general" selected>متابعة عامة</option>
+                            <option value="renewal">{{ trans('crm.type_renewal') }}</option>
+                            <option value="inactive">{{ trans('crm.type_inactive') }}</option>
+                            <option value="freeze">{{ trans('crm.type_freeze') }}</option>
+                            <option value="debt">{{ trans('crm.type_debt') }}</option>
+                            <option value="general" selected>{{ trans('crm.type_general') }}</option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold small">الأولوية</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.priority') }}</label>
                         <select id="mp_priority" class="form-select form-select-sm">
-                            <option value="high">عالية</option>
-                            <option value="medium" selected>متوسطة</option>
-                            <option value="low">منخفضة</option>
+                            <option value="high">{{ trans('crm.priority_high') }}</option>
+                            <option value="medium" selected>{{ trans('crm.priority_medium') }}</option>
+                            <option value="low">{{ trans('crm.priority_low') }}</option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold small">الحالة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.type') }}</label>
                         <select id="mp_status" class="form-select form-select-sm">
-                            <option value="pending" selected>قيد المتابعة</option>
-                            <option value="done">منتهية</option>
+                            <option value="pending" selected>{{ trans('crm.status_pending') }}</option>
+                            <option value="done">{{ trans('crm.status_done') }}</option>
                         </select>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">موعد المتابعة</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.followup_date_label') }}</label>
                         <input type="datetime-local"
                                id="mp_next_action_at"
                                class="form-control form-control-sm">
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">ملاحظات</label>
+                        <label class="form-label fw-semibold small">{{ trans('crm.notes') }}</label>
                         <textarea id="mp_notes"
                                   class="form-control form-control-sm"
                                   rows="3"
-                                  placeholder="أكتب ملاحظاتك هنا..."></textarea>
+                                  placeholder="{{ trans('crm.notes_ph') }}"></textarea>
                     </div>
 
                 </div>
             </div>
 
             <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ trans('crm.cancel') }}</button>
                 <button type="button" class="btn btn-warning btn-sm" id="mpSaveBtn" onclick="mpSaveFollowup()">
-                    <i class="fas fa-save me-1"></i> حفظ
+                    <i class="fas fa-save me-1"></i> {{ trans('crm.save') }}
                 </button>
             </div>
         </div>

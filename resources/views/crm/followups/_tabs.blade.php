@@ -1,13 +1,13 @@
 {{-- resources/views/crm/followups/_tabs.blade.php --}}
 @php
     $statusTabs = [
-        'all'       => ['label' => 'الكل',               'color' => 'secondary'],
-        'pending'   => ['label' => 'قيد المتابعة',       'color' => 'primary'  ],
-        'overdue'   => ['label' => 'متأخرة',             'color' => 'danger'   ],
-        'today'     => ['label' => 'اليوم',              'color' => 'warning'  ],
-        'prospect'  => ['label' => 'العملاء المحتملين',  'color' => 'success'  ],
-        'done'      => ['label' => 'منتهية',             'color' => 'success'  ],
-        'cancelled' => ['label' => 'ملغاة',              'color' => 'dark'     ],
+        'all'       => ['label' => trans('crm.tab_all'),        'color' => 'secondary'],
+        'pending'   => ['label' => trans('crm.tab_pending'),    'color' => 'primary'  ],
+        'overdue'   => ['label' => trans('crm.tab_overdue'),    'color' => 'danger'   ],
+        'today'     => ['label' => trans('crm.tab_today'),      'color' => 'warning'  ],
+        'prospect'  => ['label' => trans('crm.tab_prospects'),  'color' => 'success'  ],
+        'done'      => ['label' => trans('crm.tab_done'),       'color' => 'success'  ],
+        'cancelled' => ['label' => trans('crm.tab_cancelled'),  'color' => 'dark'     ],
     ];
 @endphp
 

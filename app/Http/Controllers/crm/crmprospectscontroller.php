@@ -154,7 +154,7 @@ public function index(Request $request)
                 'type'           => $request->followup_type,
                 'status'         => 'pending',
                 'priority'       => 'medium',
-                'notes'          => $request->followup_notes ?? 'متابعة أولى - عضو محتمل جديد',
+                'notes'          => $request->followup_notes ?? trans('crm.followup_saved_msg'),
                 'next_action_at' => $followupAt,
                 'created_by'     => Auth::id(),
                 'updated_by'     => Auth::id(),
@@ -162,12 +162,12 @@ public function index(Request $request)
 
             return redirect()
                 ->route('crm.prospects.show', $prospect->id)
-                ->with('success', 'تم إضافة العضو المحتمل وجدولة المتابعة بنجاح');
+                ->with('success', trans('crm.followup_saved_msg'));
         }
 
         return redirect()
             ->route('crm.prospects.show', $prospect->id)
-            ->with('success', 'تم إضافة العضو المحتمل بنجاح');
+            ->with('success', trans('crm.followup_saved_msg'));
     }
 
     // ══════════════════════════════════════════════════════
@@ -260,7 +260,7 @@ public function show(int $id)
                 'type'           => $request->followup_type,
                 'status'         => 'pending',
                 'priority'       => 'medium',
-                'notes'          => $request->followup_notes ?? 'متابعة مضافة عند التعديل',
+                'notes'          => $request->followup_notes ?? trans('crm.followup_updated_msg'),
                 'next_action_at' => $followupAt,
                 'created_by'     => Auth::id(),
                 'updated_by'     => Auth::id(),
@@ -268,12 +268,12 @@ public function show(int $id)
 
             return redirect()
                 ->route('crm.prospects.show', $prospect->id)
-                ->with('success', 'تم تحديث البيانات وجدولة المتابعة بنجاح');
+                ->with('success', trans('crm.followup_updated_msg'));
         }
 
         return redirect()
             ->route('crm.prospects.show', $prospect->id)
-            ->with('success', 'تم تحديث بيانات العضو المحتمل بنجاح');
+            ->with('success', trans('crm.followup_updated_msg'));
     }
 
     // ══════════════════════════════════════════════════════
@@ -290,7 +290,7 @@ public function show(int $id)
 
         return redirect()
             ->route('crm.prospects.index')
-            ->with('success', 'تم حذف العضو المحتمل بنجاح');
+            ->with('success', trans('crm.followup_deleted_msg'));
     }
 
     // ══════════════════════════════════════════════════════
@@ -339,14 +339,14 @@ public function show(int $id)
         if (request()->expectsJson()) {
             return response()->json([
                 'success'  => true,
-                'message'  => "تم تحويل {$prospect->full_name} إلى عضو فعلي بنجاح",
+                'message'  => trans('crm.followup_saved_msg'),
                 'redirect' => route('crm.members.show', $prospect->id),
             ]);
         }
 
         return redirect()
             ->route('crm.members.show', $prospect->id)
-            ->with('success', "تم تحويل {$prospect->full_name} إلى عضو فعلي — يمكنك الآن إضافة اشتراك");
+            ->with('success', trans('crm.followup_saved_msg'));
     }
 
     // ══════════════════════════════════════════════════════
@@ -385,7 +385,7 @@ public function show(int $id)
 
         return redirect()
             ->route('crm.prospects.index')
-            ->with('info', 'تم إلغاء العضو المحتمل وإغلاق متابعاته');
+            ->with('info', trans('crm.followup_updated_msg'));
     }
 
     // ══════════════════════════════════════════════════════

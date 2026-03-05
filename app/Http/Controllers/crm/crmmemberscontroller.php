@@ -13,15 +13,18 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Scopes\ExcludeProspectsScope;
 class CrmMembersController extends Controller
 {
-    protected array $segmentsMeta = [
-        'expiring7'  => ['label' => 'تنتهي خلال 7 أيام',  'color' => 'warning',   'icon' => 'fa-clock'],
-        'expiring30' => ['label' => 'تنتهي خلال 30 يوم',  'color' => 'info',      'icon' => 'fa-calendar-alt'],
-        'expired'    => ['label' => 'اشتراك منتهي',        'color' => 'danger',    'icon' => 'fa-times-circle'],
-        'frozen'     => ['label' => 'مجمّدون',              'color' => 'secondary', 'icon' => 'fa-snowflake'],
-        'inactive'   => ['label' => 'غير نشطين (14 يوم)', 'color' => 'dark',      'icon' => 'fa-user-slash'],
-        'new'        => ['label' => 'أعضاء جدد (30 يوم)', 'color' => 'success',   'icon' => 'fa-user-plus'],
-        'debt'       => ['label' => 'فواتير معلقة',        'color' => 'danger',    'icon' => 'fa-file-invoice'],
-    ];
+    protected function segmentsMetaData(): array
+    {
+        return [
+            'expiring7'  => ['label' => trans('crm.seg_expiring7'),  'color' => 'warning',   'icon' => 'fa-clock'],
+            'expiring30' => ['label' => trans('crm.seg_expiring30'), 'color' => 'info',      'icon' => 'fa-calendar-alt'],
+            'expired'    => ['label' => trans('crm.seg_expired'),    'color' => 'danger',    'icon' => 'fa-times-circle'],
+            'frozen'     => ['label' => trans('crm.seg_frozen'),     'color' => 'secondary', 'icon' => 'fa-snowflake'],
+            'inactive'   => ['label' => trans('crm.seg_inactive'),   'color' => 'dark',      'icon' => 'fa-user-slash'],
+            'new'        => ['label' => trans('crm.seg_new'),        'color' => 'success',   'icon' => 'fa-user-plus'],
+            'debt'       => ['label' => trans('crm.seg_debt'),       'color' => 'danger',    'icon' => 'fa-file-invoice'],
+        ];
+    }
 
     // ══════════════════════════════════════════════════════
     //  INDEX
@@ -30,7 +33,8 @@ class CrmMembersController extends Controller
     public function index(Request $request)
     {
         // ✅ [تعديل] قبول 'all' بجانب باقي الـ segments
-        $validSegments = array_merge(['all'], array_keys($this->segmentsMeta));
+        $segmentsMeta = $this->segmentsMetaData();
+        $validSegments = array_merge(['all'], array_keys($segmentsMeta));
         $segment  = in_array($request->segment, $validSegments)
                     ? $request->segment
                     : 'expiring7';
@@ -62,7 +66,7 @@ class CrmMembersController extends Controller
         $unpaidAmounts   = ($segment === 'debt') ? $this->getUnpaidAmounts($memberIds) : collect();
         $segmentCounts   = $this->getSegmentCounts($today);
         $branches        = Branch::where('status', 1)->get();
-        $segmentsMeta    = $this->segmentsMeta;
+        $segmentsMeta    = $this->segmentsMetaData();
 
         return view('crm.members.index', compact(
             'members', 'segment', 'segmentCounts', 'branches',
@@ -147,7 +151,7 @@ class CrmMembersController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $segmentsMeta = $this->segmentsMeta;
+        $segmentsMeta = $this->segmentsMetaData();
 
         return view('crm.members.show', compact(
             'member',
@@ -473,7 +477,7 @@ public function searchAjax(Request $request): \Illuminate\Http\JsonResponse
         // ✅ إضافة (محتمل) بجانب اسم العضو المحتمل للتمييز
         'text'      => trim("{$m->first_name} {$m->last_name}")
                         . ($m->member_code ? " — {$m->member_code}" : '')
-                        . ($m->type === 'prospect' ? ' 🟢 محتمل' : ''),
+                        . ($m->type === 'prospect' ? ' 🟢 ' . trans('crm.prospect_member') : ''),
 
         'phone'     => $m->phone ?? '',
         'branch_id' => $m->branch_id,

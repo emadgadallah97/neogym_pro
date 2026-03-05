@@ -20,7 +20,7 @@
 
             <div class="modal-content" dir="rtl">
                 <div class="modal-header border-0 pb-0">
-                    <h6 class="modal-title fw-bold" id="fuTitle">إضافة متابعة جديدة</h6>
+                    <h6 class="modal-title fw-bold" id="fuTitle">{{ trans('crm.add_new_followup') }}</h6>
                     <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -30,13 +30,13 @@
                         {{-- الفرع --}}
                         <div class="col-md-5">
                             <label class="form-label fw-semibold small">
-                                الفرع <span class="text-danger">*</span>
+                                {{ trans('crm.branch') }} <span class="text-danger">*</span>
                             </label>
                             <select name="branch_id"
                                     id="fu_branch_id"
                                     class="form-select form-select-sm"
                                     required>
-                                <option value="">— اختر الفرع أولاً —</option>
+                                <option value="">{{ trans('crm.choose_first_branch') }}</option>
                                 @foreach($branches as $br)
                                     <option value="{{ $br->id }}">
                                         {{ is_array($br->name)
@@ -50,7 +50,7 @@
                         {{-- العضو: وضع عادي (Select2) --}}
                         <div class="col-md-7" id="fu_member_select_wrap">
                             <label class="form-label fw-semibold small">
-                                العضو <span class="text-danger">*</span>
+                                {{ trans('crm.member') }} <span class="text-danger">*</span>
                             </label>
                             <select name="member_id"
                                     id="fu_member_id"
@@ -59,31 +59,31 @@
                                     disabled
                                     style="width:100%">
                             </select>
-                            <small id="fu_member_hint" class="text-muted">اختر الفرع أولاً لتفعيل البحث</small>
+                            <small id="fu_member_hint" class="text-muted">{{ trans('crm.choose_first_branch_hint') }}</small>
                         </div>
 
                         {{-- العضو: وضع مقفل (من صفحة show) --}}
                         <div class="col-md-7 d-none" id="fu_member_locked_wrap">
-                            <label class="form-label fw-semibold small">العضو</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.member') }}</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light">
                                     <i class="fas fa-user-tag text-success"></i>
                                 </span>
                                 <div class="form-control bg-light d-flex align-items-center gap-2">
                                     <span id="fu_member_locked_name" class="fw-semibold"></span>
-                                    <span class="badge bg-success-subtle text-success border">محتمل</span>
+                                    <span class="badge bg-success-subtle text-success border">{{ trans('crm.prospect_member') }}</span>
                                 </div>
                                 <input type="hidden" id="fu_member_locked_id" name="member_id">
                             </div>
                             <small class="text-muted">
                                 <i class="fas fa-lock me-1"></i>
-                                العضو محدد تلقائياً ولا يمكن تغييره
+                                {{ trans('crm.member_hint_locked') }}
                             </small>
                         </div>
 
                         {{-- نوع المتابعة --}}
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">نوع المتابعة</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.followup_type') }}</label>
                             <select name="type" id="fu_type" class="form-select form-select-sm" required>
                                 @foreach($typeLabels as $k => $v)
                                     <option value="{{ $k }}">{{ $v }}</option>
@@ -93,7 +93,7 @@
 
                         {{-- الحالة --}}
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">الحالة</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.type') }}</label>
                             <select name="status" id="fu_status" class="form-select form-select-sm" required>
                                 @foreach($statusLabels as $k => $v)
                                     <option value="{{ $k }}">{{ $v }}</option>
@@ -103,7 +103,7 @@
 
                         {{-- الأولوية --}}
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">الأولوية</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.priority') }}</label>
                             <select name="priority" id="fu_priority" class="form-select form-select-sm" required>
                                 @foreach($priorityLabels as $k => $v)
                                     <option value="{{ $k }}">{{ $v }}</option>
@@ -113,7 +113,7 @@
 
                         {{-- موعد المتابعة --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">موعد المتابعة</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.followup_date_label') }}</label>
                             <input type="datetime-local"
                                    name="next_action_at"
                                    id="fu_next_action_at"
@@ -122,31 +122,31 @@
 
                         {{-- النتيجة --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">النتيجة</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.int_result') }}</label>
                             <input type="text"
                                    name="result"
                                    id="fu_result"
                                    class="form-control form-control-sm"
-                                   placeholder="مثال: تم الاتفاق على تجديد">
+                                   placeholder="{{ trans('crm.result_placeholder') }}">
                         </div>
 
                         {{-- ملاحظات --}}
                         <div class="col-12">
-                            <label class="form-label fw-semibold small">ملاحظات</label>
+                            <label class="form-label fw-semibold small">{{ trans('crm.notes') }}</label>
                             <textarea name="notes"
                                       id="fu_notes"
                                       class="form-control form-control-sm"
                                       rows="3"
-                                      placeholder="تفاصيل المتابعة..."></textarea>
+                                      placeholder="{{ trans('crm.notes_ph') }}"></textarea>
                         </div>
 
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ trans('crm.cancel') }}</button>
                     <button type="submit" class="btn btn-warning btn-sm">
-                        <i class="fas fa-save me-1"></i> حفظ
+                        <i class="fas fa-save me-1"></i> {{ trans('crm.save') }}
                     </button>
                 </div>
             </div>
@@ -171,7 +171,7 @@
             dropdownParent: jQuery('#fuModal'),
             dir: 'rtl',
             minimumInputLength: 2,
-            placeholder: 'ابحث بالاسم أو الكود أو الهاتف...',
+            placeholder: '{{ trans('crm.member_search_ph') }}',
             allowClear: true,
             ajax: {
                 url: SEARCH_URL,
@@ -216,8 +216,8 @@
 
         memberEl.disabled = !hasBranch;
         hintEl.textContent = hasBranch
-            ? 'ابحث بالاسم أو الكود أو الهاتف'
-            : 'اختر الفرع أولاً لتفعيل البحث';
+            ? '{{ trans('crm.member_hint') }}'
+            : '{{ trans('crm.choose_first_branch_hint') }}';
     });
 
     // ── fuSetLockedMember ────────────────────────────────
@@ -275,7 +275,7 @@
 
         document.getElementById('fu_member_id').setAttribute('name', 'member_id');
         document.getElementById('fu_member_id').disabled = true;
-        document.getElementById('fu_member_hint').textContent = 'اختر الفرع أولاً لتفعيل البحث';
+        document.getElementById('fu_member_hint').textContent = '{{ trans('crm.choose_first_branch_hint') }}';
 
         if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
             jQuery('#fu_member_id').val(null).trigger('change');

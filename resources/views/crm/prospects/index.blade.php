@@ -26,17 +26,17 @@
     {{-- ── Header Actions ──────────────────────────────────────── --}}
     <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-            <h5 class="fw-bold mb-1">الأعضاء المحتملون</h5>
-            <small class="text-muted">إجمالي: {{ number_format($prospects->total()) }} محتمل</small>
+            <h5 class="fw-bold mb-1">{{ trans('crm.prospects_title') }}</h5>
+            <small class="text-muted">{{ trans('crm.prospects_total', ['count' => number_format($prospects->total())]) }}</small>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('crm.prospects.import') }}" class="btn btn-outline-success btn-sm">
                 <i class="fas fa-file-excel me-1"></i>
-                رفع Excel
+                {{ trans('crm.upload_excel') }}
             </a>
             <a href="{{ route('crm.prospects.create') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus me-1"></i>
-                عضو محتمل جديد
+                {{ trans('crm.new_prospect') }}
             </a>
         </div>
     </div>
@@ -49,19 +49,19 @@
 
                     {{-- بحث --}}
                     <div class="col-md-3">
-                        <label class="form-label small fw-semibold">بحث</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.search') }}</label>
                         <input type="text"
                                name="search"
                                value="{{ request('search') }}"
                                class="form-control form-control-sm"
-                               placeholder="الاسم، الهاتف، البريد...">
+                               placeholder="{{ trans('crm.search_placeholder') }}">
                     </div>
 
                     {{-- الفرع --}}
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">الفرع</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.branch') }}</label>
                         <select name="branch_id" class="form-select form-select-sm">
-                            <option value="">الكل</option>
+                            <option value="">{{ trans('crm.all') }}</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}"
                                     {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -73,17 +73,17 @@
 
                     {{-- الجنس --}}
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">الجنس</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.filter_gender') }}</label>
                         <select name="gender" class="form-select form-select-sm">
-                            <option value="">الكل</option>
-                            <option value="male"   {{ request('gender') === 'male'   ? 'selected' : '' }}>ذكر</option>
-                            <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>أنثى</option>
+                            <option value="">{{ trans('crm.all') }}</option>
+                            <option value="male"   {{ request('gender') === 'male'   ? 'selected' : '' }}>{{ trans('crm.gender_male') }}</option>
+                            <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>{{ trans('crm.gender_female') }}</option>
                         </select>
                     </div>
 
                     {{-- ✅ تاريخ الإضافة (من) --}}
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">تاريخ الإضافة (من)</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.added_date_from') }}</label>
                         <input type="date"
                                name="created_from"
                                value="{{ request('created_from') }}"
@@ -92,7 +92,7 @@
 
                     {{-- ✅ تاريخ الإضافة (إلى) --}}
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">تاريخ الإضافة (إلى)</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.added_date_to') }}</label>
                         <input type="date"
                                name="created_to"
                                value="{{ request('created_to') }}"
@@ -101,12 +101,12 @@
 
                     {{-- حالة المتابعة --}}
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">حالة المتابعة</label>
+                        <label class="form-label small fw-semibold">{{ trans('crm.filter_followup_status') }}</label>
                         <select name="followup_status" class="form-select form-select-sm">
-                            <option value="">الكل</option>
-                            <option value="no_followup" {{ request('followup_status') === 'no_followup' ? 'selected' : '' }}>بدون متابعة</option>
-                            <option value="pending"     {{ request('followup_status') === 'pending'     ? 'selected' : '' }}>متابعة مفتوحة</option>
-                            <option value="overdue"     {{ request('followup_status') === 'overdue'     ? 'selected' : '' }}>متأخرة</option>
+                            <option value="">{{ trans('crm.all') }}</option>
+                            <option value="no_followup" {{ request('followup_status') === 'no_followup' ? 'selected' : '' }}>{{ trans('crm.no_followup_opt') }}</option>
+                            <option value="pending"     {{ request('followup_status') === 'pending'     ? 'selected' : '' }}>{{ trans('crm.open_followup_opt') }}</option>
+                            <option value="overdue"     {{ request('followup_status') === 'overdue'     ? 'selected' : '' }}>{{ trans('crm.overdue') }}</option>
                         </select>
                     </div>
 
@@ -131,9 +131,9 @@
             @if($prospects->isEmpty())
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-inbox fa-3x mb-3"></i>
-                    <p class="mb-0">لا يوجد أعضاء محتملون حالياً</p>
+                    <p class="mb-0">{{ trans('crm.no_prospects') }}</p>
                     <a href="{{ route('crm.prospects.create') }}" class="btn btn-sm btn-primary mt-3">
-                        <i class="fas fa-plus me-1"></i> إضافة أول عضو محتمل
+                        <i class="fas fa-plus me-1"></i> {{ trans('crm.add_first_prospect') }}
                     </a>
                 </div>
             @else
@@ -142,14 +142,14 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="width:5%">#</th>
-                                <th>الاسم</th>
-                                <th>الفرع</th>
-                                <th>الهاتف</th>
-                                <th>واتساب</th>
-                                <th>المتابعات</th>
-                                <th>آخر متابعة</th>
-                                <th>تاريخ الإضافة</th>
-                                <th style="width:12%">إجراءات</th>
+                                <th>{{ trans('crm.prospect_name_col') }}</th>
+                                <th>{{ trans('crm.branch') }}</th>
+                                <th>{{ trans('crm.phone') }}</th>
+                                <th>{{ trans('crm.prospect_whatsapp_col') }}</th>
+                                <th>{{ trans('crm.prospect_followups_col') }}</th>
+                                <th>{{ trans('crm.prospect_last_followup') }}</th>
+                                <th>{{ trans('crm.added_date') }}</th>
+                                <th style="width:12%">{{ trans('crm.th_actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -166,7 +166,7 @@
                                     @if($prospect->gender)
                                         <small class="text-muted">
                                             <i class="fas fa-{{ $prospect->gender === 'male' ? 'mars ' : 'venus text-danger' }}"></i>
-                                            {{ $prospect->gender === 'male' ? 'ذكر' : 'أنثى' }}
+                                            {{ $prospect->gender === 'male' ? trans('crm.gender_male') : trans('crm.gender_female') }}
                                         </small>
                                     @endif
                                 </td>
@@ -208,12 +208,12 @@
                                                 {{ $lastFollowup->status_label }}
                                             </span>
                                             @if($lastFollowup->is_overdue)
-                                                <span class="badge bg-danger ms-1">متأخر</span>
+                                                <span class="badge bg-danger ms-1">{{ trans('crm.late') }}</span>
                                             @endif
                                         </div>
                                         <small class="text-muted">{{ $lastFollowup->next_action_at?->diffForHumans() }}</small>
                                     @else
-                                        <span class="text-muted small">لا توجد</span>
+                                        <span class="text-muted small">{{ trans('crm.no_followup') }}</span>
                                     @endif
                                 </td>
                                 <td>
@@ -234,7 +234,7 @@
                                         <form action="{{ route('crm.prospects.destroy', $prospect->id) }}"
                                               method="POST"
                                               class="d-inline"
-                                              onsubmit="return confirm('هل أنت متأكد من حذف هذا العضو المحتمل؟')">
+                                              onsubmit="return confirm('{{ trans('crm.confirm_delete_prospect') }}')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -254,8 +254,7 @@
                 @if($prospects->hasPages())
                     <div class="seg-pager px-4 py-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <small class="text-muted">
-                            عرض {{ $prospects->firstItem() }}–{{ $prospects->lastItem() }}
-                            من {{ number_format($prospects->total()) }} عضو
+                            {{ trans('crm.prospects_show_x_to_y', ['from' => $prospects->firstItem(), 'to' => $prospects->lastItem(), 'total' => number_format($prospects->total())]) }}
                         </small>
                         <div id="seg-pagination">
                             {{ $prospects->onEachSide(1)->links('pagination::bootstrap-5') }}
