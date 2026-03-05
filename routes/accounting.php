@@ -36,10 +36,10 @@ Route::group(
             Route::resource('commissions', 'commissionscontroller');
 
 
-// إضافات للـ actions
-Route::post('commissions/{id}/pay', [\App\Http\Controllers\accounting\commissionscontroller::class, 'pay'])->name('commissions.pay');
-Route::post('commissions/{id}/cancel', [\App\Http\Controllers\accounting\commissionscontroller::class, 'cancel'])->name('commissions.cancel');
-
+            // إضافات للـ actions
+            Route::post('commissions/{id}/pay', [\App\Http\Controllers\accounting\commissionscontroller::class, 'pay'])->name('commissions.pay');
+            Route::post('commissions/{id}/cancel', [\App\Http\Controllers\accounting\commissionscontroller::class, 'cancel'])->name('commissions.cancel');
+            Route::get('commissions/{id}/print', [\App\Http\Controllers\accounting\commissionscontroller::class, 'printSettlement'])->name('commissions.print');
         });
     },
 );

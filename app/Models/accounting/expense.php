@@ -2,6 +2,7 @@
 
 namespace App\Models\accounting;
 
+use App\Models\accounting\CommissionSettlement;
 use App\Models\employee\employee as Employee;
 use App\Models\general\Branch;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,7 @@ class Expense extends Model
         'cancelledby',
         'useradd',
         'userupdate',
+        'commission_settlement_id',
     ];
 
     protected $casts = [
@@ -74,5 +76,10 @@ class Expense extends Model
     public function canceller()
     {
         return $this->belongsTo(\App\User::class, 'cancelledby');
+    }
+
+    public function settlement()
+    {
+        return $this->belongsTo(CommissionSettlement::class, 'commission_settlement_id');
     }
 }

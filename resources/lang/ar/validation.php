@@ -133,15 +133,15 @@ return [
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',
-                    'branches.required' => ['required' => 'يجب اختيار فرع واحد على الأقل.'],
-        'branches.array' => ['array' => 'صيغة الفروع غير صحيحة.'],
-        'branches.*.exists' => ['exists' => 'الفرع المختار غير صحيح.'],
+            'branches.required' => ['required' => 'يجب اختيار فرع واحد على الأقل.'],
+            'branches.array' => ['array' => 'صيغة الفروع غير صحيحة.'],
+            'branches.*.exists' => ['exists' => 'الفرع المختار غير صحيح.'],
 
-        'primary_branch_id.required' => ['required' => 'الفرع الأساسي مطلوب.'],
-        'primary_branch_id.exists' => ['exists' => 'الفرع الأساسي المختار غير صحيح.'],
+            'primary_branch_id.required' => ['required' => 'الفرع الأساسي مطلوب.'],
+            'primary_branch_id.exists' => ['exists' => 'الفرع الأساسي المختار غير صحيح.'],
 
-        'compensation_type.in' => ['in' => 'نوع التعويض غير صحيح.'],
-        'commission_percent.max' => ['max' => 'نسبة العمولة يجب ألا تزيد عن 100.'],
+            'compensation_type.in' => ['in' => 'نوع الراتب غير صحيح.'],
+            'commission_percent.max' => ['max' => 'نسبة العمولة يجب ألا تزيد عن 100.'],
         ],
     ],
 
@@ -157,7 +157,7 @@ return [
     */
 
     'attributes' => [
-         'first_name' => 'الاسم الأول',
+        'first_name' => 'الاسم الأول',
         'last_name' => 'الاسم الأخير',
         'job_id' => 'الوظيفة',
         'photo' => 'الصورة',
@@ -173,7 +173,7 @@ return [
         'years_experience' => 'سنوات الخبرة',
         'bio' => 'نبذة',
 
-        'compensation_type' => 'نوع التعويض',
+        'compensation_type' => 'نوع الراتب',
         'base_salary' => 'الراتب الأساسي',
         'commission_percent' => 'نسبة العمولة',
         'commission_fixed' => 'عمولة ثابتة',
@@ -194,6 +194,6 @@ return [
 
 
 
-   
+
 
 ];

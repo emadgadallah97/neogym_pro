@@ -2,6 +2,8 @@
 
 namespace App\Models\accounting;
 
+use App\Models\employee\employee as Employee;
+use App\Models\general\Branch;
 use Illuminate\Database\Eloquent\Model;
 
 class CommissionSettlementItem extends Model
@@ -39,5 +41,15 @@ class CommissionSettlementItem extends Model
     public function memberSubscription()
     {
         return $this->belongsTo(\App\Models\sales\MemberSubscription::class, 'member_subscription_id');
+    }
+
+    public function salesEmployee()
+    {
+        return $this->belongsTo(Employee::class, 'sales_employee_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }

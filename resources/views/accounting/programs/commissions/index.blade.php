@@ -6,13 +6,14 @@
 @section('content')
 
 <style>
-    .kpi-card{
+    .kpi-card {
         border: 0;
-        box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.1);
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .1);
         overflow: hidden;
         height: 100%;
     }
-    .kpi-card .kpi-icon{
+
+    .kpi-card .kpi-icon {
         width: 44px;
         height: 44px;
         display: inline-flex;
@@ -21,35 +22,40 @@
         border-radius: 14px;
         font-size: 22px;
     }
-    .kpi-card .kpi-value{
+
+    .kpi-card .kpi-value {
         font-weight: 700;
         letter-spacing: .2px;
     }
-    .kpi-card .kpi-label{
+
+    .kpi-card .kpi-label {
         font-size: 12px;
         letter-spacing: .6px;
     }
-    .kpi-card .kpi-foot{
-        border-top: 1px dashed rgba(0,0,0,.08);
+
+    .kpi-card .kpi-foot {
+        border-top: 1px dashed rgba(0, 0, 0, .08);
         padding: .6rem 1rem;
-        background: rgba(0,0,0,.015);
+        background: rgba(0, 0, 0, .015);
     }
 
-    .section-title-row{
+    .section-title-row {
         gap: .75rem;
     }
-    .section-title-row .section-subtitle{
+
+    .section-title-row .section-subtitle {
         margin: 0;
         color: #6c757d;
         font-size: 13px;
     }
 
-    .preview-summary-card{
+    .preview-summary-card {
         border: 0;
-        box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
         height: 100%;
     }
-    .preview-summary-card .icon{
+
+    .preview-summary-card .icon {
         width: 40px;
         height: 40px;
         border-radius: 14px;
@@ -58,36 +64,54 @@
         justify-content: center;
         font-size: 20px;
     }
-    .preview-actions-bar{
+
+    .preview-actions-bar {
         position: sticky;
         top: 0;
         z-index: 2;
         background: #fff;
-        border: 1px solid rgba(0,0,0,.08);
+        border: 1px solid rgba(0, 0, 0, .08);
         border-radius: .5rem;
         padding: .75rem;
     }
 
-    #previewTable tbody tr.is-excluded{
-        background: rgba(255,193,7,.15) !important;
+    #previewTable tbody tr.is-excluded {
+        background: rgba(255, 193, 7, .15) !important;
     }
 
-    .table td, .table th{
+    .table td,
+    .table th {
         vertical-align: middle;
     }
-    .badge-status{
+
+    .badge-status {
         font-weight: 600;
         letter-spacing: .2px;
     }
 
     /* Settlements filters */
-    .settlements-filters{
-        border: 1px solid rgba(0,0,0,.08);
+    .settlements-filters {
+        border: 1px solid rgba(0, 0, 0, .08);
         border-radius: .5rem;
         padding: .75rem;
-        background: rgba(0,0,0,.015);
+        background: rgba(0, 0, 0, .015);
+    }
+
+    .modal-summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px dashed rgba(0, 0, 0, .08);
+    }
+
+    .modal-summary-item:last-child {
+        border-bottom: 0;
     }
 </style>
+
+@php
+$locale = app()->getLocale();
+@endphp
 
 <div class="row">
     <div class="col-12">
@@ -240,25 +264,44 @@
                             <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label mb-1">
                                 <i class="ri-user-star-line align-bottom me-1"></i> {{ trans('accounting.sales_employee') }}
                             </label>
                             <select name="sales_employee_id" class="form-select select2" data-placeholder="{{ trans('accounting.all') }}">
                                 <option value="">{{ trans('accounting.all') }}</option>
                                 @foreach($SalesEmployeesList as $e)
-                                    @php
-                                        $ename = $e->fullname ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? ''));
-                                        $ename = $ename ?: ('#' . $e->id);
-                                    @endphp
-                                    <option value="{{ $e->id }}" {{ (string)request('sales_employee_id') === (string)$e->id ? 'selected' : '' }}>
-                                        {{ ($e->code ? ($e->code.' - ') : '') . $ename }}
-                                    </option>
+                                @php
+                                $ename = $e->fullname ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? ''));
+                                $ename = $ename ?: ('#' . $e->id);
+                                @endphp
+                                <option value="{{ $e->id }}" {{ (string)request('sales_employee_id') === (string)$e->id ? 'selected' : '' }}>
+                                    {{ ($e->code ? ($e->code.' - ') : '') . $ename }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="col-md-2 text-end">
+                        <div class="col-md-2">
+                            <label class="form-label mb-1">
+                                <i class="ri-building-line align-bottom me-1"></i> {{ trans('accounting.commissions_branch_filter') }}
+                            </label>
+                            <select name="branch_id" class="form-select select2" data-placeholder="{{ trans('accounting.all_branches') }}">
+                                <option value="">{{ trans('accounting.all_branches') }}</option>
+                                @foreach($BranchesList as $b)
+                                @php
+                                $bName = method_exists($b, 'getTranslation')
+                                ? $b->getTranslation('name', $locale)
+                                : (is_array($b->name) ? ($b->name[$locale] ?? ($b->name['ar'] ?? '')) : $b->name);
+                                @endphp
+                                <option value="{{ $b->id }}" {{ (string)request('branch_id') === (string)$b->id ? 'selected' : '' }}>
+                                    {{ $bName }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-1 text-end">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="ri-search-line align-bottom me-1"></i> {{ trans('accounting.commissions_preview') }}
                             </button>
@@ -267,165 +310,166 @@
                 </form>
 
                 @if($preview)
-                    <hr>
+                <hr>
 
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div>
-                            <h5 class="mb-1">
-                                <i class="ri-eye-line align-bottom me-1"></i>
-                                {{ trans('accounting.commissions_preview_result') }}
-                            </h5>
-                            <p class="text-muted mb-0">
-                                <span class="me-2"><i class="ri-calendar-2-line align-bottom me-1"></i>{{ trans('accounting.date_from') }}: <span class="fw-semibold">{{ $preview['date_from'] }}</span></span>
-                                <span><i class="ri-calendar-check-line align-bottom me-1"></i>{{ trans('accounting.date_to') }}: <span class="fw-semibold">{{ $preview['date_to'] }}</span></span>
-                            </p>
-                        </div>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="ri-eye-line align-bottom me-1"></i>
+                            {{ trans('accounting.commissions_preview_result') }}
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <span class="me-2"><i class="ri-calendar-2-line align-bottom me-1"></i>{{ trans('accounting.date_from') }}: <span class="fw-semibold">{{ $preview['date_from'] }}</span></span>
+                            <span><i class="ri-calendar-check-line align-bottom me-1"></i>{{ trans('accounting.date_to') }}: <span class="fw-semibold">{{ $preview['date_to'] }}</span></span>
+                        </p>
                     </div>
+                </div>
 
-                    @php
-                        $previewAllCount = (int)($previewTotals['all_count'] ?? 0);
-                        $previewAllAmount = (float)($previewTotals['all_amount'] ?? 0);
-                    @endphp
+                @php
+                $previewAllCount = (int)($previewTotals['all_count'] ?? 0);
+                $previewAllAmount = (float)($previewTotals['all_amount'] ?? 0);
+                @endphp
 
-                    <div class="row mt-3 g-3">
-                        <div class="col-md-4">
-                            <div class="card preview-summary-card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div>
-                                            <div class="text-muted">{{ trans('accounting.total_records') }}</div>
-                                            <div class="h4 mb-0 fw-bold" id="pv_all_count">{{ $previewAllCount }}</div>
-                                            <div class="text-muted small mt-1">{{ trans('accounting.total_records') }}</div>
-                                        </div>
-                                        <div class="icon bg-primary-subtle text-primary">
-                                            <i class="ri-file-list-3-line"></i>
-                                        </div>
+                <div class="row mt-3 g-3">
+                    <div class="col-md-4">
+                        <div class="card preview-summary-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start justify-content-between">
+                                    <div>
+                                        <div class="text-muted">{{ trans('accounting.total_records') }}</div>
+                                        <div class="h4 mb-0 fw-bold" id="pv_all_count">{{ $previewAllCount }}</div>
+                                        <div class="text-muted small mt-1">{{ trans('accounting.total_records') }}</div>
                                     </div>
-                                    <div class="mt-3 d-flex gap-3 small">
-                                        <span class="text-muted"><i class="ri-check-line align-bottom me-1"></i>{{ trans('accounting.items_count') }}: <b id="pv_included_count">{{ $previewAllCount }}</b></span>
-                                        <span class="text-muted"><i class="ri-forbid-2-line align-bottom me-1"></i>{{ trans('accounting.exclude') }}: <b id="pv_excluded_count">0</b></span>
+                                    <div class="icon bg-primary-subtle text-primary">
+                                        <i class="ri-file-list-3-line"></i>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="card preview-summary-card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div>
-                                            <div class="text-muted">{{ trans('accounting.total_amount') }}</div>
-                                            <div class="h4 mb-0 fw-bold" id="pv_all_amount">{{ number_format($previewAllAmount, 2) }}</div>
-                                            <div class="text-muted small mt-1">{{ trans('accounting.commission_amount') }}</div>
-                                        </div>
-                                        <div class="icon bg-info-subtle text-info">
-                                            <i class="ri-money-dollar-circle-line"></i>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 d-flex gap-3 small">
-                                        <span class="text-muted"><i class="ri-check-double-line align-bottom me-1"></i>{{ trans('accounting.total_amount') }}: <b id="pv_included_amount">{{ number_format($previewAllAmount, 2) }}</b></span>
-                                        <span class="text-muted"><i class="ri-subtract-line align-bottom me-1"></i>{{ trans('accounting.exclude') }}: <b id="pv_excluded_amount">0.00</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="card preview-summary-card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div>
-                                            <div class="text-muted">{{ trans('accounting.note') }}</div>
-                                            <div class="fw-semibold">{{ trans('accounting.commissions_exclude_note') }}</div>
-                                            <div class="text-muted small mt-1">{{ trans('accounting.optional') }}</div>
-                                        </div>
-                                        <div class="icon bg-warning-subtle text-warning">
-                                            <i class="ri-information-line"></i>
-                                        </div>
-                                    </div>
+                                <div class="mt-3 d-flex gap-3 small">
+                                    <span class="text-muted"><i class="ri-check-line align-bottom me-1"></i>{{ trans('accounting.items_count') }}: <b id="pv_included_count">{{ $previewAllCount }}</b></span>
+                                    <span class="text-muted"><i class="ri-forbid-2-line align-bottom me-1"></i>{{ trans('accounting.exclude') }}: <b id="pv_excluded_count">0</b></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Save settlement (POST) --}}
-                    <form method="post" action="{{ route('commissions.store') }}" class="mt-3">
-                        @csrf
-
-                        <input type="hidden" name="date_from" value="{{ $preview['date_from'] }}">
-                        <input type="hidden" name="date_to" value="{{ $preview['date_to'] }}">
-                        <input type="hidden" name="sales_employee_id" value="{{ $preview['sales_employee_id'] }}">
-
-                        <div class="preview-actions-bar mb-3">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-8">
-                                    <label class="form-label mb-1">
-                                        <i class="ri-sticky-note-line align-bottom me-1"></i> {{ trans('accounting.notes') }}
-                                    </label>
-                                    <input type="text" name="notes" class="form-control" placeholder="{{ trans('accounting.commissions_notes_hint') }}">
+                    <div class="col-md-4">
+                        <div class="card preview-summary-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start justify-content-between">
+                                    <div>
+                                        <div class="text-muted">{{ trans('accounting.total_amount') }}</div>
+                                        <div class="h4 mb-0 fw-bold" id="pv_all_amount">{{ number_format($previewAllAmount, 2) }}</div>
+                                        <div class="text-muted small mt-1">{{ trans('accounting.commission_amount') }}</div>
+                                    </div>
+                                    <div class="icon bg-info-subtle text-info">
+                                        <i class="ri-money-dollar-circle-line"></i>
+                                    </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <button type="submit" name="action" value="save_draft" class="btn btn-soft-secondary w-100">
-                                        <i class="ri-save-3-line align-bottom me-1"></i> {{ trans('accounting.save_draft') }}
-                                    </button>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" name="action" value="pay_now" class="btn btn-success w-100">
-                                        <i class="ri-check-double-line align-bottom me-1"></i> {{ trans('accounting.pay_now') }}
-                                    </button>
+                                <div class="mt-3 d-flex gap-3 small">
+                                    <span class="text-muted"><i class="ri-check-double-line align-bottom me-1"></i>{{ trans('accounting.total_amount') }}: <b id="pv_included_amount">{{ number_format($previewAllAmount, 2) }}</b></span>
+                                    <span class="text-muted"><i class="ri-subtract-line align-bottom me-1"></i>{{ trans('accounting.exclude') }}: <b id="pv_excluded_amount">0.00</b></span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="table-responsive">
-                            <table id="previewTable" class="table table-bordered dt-responsive nowrap table-striped table-hover align-middle" style="width:100%">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width:110px;">{{ trans('accounting.exclude') }}</th>
-                                        <th>{{ trans('accounting.subscription_id') }}</th>
-                                        <th>{{ trans('accounting.member') }}</th>
-                                        <th>{{ trans('accounting.branch') }}</th>
-                                        <th>{{ trans('accounting.sales_employee') }}</th>
-                                        <th>{{ trans('accounting.create_date') }}</th>
-                                        <th>{{ trans('accounting.commission_amount') }}</th>
-                                        <th>{{ trans('accounting.exclude_reason') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($previewRows as $s)
-                                        @php
-                                            $memberName = $s->member->fullname ?? ($s->member->full_name ?? ($s->member->name ?? '-'));
-                                            $branchName = method_exists($s->branch, 'getTranslation') ? $s->branch->getTranslation('name', app()->getLocale()) : ($s->branch->name ?? '-');
-                                            $empName = $s->salesEmployee->fullname ?? trim(($s->salesEmployee->first_name ?? '').' '.($s->salesEmployee->last_name ?? ''));
-                                            $empName = $empName ?: '-';
-                                            $commission = (float)($s->commission_amount ?? 0);
-                                        @endphp
-                                        <tr data-subscription-id="{{ (int)$s->id }}" data-commission="{{ $commission }}">
-                                            <td class="text-center">
-                                                <div class="form-check form-switch d-inline-flex align-items-center gap-2 m-0">
-                                                    <input class="form-check-input js-exclude" type="checkbox" name="exclude_subscription_ids[]" value="{{ $s->id }}" id="ex_{{ $s->id }}">
-                                                    <label class="form-check-label small text-muted" for="ex_{{ $s->id }}">{{ trans('accounting.exclude') }}</label>
-                                                </div>
-                                            </td>
-                                            <td class="fw-semibold">{{ $s->id }}</td>
-                                            <td>{{ $memberName }}</td>
-                                            <td>{{ $branchName }}</td>
-                                            <td>{{ $empName }}</td>
-                                            <td class="text-muted">{{ $s->created_at }}</td>
-                                            <td class="fw-semibold js-commission-cell">{{ number_format($commission, 2) }}</td>
-                                            <td style="min-width: 240px;">
-                                                <input type="text"
-                                                       name="exclude_reasons[{{ $s->id }}]"
-                                                       class="form-control form-control-sm js-reason"
-                                                       placeholder="{{ trans('accounting.optional') }}"
-                                                       disabled>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                    <div class="col-md-4">
+                        <div class="card preview-summary-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start justify-content-between">
+                                    <div>
+                                        <div class="text-muted">{{ trans('accounting.note') }}</div>
+                                        <div class="fw-semibold">{{ trans('accounting.commissions_exclude_note') }}</div>
+                                        <div class="text-muted small mt-1">{{ trans('accounting.optional') }}</div>
+                                    </div>
+                                    <div class="icon bg-warning-subtle text-warning">
+                                        <i class="ri-information-line"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+                </div>
+
+                {{-- Save settlement (POST) --}}
+                <form method="post" action="{{ route('commissions.store') }}" class="mt-3">
+                    @csrf
+
+                    <input type="hidden" name="date_from" value="{{ $preview['date_from'] }}">
+                    <input type="hidden" name="date_to" value="{{ $preview['date_to'] }}">
+                    <input type="hidden" name="sales_employee_id" value="{{ $preview['sales_employee_id'] }}">
+                    <input type="hidden" name="branch_id" value="{{ $preview['branch_id'] }}">
+
+                    <div class="preview-actions-bar mb-3">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label mb-1">
+                                    <i class="ri-sticky-note-line align-bottom me-1"></i> {{ trans('accounting.notes') }}
+                                </label>
+                                <input type="text" name="notes" class="form-control" placeholder="{{ trans('accounting.commissions_notes_hint') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" name="action" value="save_draft" class="btn btn-soft-secondary w-100">
+                                    <i class="ri-save-3-line align-bottom me-1"></i> {{ trans('accounting.save_draft') }}
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-success w-100" id="btnPayNowTrigger">
+                                    <i class="ri-check-double-line align-bottom me-1"></i> {{ trans('accounting.pay_now') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="previewTable" class="table table-bordered dt-responsive nowrap table-striped table-hover align-middle" style="width:100%">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:110px;">{{ trans('accounting.exclude') }}</th>
+                                    <th>{{ trans('accounting.subscription_id') }}</th>
+                                    <th>{{ trans('accounting.member') }}</th>
+                                    <th>{{ trans('accounting.branch') }}</th>
+                                    <th>{{ trans('accounting.sales_employee') }}</th>
+                                    <th>{{ trans('accounting.create_date') }}</th>
+                                    <th>{{ trans('accounting.commission_amount') }}</th>
+                                    <th>{{ trans('accounting.exclude_reason') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($previewRows as $s)
+                                @php
+                                $memberName = $s->member->fullname ?? ($s->member->full_name ?? ($s->member->name ?? '-'));
+                                $branchName = method_exists($s->branch, 'getTranslation') ? $s->branch->getTranslation('name', app()->getLocale()) : ($s->branch->name ?? '-');
+                                $empName = $s->salesEmployee->fullname ?? trim(($s->salesEmployee->first_name ?? '').' '.($s->salesEmployee->last_name ?? ''));
+                                $empName = $empName ?: '-';
+                                $commission = (float)($s->commission_amount ?? 0);
+                                @endphp
+                                <tr data-subscription-id="{{ (int)$s->id }}" data-commission="{{ $commission }}">
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-flex align-items-center gap-2 m-0">
+                                            <input class="form-check-input js-exclude" type="checkbox" name="exclude_subscription_ids[]" value="{{ $s->id }}" id="ex_{{ $s->id }}">
+                                            <label class="form-check-label small text-muted" for="ex_{{ $s->id }}">{{ trans('accounting.exclude') }}</label>
+                                        </div>
+                                    </td>
+                                    <td class="fw-semibold">{{ $s->id }}</td>
+                                    <td>{{ $memberName }}</td>
+                                    <td>{{ $branchName }}</td>
+                                    <td>{{ $empName }}</td>
+                                    <td class="text-muted">{{ $s->created_at }}</td>
+                                    <td class="fw-semibold js-commission-cell">{{ number_format($commission, 2) }}</td>
+                                    <td style="min-width: 240px;">
+                                        <input type="text"
+                                            name="exclude_reasons[{{ $s->id }}]"
+                                            class="form-control form-control-sm js-reason"
+                                            placeholder="{{ trans('accounting.optional') }}"
+                                            disabled>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
                 @endif
             </div>
         </div>
@@ -463,11 +507,11 @@
                                 <i class="ri-search-line align-bottom me-1"></i> {{ trans('accounting.settlement_search') }}
                             </label>
                             <input type="text"
-                                   id="st_q"
-                                   name="st_q"
-                                   class="form-control"
-                                   value="{{ request('st_q') }}"
-                                   placeholder="#ID / {{ trans('accounting.sales_employee') }}">
+                                id="st_q"
+                                name="st_q"
+                                class="form-control"
+                                value="{{ request('st_q') }}"
+                                placeholder="#ID / {{ trans('accounting.sales_employee') }}">
                         </div>
 
                         <div class="col-md-2">
@@ -503,13 +547,13 @@
                             <select id="st_sales_employee_id" name="st_sales_employee_id" class="form-select select2" data-placeholder="{{ trans('accounting.all') }}">
                                 <option value="">{{ trans('accounting.all') }}</option>
                                 @foreach($SalesEmployeesList as $e)
-                                    @php
-                                        $ename = $e->fullname ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? ''));
-                                        $ename = $ename ?: ('#' . $e->id);
-                                    @endphp
-                                    <option value="{{ $e->id }}" {{ (string)request('st_sales_employee_id') === (string)$e->id ? 'selected' : '' }}>
-                                        {{ ($e->code ? ($e->code.' - ') : '') . $ename }}
-                                    </option>
+                                @php
+                                $ename = $e->fullname ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? ''));
+                                $ename = $ename ?: ('#' . $e->id);
+                                @endphp
+                                <option value="{{ $e->id }}" {{ (string)request('st_sales_employee_id') === (string)$e->id ? 'selected' : '' }}>
+                                    {{ ($e->code ? ($e->code.' - ') : '') . $ename }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -558,6 +602,7 @@
                                 <th>{{ trans('accounting.date_from') }}</th>
                                 <th>{{ trans('accounting.date_to') }}</th>
                                 <th>{{ trans('accounting.sales_employee') }}</th>
+                                <th>{{ trans('accounting.branch') }}</th>
                                 <th style="width:120px;">{{ trans('accounting.status') }}</th>
                                 <th style="width:140px;">{{ trans('accounting.total_amount') }}</th>
                                 <th style="width:140px;">{{ trans('accounting.items_count') }}</th>
@@ -567,60 +612,67 @@
                         <tbody>
                             @php $i=0; @endphp
                             @foreach($settlements as $st)
-                                @php
-                                    $i++;
-                                    $emp = $st->salesEmployee ? ($st->salesEmployee->fullname ?? trim(($st->salesEmployee->first_name ?? '').' '.($st->salesEmployee->last_name ?? ''))) : null;
-                                @endphp
-                                <tr>
-                                    <td class="text-muted">{{ $i }}</td>
-                                    <td class="fw-semibold">{{ $st->id }}</td>
-                                    <td>
-                                        <span class="d-none js-date-from">{{ optional($st->date_from)->format('Y-m-d') }}</span>
-                                        {{ optional($st->date_from)->format('Y-m-d') }}
-                                    </td>
-                                    <td>
-                                        <span class="d-none js-date-to">{{ optional($st->date_to)->format('Y-m-d') }}</span>
-                                        {{ optional($st->date_to)->format('Y-m-d') }}
-                                    </td>
-                                    <td>
-                                        <span class="d-none js-emp-id">{{ (int)$st->sales_employee_id }}</span>
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-semibold">{{ $emp ?: trans('accounting.all_employees') }}</span>
-                                            @if($st->sales_employee_id)
-                                                <span class="text-muted small">#{{ $st->sales_employee_id }}</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="d-none js-status">{{ (string)$st->status }}</span>
-                                        @if($st->status === 'paid')
-                                            <span class="badge bg-success badge-status">
-                                                <i class="ri-checkbox-circle-line align-bottom me-1"></i>{{ trans('accounting.paid') }}
-                                            </span>
-                                        @elseif($st->status === 'draft')
-                                            <span class="badge bg-warning text-dark badge-status">
-                                                <i class="ri-draft-line align-bottom me-1"></i>{{ trans('accounting.draft') }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary badge-status">
-                                                <i class="ri-close-circle-line align-bottom me-1"></i>{{ trans('accounting.cancelled') }}
-                                            </span>
+                            @php
+                            $i++;
+                            $emp = $st->salesEmployee ? ($st->salesEmployee->fullname ?? trim(($st->salesEmployee->first_name ?? '').' '.($st->salesEmployee->last_name ?? ''))) : null;
+                            $stBranchName = null;
+                            if ($st->branch) {
+                            $stBranchName = method_exists($st->branch, 'getTranslation')
+                            ? $st->branch->getTranslation('name', $locale)
+                            : (is_array($st->branch->name) ? ($st->branch->name[$locale] ?? ($st->branch->name['ar'] ?? '')) : $st->branch->name);
+                            }
+                            @endphp
+                            <tr>
+                                <td class="text-muted">{{ $i }}</td>
+                                <td class="fw-semibold">{{ $st->id }}</td>
+                                <td>
+                                    <span class="d-none js-date-from">{{ optional($st->date_from)->format('Y-m-d') }}</span>
+                                    {{ optional($st->date_from)->format('Y-m-d') }}
+                                </td>
+                                <td>
+                                    <span class="d-none js-date-to">{{ optional($st->date_to)->format('Y-m-d') }}</span>
+                                    {{ optional($st->date_to)->format('Y-m-d') }}
+                                </td>
+                                <td>
+                                    <span class="d-none js-emp-id">{{ (int)$st->sales_employee_id }}</span>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-semibold">{{ $emp ?: trans('accounting.all_employees') }}</span>
+                                        @if($st->sales_employee_id)
+                                        <span class="text-muted small">#{{ $st->sales_employee_id }}</span>
                                         @endif
-                                    </td>
-                                    <td class="fw-semibold">
-                                        <span class="d-none js-total">{{ (float)$st->total_commission_amount }}</span>
-                                        {{ number_format((float)$st->total_commission_amount, 2) }}
-                                    </td>
-                                    <td>
-                                        <span class="fw-semibold">{{ (int)$st->items_count }}</span>
-                                        <span class="text-muted">/ {{ (int)$st->all_items_count }}</span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('commissions.show', $st->id) }}" class="btn btn-sm btn-soft-primary">
-                                            <i class="ri-eye-line align-bottom me-1"></i> {{ trans('accounting.view') }}
-                                        </a>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </td>
+                                <td>{{ $stBranchName ?: '-' }}</td>
+                                <td>
+                                    <span class="d-none js-status">{{ (string)$st->status }}</span>
+                                    @if($st->status === 'paid')
+                                    <span class="badge bg-success badge-status">
+                                        <i class="ri-checkbox-circle-line align-bottom me-1"></i>{{ trans('accounting.paid') }}
+                                    </span>
+                                    @elseif($st->status === 'draft')
+                                    <span class="badge bg-warning text-dark badge-status">
+                                        <i class="ri-draft-line align-bottom me-1"></i>{{ trans('accounting.draft') }}
+                                    </span>
+                                    @else
+                                    <span class="badge bg-secondary badge-status">
+                                        <i class="ri-close-circle-line align-bottom me-1"></i>{{ trans('accounting.cancelled') }}
+                                    </span>
+                                    @endif
+                                </td>
+                                <td class="fw-semibold">
+                                    <span class="d-none js-total">{{ (float)$st->total_commission_amount }}</span>
+                                    {{ number_format((float)$st->total_commission_amount, 2) }}
+                                </td>
+                                <td>
+                                    <span class="fw-semibold">{{ (int)$st->items_count }}</span>
+                                    <span class="text-muted">/ {{ (int)$st->all_items_count }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('commissions.show', $st->id) }}" class="btn btn-sm btn-soft-primary">
+                                        <i class="ri-eye-line align-bottom me-1"></i> {{ trans('accounting.view') }}
+                                    </a>
+                                </td>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -635,196 +687,394 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof $ === 'undefined') return;
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ === 'undefined') return;
 
-    var isRtl = $('html').attr('dir') === 'rtl';
-    var locale = ($('html').attr('lang') || '').toLowerCase();
+        var isRtl = $('html').attr('dir') === 'rtl';
+        var locale = ($('html').attr('lang') || '').toLowerCase();
 
-    function initSelect2($el){
-        if (!$.fn || !$.fn.select2) return;
-        if (!$el || !$el.length) return;
-        if ($el.hasClass('select2-hidden-accessible')) return;
+        function initSelect2($el) {
+            if (!$.fn || !$.fn.select2) return;
+            if (!$el || !$el.length) return;
+            if ($el.hasClass('select2-hidden-accessible')) return;
 
-        var placeholder = $el.data('placeholder') || '{{ trans('accounting.choose') }}';
+            var placeholder = $el.data('placeholder') || '{{ trans('
+            accounting.choose ') }}';
 
-        $el.select2({
-            width: '100%',
-            placeholder: placeholder,
-            allowClear: true,
-            dir: isRtl ? 'rtl' : 'ltr',
-            language: (locale === 'ar' ? 'ar' : undefined)
-        });
-    }
-
-    $('select.select2').each(function(){ initSelect2($(this)); });
-
-    // DataTables
-    var settlementsDt = null;
-    if ($.fn && $.fn.DataTable) {
-
-        // Custom range filters (amount/date) for settlements
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
-            if (!settings || settings.nTable?.id !== 'settlementsTable') return true;
-
-            var tr = settings.aoData[dataIndex]?.nTr;
-            if (!tr) return true;
-
-            var qFrom = (document.getElementById('st_date_from')?.value || '').trim();
-            var qTo = (document.getElementById('st_date_to')?.value || '').trim();
-            var aFrom = (document.getElementById('st_amount_from')?.value || '').trim();
-            var aTo = (document.getElementById('st_amount_to')?.value || '').trim();
-
-            var rowDateFrom = (tr.querySelector('.js-date-from')?.textContent || '').trim();
-            var rowDateTo = (tr.querySelector('.js-date-to')?.textContent || '').trim();
-
-            var rowTotalRaw = (tr.querySelector('.js-total')?.textContent || '').toString().trim();
-            var rowTotal = parseFloat(rowTotalRaw || '0') || 0;
-
-            // Date filter (Y-m-d string compare works)
-            if (qFrom && rowDateFrom && rowDateFrom < qFrom) return false;
-            if (qTo && rowDateTo && rowDateTo > qTo) return false;
-
-            // Amount filter
-            if (aFrom !== '' && rowTotal < (parseFloat(aFrom) || 0)) return false;
-            if (aTo !== '' && rowTotal > (parseFloat(aTo) || 0)) return false;
-
-            return true;
-        });
-
-        settlementsDt = $('#settlementsTable').DataTable({
-            pageLength: 25,
-            order: [[1, 'desc']]
-        });
-
-        if (document.getElementById('previewTable')) {
-            $('#previewTable').DataTable({
-                pageLength: 25,
-                order: [[5, 'asc']]
+            $el.select2({
+                width: '100%',
+                placeholder: placeholder,
+                allowClear: true,
+                dir: isRtl ? 'rtl' : 'ltr',
+                language: (locale === 'ar' ? 'ar' : undefined)
             });
         }
-    }
 
-    // Bind settlements filters to DataTables (current page)
-    function applySettlementsFilters(){
-        if (!settlementsDt) return;
-
-        var q = (document.getElementById('st_q')?.value || '').trim();
-        var status = (document.getElementById('st_status')?.value || '').trim();
-        var empId = (document.getElementById('st_sales_employee_id')?.value || '').trim();
-
-        // Global search
-        settlementsDt.search(q);
-
-        // Status: use hidden raw value inside cell
-        // Column index: 5 (Status)
-        if (status) {
-            settlementsDt.column(5).search(status, true, false);
-        } else {
-            settlementsDt.column(5).search('', true, false);
-        }
-
-        // Employee: use hidden employee id inside cell
-        // Column index: 4 (Sales employee)
-        if (empId) {
-            settlementsDt.column(4).search('\\b' + empId + '\\b', true, false);
-        } else {
-            settlementsDt.column(4).search('', true, false);
-        }
-
-        settlementsDt.draw();
-    }
-
-    // Live bind
-    ['st_q','st_status','st_date_from','st_date_to','st_amount_from','st_amount_to'].forEach(function(id){
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('input', applySettlementsFilters);
-        el.addEventListener('change', applySettlementsFilters);
-    });
-
-    $('#st_sales_employee_id').on('change', applySettlementsFilters);
-
-    // Initial apply (if query params exist)
-    applySettlementsFilters();
-
-    // Preview exclude UX + live totals (unchanged)
-    function toFloat(v){
-        v = (v ?? '').toString();
-        v = v.replace(/,/g, '').trim();
-        var n = parseFloat(v);
-        return isNaN(n) ? 0 : n;
-    }
-
-    function formatMoney(n){
-        try{
-            return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }catch(e){
-            return (Number(n) || 0).toFixed(2);
-        }
-    }
-
-    function refreshPreviewTotals(){
-        var rows = document.querySelectorAll('#previewTable tbody tr');
-        var allCount = 0, excludedCount = 0, includedCount = 0;
-        var allAmount = 0, excludedAmount = 0, includedAmount = 0;
-
-        rows.forEach(function(tr){
-            var amount = toFloat(tr.getAttribute('data-commission'));
-            var isExcluded = tr.classList.contains('is-excluded');
-
-            allCount += 1;
-            allAmount += amount;
-
-            if (isExcluded) {
-                excludedCount += 1;
-                excludedAmount += amount;
-            } else {
-                includedCount += 1;
-                includedAmount += amount;
-            }
+        $('select.select2').each(function() {
+            initSelect2($(this));
         });
 
-        var el;
-        el = document.getElementById('pv_all_count'); if (el) el.textContent = allCount;
-        el = document.getElementById('pv_all_amount'); if (el) el.textContent = formatMoney(allAmount);
+        // DataTables
+        var settlementsDt = null;
+        if ($.fn && $.fn.DataTable) {
 
-        el = document.getElementById('pv_excluded_count'); if (el) el.textContent = excludedCount;
-        el = document.getElementById('pv_excluded_amount'); if (el) el.textContent = formatMoney(excludedAmount);
+            // Custom range filters (amount/date) for settlements
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                if (!settings || settings.nTable?.id !== 'settlementsTable') return true;
 
-        el = document.getElementById('pv_included_count'); if (el) el.textContent = includedCount;
-        el = document.getElementById('pv_included_amount'); if (el) el.textContent = formatMoney(includedAmount);
-    }
+                var tr = settings.aoData[dataIndex]?.nTr;
+                if (!tr) return true;
 
-    function bindExcludeToggles(){
-        var table = document.getElementById('previewTable');
-        if (!table) return;
+                var qFrom = (document.getElementById('st_date_from')?.value || '').trim();
+                var qTo = (document.getElementById('st_date_to')?.value || '').trim();
+                var aFrom = (document.getElementById('st_amount_from')?.value || '').trim();
+                var aTo = (document.getElementById('st_amount_to')?.value || '').trim();
 
-        table.addEventListener('change', function(e){
-            var chk = e.target.closest('.js-exclude');
-            if (!chk) return;
+                var rowDateFrom = (tr.querySelector('.js-date-from')?.textContent || '').trim();
+                var rowDateTo = (tr.querySelector('.js-date-to')?.textContent || '').trim();
 
-            var tr = chk.closest('tr');
-            if (!tr) return;
+                var rowTotalRaw = (tr.querySelector('.js-total')?.textContent || '').toString().trim();
+                var rowTotal = parseFloat(rowTotalRaw || '0') || 0;
 
-            var reason = tr.querySelector('.js-reason');
-            var isOn = chk.checked;
+                // Date filter (Y-m-d string compare works)
+                if (qFrom && rowDateFrom && rowDateFrom < qFrom) return false;
+                if (qTo && rowDateTo && rowDateTo > qTo) return false;
 
-            tr.classList.toggle('is-excluded', isOn);
-            if (reason) {
-                reason.disabled = !isOn;
-                if (!isOn) reason.value = '';
-                if (isOn) reason.focus();
+                // Amount filter
+                if (aFrom !== '' && rowTotal < (parseFloat(aFrom) || 0)) return false;
+                if (aTo !== '' && rowTotal > (parseFloat(aTo) || 0)) return false;
+
+                return true;
+            });
+
+            settlementsDt = $('#settlementsTable').DataTable({
+                pageLength: 25,
+                order: [
+                    [1, 'desc']
+                ]
+            });
+
+            if (document.getElementById('previewTable')) {
+                $('#previewTable').DataTable({
+                    pageLength: 25,
+                    order: [
+                        [5, 'asc']
+                    ]
+                });
             }
+        }
+
+        // Bind settlements filters to DataTables (current page)
+        function applySettlementsFilters() {
+            if (!settlementsDt) return;
+
+            var q = (document.getElementById('st_q')?.value || '').trim();
+            var status = (document.getElementById('st_status')?.value || '').trim();
+            var empId = (document.getElementById('st_sales_employee_id')?.value || '').trim();
+
+            // Global search
+            settlementsDt.search(q);
+
+            // Status: use hidden raw value inside cell
+            // Column index: 5 (Status)
+            if (status) {
+                settlementsDt.column(5).search(status, true, false);
+            } else {
+                settlementsDt.column(5).search('', true, false);
+            }
+
+            // Employee: use hidden employee id inside cell
+            // Column index: 4 (Sales employee)
+            if (empId) {
+                settlementsDt.column(4).search('\\b' + empId + '\\b', true, false);
+            } else {
+                settlementsDt.column(4).search('', true, false);
+            }
+
+            settlementsDt.draw();
+        }
+
+        // Live bind
+        ['st_q', 'st_status', 'st_date_from', 'st_date_to', 'st_amount_from', 'st_amount_to'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', applySettlementsFilters);
+            el.addEventListener('change', applySettlementsFilters);
+        });
+
+        $('#st_sales_employee_id').on('change', applySettlementsFilters);
+
+        // Initial apply (if query params exist)
+        applySettlementsFilters();
+
+        // Preview exclude UX + live totals (unchanged)
+        function toFloat(v) {
+            v = (v ?? '').toString();
+            v = v.replace(/,/g, '').trim();
+            var n = parseFloat(v);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function formatMoney(n) {
+            try {
+                return (Number(n) || 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            } catch (e) {
+                return (Number(n) || 0).toFixed(2);
+            }
+        }
+
+        function refreshPreviewTotals() {
+            var rows = document.querySelectorAll('#previewTable tbody tr');
+            var allCount = 0,
+                excludedCount = 0,
+                includedCount = 0;
+            var allAmount = 0,
+                excludedAmount = 0,
+                includedAmount = 0;
+
+            rows.forEach(function(tr) {
+                var amount = toFloat(tr.getAttribute('data-commission'));
+                var isExcluded = tr.classList.contains('is-excluded');
+
+                allCount += 1;
+                allAmount += amount;
+
+                if (isExcluded) {
+                    excludedCount += 1;
+                    excludedAmount += amount;
+                } else {
+                    includedCount += 1;
+                    includedAmount += amount;
+                }
+            });
+
+            var el;
+            el = document.getElementById('pv_all_count');
+            if (el) el.textContent = allCount;
+            el = document.getElementById('pv_all_amount');
+            if (el) el.textContent = formatMoney(allAmount);
+
+            el = document.getElementById('pv_excluded_count');
+            if (el) el.textContent = excludedCount;
+            el = document.getElementById('pv_excluded_amount');
+            if (el) el.textContent = formatMoney(excludedAmount);
+
+            el = document.getElementById('pv_included_count');
+            if (el) el.textContent = includedCount;
+            el = document.getElementById('pv_included_amount');
+            if (el) el.textContent = formatMoney(includedAmount);
+        }
+
+        function bindExcludeToggles() {
+            var table = document.getElementById('previewTable');
+            if (!table) return;
+
+            table.addEventListener('change', function(e) {
+                var chk = e.target.closest('.js-exclude');
+                if (!chk) return;
+
+                var tr = chk.closest('tr');
+                if (!tr) return;
+
+                var reason = tr.querySelector('.js-reason');
+                var isOn = chk.checked;
+
+                tr.classList.toggle('is-excluded', isOn);
+                if (reason) {
+                    reason.disabled = !isOn;
+                    if (!isOn) reason.value = '';
+                    if (isOn) reason.focus();
+                }
+
+                refreshPreviewTotals();
+            });
 
             refreshPreviewTotals();
-        });
+        }
 
-        refreshPreviewTotals();
-    }
+        bindExcludeToggles();
 
-    bindExcludeToggles();
-});
+        // Pay Now Modal Logic
+        var payNowBtn = document.getElementById('btnPayNowTrigger');
+        if (payNowBtn) {
+            payNowBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var modal = new bootstrap.Modal(document.getElementById('payNowConfirmModal'));
+                modal.show();
+            });
+        }
+
+        // Confirm pay now: copy form data + modal fields and submit
+        var confirmPayBtn = document.getElementById('confirmPayNowSubmit');
+        if (confirmPayBtn) {
+            confirmPayBtn.addEventListener('click', function() {
+                var mainForm = payNowBtn.closest('form');
+                if (!mainForm) return;
+
+                // Set action to pay_now
+                var actionInput = mainForm.querySelector('input[name="action"]');
+                if (!actionInput) {
+                    actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    mainForm.appendChild(actionInput);
+                }
+                actionInput.value = 'pay_now';
+
+                // Copy modal fields into main form
+                ['expense_type_id', 'expense_branch_id', 'expense_disbursed_by'].forEach(function(name) {
+                    var modalField = document.querySelector('#payNowConfirmModal [name="' + name + '"]');
+                    var existing = mainForm.querySelector('input[name="' + name + '"]');
+                    if (!existing) {
+                        existing = document.createElement('input');
+                        existing.type = 'hidden';
+                        existing.name = name;
+                        mainForm.appendChild(existing);
+                    }
+                    existing.value = modalField ? modalField.value : '';
+                });
+
+                // Validate expense_type_id
+                var expTypeVal = mainForm.querySelector('input[name="expense_type_id"]').value;
+                if (!expTypeVal) {
+                    alert('{{ trans("accounting.commissions_select_expense_type") }}');
+                    return;
+                }
+
+                mainForm.submit();
+            });
+        }
+
+        // Load employees when branch changes in pay-now modal
+        var modalBranchSelect = document.querySelector('#payNowConfirmModal select[name="expense_branch_id"]');
+        var modalEmpSelect = document.querySelector('#payNowConfirmModal select[name="expense_disbursed_by"]');
+        if (modalBranchSelect && modalEmpSelect) {
+            modalBranchSelect.addEventListener('change', function() {
+                var branchId = this.value;
+                modalEmpSelect.innerHTML = '<option value="">{{ trans("accounting.optional") }}</option>';
+                if (!branchId) return;
+
+                $.ajax({
+                    url: '{{ route("expenses.actions.employees_by_branch") }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        branchid: branchId
+                    },
+                    success: function(res) {
+                        if (res.ok && res.data) {
+                            res.data.forEach(function(e) {
+                                var opt = document.createElement('option');
+                                opt.value = e.id;
+                                opt.textContent = e.text;
+                                modalEmpSelect.appendChild(opt);
+                            });
+                        }
+                    }
+                });
+            });
+        }
+    });
 </script>
+
+{{-- Pay Now Confirmation Modal --}}
+@if($preview)
+<div class="modal fade" id="payNowConfirmModal" tabindex="-1" aria-labelledby="payNowConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success-subtle">
+                <h5 class="modal-title" id="payNowConfirmModalLabel">
+                    <i class="ri-check-double-line align-bottom me-1"></i>
+                    {{ trans('accounting.commissions_confirm_pay_title') }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 p-3 rounded" style="background: rgba(25,135,84,.06); border: 1px solid rgba(25,135,84,.15);">
+                    <h6 class="fw-bold mb-2">
+                        <i class="ri-file-list-3-line align-bottom me-1"></i>
+                        {{ trans('accounting.commissions_confirm_pay_summary') }}
+                    </h6>
+                    <div class="modal-summary-item">
+                        <span class="text-muted">{{ trans('accounting.commissions_settlement_amount') }}</span>
+                        <span class="fw-bold text-success" id="modal_pv_amount">{{ number_format((float)($previewTotals['all_amount'] ?? 0), 2) }}</span>
+                    </div>
+                    <div class="modal-summary-item">
+                        <span class="text-muted">{{ trans('accounting.commissions_settlement_items') }}</span>
+                        <span class="fw-bold" id="modal_pv_count">{{ (int)($previewTotals['all_count'] ?? 0) }}</span>
+                    </div>
+                    <div class="modal-summary-item">
+                        <span class="text-muted">{{ trans('accounting.commissions_settlement_period') }}</span>
+                        <span class="fw-semibold">{{ $preview['date_from'] ?? '' }} — {{ $preview['date_to'] ?? '' }}</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="ri-information-line align-bottom me-1"></i>
+                    {{ trans('accounting.commissions_confirm_pay_message') }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="ri-price-tag-3-line align-bottom me-1"></i>
+                        {{ trans('accounting.expense_type') }} <span class="text-danger">*</span>
+                    </label>
+                    <select name="expense_type_id" class="form-select">
+                        <option value="">{{ trans('accounting.commissions_select_expense_type') }}</option>
+                        @foreach($ExpensesTypes as $et)
+                        @php
+                        $etName = method_exists($et, 'getTranslation')
+                        ? $et->getTranslation('name', $locale)
+                        : (is_array($et->name) ? ($et->name[$locale] ?? ($et->name['ar'] ?? '')) : $et->name);
+                        @endphp
+                        <option value="{{ $et->id }}">{{ $etName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="ri-building-line align-bottom me-1"></i>
+                        {{ trans('accounting.branch') }}
+                    </label>
+                    <select name="expense_branch_id" class="form-select">
+                        <option value="">{{ trans('accounting.commissions_select_branch') }}</option>
+                        @foreach($BranchesList as $b)
+                        @php
+                        $bName = method_exists($b, 'getTranslation')
+                        ? $b->getTranslation('name', $locale)
+                        : (is_array($b->name) ? ($b->name[$locale] ?? ($b->name['ar'] ?? '')) : $b->name);
+                        @endphp
+                        <option value="{{ $b->id }}">{{ $bName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="ri-user-line align-bottom me-1"></i>
+                        {{ trans('accounting.commissions_select_disbursed_by') }}
+                    </label>
+                    <select name="expense_disbursed_by" class="form-select">
+                        <option value="">{{ trans('accounting.optional') }}</option>
+                    </select>
+                    <div class="form-text text-muted">{{ trans('accounting.choose_branch_first') }}</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line align-bottom me-1"></i>{{ trans('accounting.commissions_close') }}
+                </button>
+                <button type="button" class="btn btn-success" id="confirmPayNowSubmit">
+                    <i class="ri-check-double-line align-bottom me-1"></i>{{ trans('accounting.commissions_confirm_and_pay') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection

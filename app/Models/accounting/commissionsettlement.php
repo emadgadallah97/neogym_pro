@@ -3,6 +3,7 @@
 namespace App\Models\accounting;
 
 use App\Models\employee\employee as Employee;
+use App\Models\general\Branch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,6 +17,7 @@ class CommissionSettlement extends Model
         'date_from',
         'date_to',
         'sales_employee_id',
+        'branch_id',
         'status',
         'total_commission_amount',
         'total_excluded_commission_amount',
@@ -55,5 +57,10 @@ class CommissionSettlement extends Model
     public function paidByUser()
     {
         return $this->belongsTo(\App\User::class, 'paid_by');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }
