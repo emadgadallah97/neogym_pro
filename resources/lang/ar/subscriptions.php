@@ -153,7 +153,7 @@ return [
 'section_branches_pricing' => 'الفروع والتسعير',
 
 'branches_select_hint' => 'اختر الفروع التي تتاح لها هذه الباقة، ثم سيتم عرض التسعير لكل فرع بالأسفل.',
-'pricing_select_branch_first' => 'اختر فرعًا واحدًا على الأقل لإظهار تسعير الفروع والمدربين.',
+'pricing_select_branch_first' => 'اختر فرعًا واحدًا على الأقل لإظهار تسعير الفروع .',
 'choose' => 'اختر',
 'pricing' => 'التسعير',
     'allow_freeze' => 'السماح بالتجميد',
@@ -168,5 +168,7 @@ return [
     'private_coach' => 'مدرب خاص',
     'private_coach_yes' => 'هل الاشتراك بمدرب خاص؟',
     'end_date' => 'تاريخ الانتهاء',
+    'base_price' => 'السعر الاساسي',
+
 
 ];
