@@ -72,50 +72,50 @@ class memberscontroller extends Controller
         return redirect()->back()->with('success', trans('members.created_successfully'));
     }
 
-   public function update(Request $request, $id)
-{
-    $memberId = $request->input('id') ?? $id;
-    $member = Member::findOrFail($memberId);
+    public function update(Request $request, $id)
+    {
+        $memberId = $request->input('id') ?? $id;
+        $member = Member::findOrFail($memberId);
 
-    $data = $this->validateMember($request, $member->id);
+        $data = $this->validateMember($request, $member->id);
 
-    // مهم: لا تجعل fill يغير photo (خصوصًا لو validation يرجع photo = null)
-    if (array_key_exists('photo', $data)) {
-        unset($data['photo']);
+        // مهم: لا تجعل fill يغير photo (خصوصًا لو validation يرجع photo = null)
+        if (array_key_exists('photo', $data)) {
+            unset($data['photo']);
+        }
+
+        $oldPhoto = $member->photo;
+
+        $member->fill($data);
+
+        if ($request->hasFile('photo')) {
+            // 1) خزّن الجديد أولاً
+            $newPath = $this->file_storage($request->file('photo'), 'members');
+
+            // 2) ثم احذف القديم
+            $this->deletePublicAttachmentIfExists($oldPhoto);
+
+            // 3) ثم احفظ المسار الجديد
+            $member->photo = $newPath;
+        }
+
+        $member->user_update = auth()->id() ?? null;
+        $member->save();
+
+        $this->autoUnfreezeExpiredMembers();
+
+        $member->load(['branch']);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => trans('members.updated_successfully'),
+                'member' => $this->memberPayload($member),
+            ]);
+        }
+
+        return redirect()->back()->with('success', trans('members.updated_successfully'));
     }
-
-    $oldPhoto = $member->photo;
-
-    $member->fill($data);
-
-    if ($request->hasFile('photo')) {
-        // 1) خزّن الجديد أولاً
-        $newPath = $this->file_storage($request->file('photo'), 'members');
-
-        // 2) ثم احذف القديم
-        $this->deletePublicAttachmentIfExists($oldPhoto);
-
-        // 3) ثم احفظ المسار الجديد
-        $member->photo = $newPath;
-    }
-
-    $member->user_update = auth()->id() ?? null;
-    $member->save();
-
-    $this->autoUnfreezeExpiredMembers();
-
-    $member->load(['branch']);
-
-    if ($request->ajax()) {
-        return response()->json([
-            'status' => true,
-            'message' => trans('members.updated_successfully'),
-            'member' => $this->memberPayload($member),
-        ]);
-    }
-
-    return redirect()->back()->with('success', trans('members.updated_successfully'));
-}
 
 
     public function show(Request $request, $id)
@@ -132,63 +132,63 @@ class memberscontroller extends Controller
 
         return redirect()->route('members.index');
     }
-public function destroy(Request $request, $id)
-{
-    $memberId = $request->input('id') ?? $id;
-    $member = Member::findOrFail($memberId);
+    public function destroy(Request $request, $id)
+    {
+        $memberId = $request->input('id') ?? $id;
+        $member = Member::findOrFail($memberId);
 
-    // حذف الصورة من السيرفر عند حذف العضو
-    $this->deletePublicAttachmentIfExists($member->photo);
+        // حذف الصورة من السيرفر عند حذف العضو
+        $this->deletePublicAttachmentIfExists($member->photo);
 
-    $member->delete();
+        $member->delete();
 
-    if ($request->ajax()) {
-        return response()->json([
-            'status' => true,
-            'message' => trans('members.deleted_successfully'),
-            'id' => $memberId,
-        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => trans('members.deleted_successfully'),
+                'id' => $memberId,
+            ]);
+        }
+
+        return redirect()->back()->with('success', trans('members.deleted_successfully'));
     }
-
-    return redirect()->back()->with('success', trans('members.deleted_successfully'));
-}
 
     /**
      * عرض صفحة كارت العضو
      */
-public function card(Member $member)
-{
-    $this->autoUnfreezeExpiredMembers();
+    public function card(Member $member)
+    {
+        $this->autoUnfreezeExpiredMembers();
 
-    $member->load(['branch']);
+        $member->load(['branch']);
 
-    $settings = GeneralSetting::where('status', 1)->first();
+        $settings = GeneralSetting::where('status', 1)->first();
 
-    $logoUrl = (!empty($settings?->logo)) ? url($settings->logo) : null;
-    $gymNameAr = $settings ? $settings->getTranslation('name', 'ar') : '';
-    $gymNameEn = $settings ? $settings->getTranslation('name', 'en') : '';
+        $logoUrl = (!empty($settings?->logo)) ? url($settings->logo) : null;
+        $gymNameAr = $settings ? $settings->getTranslation('name', 'ar') : '';
+        $gymNameEn = $settings ? $settings->getTranslation('name', 'en') : '';
 
-    $memberPhoto = (!empty($member->photo)) ? url($member->photo) : null;
+        $memberPhoto = (!empty($member->photo)) ? url($member->photo) : null;
 
-    $pngBinary = $this->qrPngBinary($member->member_code, 220, 1);
-    $barcodePng = base64_encode($pngBinary);
+        $pngBinary = $this->qrPngBinary($member->member_code, 220, 1);
+        $barcodePng = base64_encode($pngBinary);
 
-    $template = $settings?->member_card_template ?: GeneralSetting::defaultMemberCardTemplate();
+        $template = $settings?->member_card_template ?: GeneralSetting::defaultMemberCardTemplate();
 
-    // تأكيد وجود القالب (fallback)
-    if (!view()->exists("members.cards.$template")) {
-        $template = GeneralSetting::defaultMemberCardTemplate();
+        // تأكيد وجود القالب (fallback)
+        if (!view()->exists("members.cards.$template")) {
+            $template = GeneralSetting::defaultMemberCardTemplate();
+        }
+
+        return view("members.cards.$template", compact(
+            'member',
+            'barcodePng',
+            'memberPhoto',
+            'gymNameAr',
+            'gymNameEn',
+            'logoUrl'
+        ));
     }
-
-    return view("members.cards.$template", compact(
-        'member',
-        'barcodePng',
-        'memberPhoto',
-        'gymNameAr',
-        'gymNameEn',
-        'logoUrl'
-    ));
-}
 
 
     public function qrPng(Member $member)
@@ -206,23 +206,23 @@ public function card(Member $member)
     /**
      * QR PNG generator using GD backend (no Imagick).
      */
-/**
- * QR PNG generator using chillerlan/php-qrcode (GD backend)
- */
-/**
- * QR PNG generator using chillerlan/php-qrcode (GD backend - simplified)
- */
-private function qrPngBinary(string $text, int $size = 320, int $margin = 1): string
-{
-    $options = new QROptions([
-        'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-        'eccLevel'     => QRCode::ECC_H,
-        'scale'        => max(5, intval($size / 50)),
-        'imageBase64'  => false,
-    ]);
+    /**
+     * QR PNG generator using chillerlan/php-qrcode (GD backend)
+     */
+    /**
+     * QR PNG generator using chillerlan/php-qrcode (GD backend - simplified)
+     */
+    private function qrPngBinary(string $text, int $size = 320, int $margin = 1): string
+    {
+        $options = new QROptions([
+            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'     => QRCode::ECC_H,
+            'scale'        => max(5, intval($size / 50)),
+            'imageBase64'  => false,
+        ]);
 
-    return (new QRCode($options))->render($text);
-}
+        return (new QRCode($options))->render($text);
+    }
 
 
 
@@ -363,38 +363,89 @@ private function qrPngBinary(string $text, int $size = 320, int $margin = 1): st
             $payload['government_name'] = $member->government ? $member->government->getTranslation('name', 'ar') : '-';
             $payload['city_name'] = $member->city ? $member->city->getTranslation('name', 'ar') : '-';
             $payload['area_name'] = $member->area ? $member->area->getTranslation('name', 'ar') : '-';
+
+            // ── Subscriptions ──
+            $locale = app()->getLocale();
+            $subs = \Illuminate\Support\Facades\DB::table('member_subscriptions')
+                ->where('member_id', $member->id)
+                ->whereNull('deleted_at')
+                ->orderByDesc('start_date')
+                ->get();
+
+            $payload['subscriptions'] = $subs->map(function ($s) {
+                return [
+                    'plan_name'          => $this->parsePlanName($s->plan_name),
+                    'status'             => $s->status ?? '',
+                    'start_date'         => $s->start_date ?? '',
+                    'end_date'           => $s->end_date ?? '',
+                    'sessions_count'     => (int)($s->sessions_count ?? 0),
+                    'sessions_remaining' => (int)($s->sessions_remaining ?? 0),
+                    'total_amount'       => number_format((float)($s->total_amount ?? 0), 2),
+                ];
+            })->values()->toArray();
         }
 
         return $payload;
     }
 
-   private function deletePublicAttachmentIfExists($path): void
-{
-    if (empty($path)) return;
+    private function deletePublicAttachmentIfExists($path): void
+    {
+        if (empty($path)) return;
 
-    // لو path URL كامل
-    $clean = parse_url($path, PHP_URL_PATH) ?: $path;
-    $clean = ltrim($clean, '/');
+        // لو path URL كامل
+        $clean = parse_url($path, PHP_URL_PATH) ?: $path;
+        $clean = ltrim($clean, '/');
 
-    // حالات شائعة: storage/xxx (رابط storage:link)
-    if (str_starts_with($clean, 'storage/')) {
-        $diskPath = substr($clean, strlen('storage/'));
-        if (Storage::disk('public')->exists($diskPath)) {
-            Storage::disk('public')->delete($diskPath);
+        // حالات شائعة: storage/xxx (رابط storage:link)
+        if (str_starts_with($clean, 'storage/')) {
+            $diskPath = substr($clean, strlen('storage/'));
+            if (Storage::disk('public')->exists($diskPath)) {
+                Storage::disk('public')->delete($diskPath);
+            }
+            return;
         }
-        return;
+
+        // لو مسار داخل public مباشرة (مثلاً members/.. أو uploads/members/.. أو attachments/..)
+        $full = public_path($clean);
+        if (File::exists($full)) {
+            File::delete($full);
+            return;
+        }
+
+        // fallback: جرّب كأنه على public disk بدون storage/ prefix
+        if (Storage::disk('public')->exists($clean)) {
+            Storage::disk('public')->delete($clean);
+        }
     }
 
-    // لو مسار داخل public مباشرة (مثلاً members/.. أو uploads/members/.. أو attachments/..)
-    $full = public_path($clean);
-    if (File::exists($full)) {
-        File::delete($full);
-        return;
-    }
+    private function parsePlanName($planName): string
+    {
+        if (empty($planName)) return '—';
 
-    // fallback: جرّب كأنه على public disk بدون storage/ prefix
-    if (Storage::disk('public')->exists($clean)) {
-        Storage::disk('public')->delete($clean);
+        if (is_array($planName)) {
+            return $planName[app()->getLocale()]
+                ?? $planName['ar']
+                ?? $planName['en']
+                ?? (count($planName) ? array_values($planName)[0] : '—');
+        }
+
+        if (is_string($planName)) {
+            $decoded = json_decode($planName, true);
+
+            if (is_array($decoded)) {
+                return $decoded[app()->getLocale()]
+                    ?? $decoded['ar']
+                    ?? $decoded['en']
+                    ?? (count($decoded) ? array_values($decoded)[0] : '—');
+            }
+
+            if (is_string($decoded) && !empty($decoded)) {
+                return $decoded;
+            }
+
+            return $planName;
+        }
+
+        return '—';
     }
-}
 }

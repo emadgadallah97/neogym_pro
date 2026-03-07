@@ -1,46 +1,46 @@
 @extends('layouts.master_table')
 
 @section('title')
-    {{ trans('main_trans.title') }}
+{{ trans('main_trans.title') }}
 @stop
 
 @section('content')
 
 @php
-    $CITIES_JS = $Cities->map(function ($c) {
-        return [
-            'id' => $c->id,
-            'name' => $c->getTranslation('name', 'ar'),
-            'gov' => $c->id_government,
-        ];
-    })->values();
+$CITIES_JS = $Cities->map(function ($c) {
+return [
+'id' => $c->id,
+'name' => $c->getTranslation('name', 'ar'),
+'gov' => $c->id_government,
+];
+})->values();
 
-    $AREAS_JS = $Areas->map(function ($a) {
-        return [
-            'id' => $a->id,
-            'name' => $a->getTranslation('name', 'ar'),
-            'city' => $a->id_city,
-        ];
-    })->values();
+$AREAS_JS = $Areas->map(function ($a) {
+return [
+'id' => $a->id,
+'name' => $a->getTranslation('name', 'ar'),
+'city' => $a->id_city,
+];
+})->values();
 
-    // Route templates (مع الـ locale)
-    $MEMBERS_ROUTES = [
-        'show'    => route('members.show', '__ID__'),
-        'update'  => route('members.update', '__ID__'),
-        'destroy' => route('members.destroy', '__ID__'),
-        'card'    => route('members.card', '__ID__'),
-        'qr_png'  => route('members.qr_png', '__ID__'),
-    ];
+// Route templates (مع الـ locale)
+$MEMBERS_ROUTES = [
+'show' => route('members.show', '__ID__'),
+'update' => route('members.update', '__ID__'),
+'destroy' => route('members.destroy', '__ID__'),
+'card' => route('members.card', '__ID__'),
+'qr_png' => route('members.qr_png', '__ID__'),
+];
 
-    // KPIs
-    $totalMembers  = $Members->count();
-    $countActive   = $Members->where('status', 'active')->count();
-    $countInactive = $Members->where('status', 'inactive')->count();
-    $countFrozen   = $Members->where('status', 'frozen')->count();
+// KPIs
+$totalMembers = $Members->count();
+$countActive = $Members->where('status', 'active')->count();
+$countInactive = $Members->where('status', 'inactive')->count();
+$countFrozen = $Members->where('status', 'frozen')->count();
 
-    $branchCounts = $Members->whereNotNull('branch_id')
-        ->groupBy('branch_id')
-        ->map(fn($items) => $items->count());
+$branchCounts = $Members->whereNotNull('branch_id')
+->groupBy('branch_id')
+->map(fn($items) => $items->count());
 @endphp
 
 <div class="row">
@@ -70,7 +70,7 @@
 
                     <div class="d-flex gap-2">
                         <button data-bs-toggle="modal" data-bs-target="#addMemberModal"
-                                class="btn btn-primary waves-effect waves-light" type="button">
+                            class="btn btn-primary waves-effect waves-light" type="button">
                             <i class="mdi mdi-account-plus-outline"></i>
                             {{ trans('members.add_new_member') }}
                         </button>
@@ -79,27 +79,27 @@
 
                 {{-- Session Messages --}}
                 @if (Session::has('success'))
-                    <div class="alert alert-success alert-dismissible mt-3" role="alert">
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        <strong>Success!</strong> {{ session('success') }}
-                    </div>
+                <div class="alert alert-success alert-dismissible mt-3" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <strong>Success!</strong> {{ session('success') }}
+                </div>
                 @endif
 
                 @if (Session::has('error'))
-                    <div class="alert alert-danger alert-dismissible mt-3" role="alert">
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        <strong>Error!</strong> {{ session('error') }}
-                    </div>
+                <div class="alert alert-danger alert-dismissible mt-3" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <strong>Error!</strong> {{ session('error') }}
+                </div>
                 @endif
 
                 @if ($errors->any())
-                    <div class="alert alert-danger mt-3">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                <div class="alert alert-danger mt-3">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
                 @endif
 
                 {{-- AJAX Messages --}}
@@ -195,14 +195,14 @@
 
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($Branches as $Branch)
-                                @php
-                                    $bName = $Branch->getTranslation('name','ar');
-                                    $bCount = $branchCounts[$Branch->id] ?? 0;
-                                @endphp
+                            @php
+                            $bName = $Branch->getTranslation('name','ar');
+                            $bCount = $branchCounts[$Branch->id] ?? 0;
+                            @endphp
 
-                                <span class="badge bg-soft-info text-info p-2">
-                                    {{ $bName }}: <span class="fw-semibold text-dark">{{ $bCount }}</span>
-                                </span>
+                            <span class="badge bg-soft-info text-info p-2">
+                                {{ $bName }}: <span class="fw-semibold text-dark">{{ $bCount }}</span>
+                            </span>
                             @endforeach
                         </div>
                     </div>
@@ -217,7 +217,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="mdi mdi-magnify"></i></span>
                                     <input type="text" class="form-control" id="memberGlobalSearch"
-                                           placeholder="{{ trans('members.search_hint') }}">
+                                        placeholder="{{ trans('members.search_hint') }}">
                                 </div>
                                 <small class="text-muted">{{ trans('members.search_note') }}</small>
                             </div>
@@ -227,9 +227,9 @@
                                 <select class="form-select" id="filterBranch">
                                     <option value="">{{ trans('settings_trans.choose') }}</option>
                                     @foreach($Branches as $Branch)
-                                        <option value="{{ $Branch->getTranslation('name','ar') }}">
-                                            {{ $Branch->getTranslation('name','ar') }}
-                                        </option>
+                                    <option value="{{ $Branch->getTranslation('name','ar') }}">
+                                        {{ $Branch->getTranslation('name','ar') }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -265,25 +265,25 @@
                 <div class="table-responsive">
                     <table id="membersTable" class="table table-bordered dt-responsive nowrap table-striped align-middle" style="width:100%">
                         <thead class="table-light">
-                        <tr>
-                            <th data-ordering="false">{{ trans('settings_trans.srno') }}</th>
-                            <th>{{ trans('members.member_code') }}</th>
-                            <th>{{ trans('members.full_name') }}</th>
-                            <th>{{ trans('members.branch') }}</th>
-                            <th>{{ trans('members.phone') }}</th>
-                            <th>{{ trans('settings_trans.status') }}</th>
-                            <th>{{ trans('members.join_date') }}</th>
-                            <th data-ordering="false">{{ trans('settings_trans.action') }}</th>
-                        </tr>
+                            <tr>
+                                <th data-ordering="false">{{ trans('settings_trans.srno') }}</th>
+                                <th>{{ trans('members.member_code') }}</th>
+                                <th>{{ trans('members.full_name') }}</th>
+                                <th>{{ trans('members.branch') }}</th>
+                                <th>{{ trans('members.phone') }}</th>
+                                <th>{{ trans('settings_trans.status') }}</th>
+                                <th>{{ trans('members.join_date') }}</th>
+                                <th data-ordering="false">{{ trans('settings_trans.action') }}</th>
+                            </tr>
                         </thead>
 
                         <tbody>
-                        @php $i = 0; @endphp
-                        @foreach($Members as $Member)
+                            @php $i = 0; @endphp
+                            @foreach($Members as $Member)
                             @php
-                                $i++;
-                                $branchName = $Member->branch ? $Member->branch->getTranslation('name','ar') : '-';
-                                $photoUrl = !empty($Member->photo) ? url($Member->photo) : '';
+                            $i++;
+                            $branchName = $Member->branch ? $Member->branch->getTranslation('name','ar') : '-';
+                            $photoUrl = !empty($Member->photo) ? url($Member->photo) : '';
                             @endphp
 
                             <tr data-row-id="{{ $Member->id }}">
@@ -297,11 +297,11 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="avatar-xs">
                                             @if(!empty($Member->photo))
-                                                <img src="{{ $photoUrl }}" class="rounded-circle" style="width:34px;height:34px;object-fit:cover">
+                                            <img src="{{ $photoUrl }}" class="rounded-circle" style="width:34px;height:34px;object-fit:cover">
                                             @else
-                                                <span class="avatar-title rounded-circle bg-soft-primary text-primary">
-                                                    <i class="mdi mdi-account-outline"></i>
-                                                </span>
+                                            <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                <i class="mdi mdi-account-outline"></i>
+                                            </span>
                                             @endif
                                         </div>
                                         <div class="lh-1">
@@ -319,11 +319,11 @@
 
                                 <td>
                                     @if($Member->status == 'active')
-                                        <span class="badge bg-success">{{ trans('members.active') }}</span>
+                                    <span class="badge bg-success">{{ trans('members.active') }}</span>
                                     @elseif($Member->status == 'inactive')
-                                        <span class="badge bg-danger">{{ trans('members.inactive') }}</span>
+                                    <span class="badge bg-danger">{{ trans('members.inactive') }}</span>
                                     @else
-                                        <span class="badge bg-warning text-dark">{{ trans('members.frozen') }}</span>
+                                    <span class="badge bg-warning text-dark">{{ trans('members.frozen') }}</span>
                                     @endif
                                 </td>
 
@@ -334,61 +334,61 @@
 
                                         {{-- View (AJAX show) --}}
                                         <button type="button"
-                                                class="btn btn-sm btn-soft-info btn-icon"
-                                                title="{{ trans('members.view') }}"
-                                                data-tooltip="1"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#viewMemberModal"
-                                                data-id="{{ $Member->id }}"
-                                                data-show-url="{{ route('members.show', $Member->id) }}">
+                                            class="btn btn-sm btn-soft-info btn-icon"
+                                            title="{{ trans('members.view') }}"
+                                            data-tooltip="1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#viewMemberModal"
+                                            data-id="{{ $Member->id }}"
+                                            data-show-url="{{ route('members.show', $Member->id) }}">
                                             <i class="mdi mdi-eye-outline"></i>
                                         </button>
 
                                         {{-- Edit (AJAX show + set update action) --}}
                                         <button type="button"
-                                                class="btn btn-sm btn-soft-warning btn-icon btn-edit-member"
-                                                title="{{ trans('members.edit') }}"
-                                                data-tooltip="1"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editMemberModal"
-                                                data-id="{{ $Member->id }}"
-                                                data-show-url="{{ route('members.show', $Member->id) }}">
+                                            class="btn btn-sm btn-soft-warning btn-icon btn-edit-member"
+                                            title="{{ trans('members.edit') }}"
+                                            data-tooltip="1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editMemberModal"
+                                            data-id="{{ $Member->id }}"
+                                            data-show-url="{{ route('members.show', $Member->id) }}">
                                             <i class="mdi mdi-pencil-outline"></i>
                                         </button>
 
                                         {{-- Card --}}
                                         <a class="btn btn-sm btn-soft-primary btn-icon"
-                                           title="{{ trans('members.print_card') }}"
-                                           data-tooltip="1"
-                                           target="_blank"
-                                           href="{{ route('members.card', $Member->id) }}">
+                                            title="{{ trans('members.print_card') }}"
+                                            data-tooltip="1"
+                                            target="_blank"
+                                            href="{{ route('members.card', $Member->id) }}">
                                             <i class="mdi mdi-card-account-details-outline"></i>
                                         </a>
 
                                         {{-- QR --}}
                                         <a class="btn btn-sm btn-soft-secondary btn-icon"
-                                           title="{{ trans('members.download_qr_png') }}"
-                                           data-tooltip="1"
-                                           href="{{ route('members.qr_png', $Member->id) }}">
+                                            title="{{ trans('members.download_qr_png') }}"
+                                            data-tooltip="1"
+                                            href="{{ route('members.qr_png', $Member->id) }}">
                                             <i class="mdi mdi-qrcode"></i>
                                         </a>
 
                                         {{-- Delete --}}
                                         <button type="button"
-                                                class="btn btn-sm btn-soft-danger btn-icon btn-delete-member"
-                                                title="{{ trans('members.delete') }}"
-                                                data-tooltip="1"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteMemberModal"
-                                                data-id="{{ $Member->id }}"
-                                                data-name="{{ $Member->first_name }} {{ $Member->last_name }}">
+                                            class="btn btn-sm btn-soft-danger btn-icon btn-delete-member"
+                                            title="{{ trans('members.delete') }}"
+                                            data-tooltip="1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteMemberModal"
+                                            data-id="{{ $Member->id }}"
+                                            data-name="{{ $Member->first_name }} {{ $Member->last_name }}">
                                             <i class="ri-delete-bin-6-line"></i>
                                         </button>
 
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                            @endforeach
                         </tbody>
 
                     </table>
@@ -429,37 +429,37 @@
 
 {{-- Add Modal --}}
 @include('members.form', [
-    'mode' => 'add',
-    'modalId' => 'addMemberModal',
-    'headerClass' => 'bg-soft-success',
-    'icon' => 'mdi-account-plus-outline',
-    'title' => trans('members.add_new_member'),
-    'formId' => 'addMemberForm',
-    'action' => route('members.store'),
-    'httpMethod' => 'post',
-    'member' => null,
-    'Branches' => $Branches,
-    'Governments' => $Governments,
-    'Cities' => $Cities,
-    'Areas' => $Areas,
+'mode' => 'add',
+'modalId' => 'addMemberModal',
+'headerClass' => 'bg-soft-success',
+'icon' => 'mdi-account-plus-outline',
+'title' => trans('members.add_new_member'),
+'formId' => 'addMemberForm',
+'action' => route('members.store'),
+'httpMethod' => 'post',
+'member' => null,
+'Branches' => $Branches,
+'Governments' => $Governments,
+'Cities' => $Cities,
+'Areas' => $Areas,
 ])
 
 {{-- Edit Modal --}}
 @include('members.form', [
-    'mode' => 'edit',
-    'modalId' => 'editMemberModal',
-    'headerClass' => 'bg-soft-warning',
-    'icon' => 'mdi-account-edit-outline',
-    'title' => trans('members.update_member'),
-    'formId' => 'editMemberForm',
-    // action سيتم ضبطه بالـ JS
-    'action' => route('members.update','__ID__'),
-    'httpMethod' => 'patch',
-    'member' => null,
-    'Branches' => $Branches,
-    'Governments' => $Governments,
-    'Cities' => $Cities,
-    'Areas' => $Areas,
+'mode' => 'edit',
+'modalId' => 'editMemberModal',
+'headerClass' => 'bg-soft-warning',
+'icon' => 'mdi-account-edit-outline',
+'title' => trans('members.update_member'),
+'formId' => 'editMemberForm',
+// action سيتم ضبطه بالـ JS
+'action' => route('members.update','__ID__'),
+'httpMethod' => 'patch',
+'member' => null,
+'Branches' => $Branches,
+'Governments' => $Governments,
+'Cities' => $Cities,
+'Areas' => $Areas,
 ])
 
 <script>
@@ -481,9 +481,9 @@
 
     const MEMBERS_ROUTES = @json($MEMBERS_ROUTES);
     const CITIES = @json($CITIES_JS);
-    const AREAS  = @json($AREAS_JS);
+    const AREAS = @json($AREAS_JS);
 
-    function routeWithId(tpl, id){
+    function routeWithId(tpl, id) {
         return String(tpl).replace('__ID__', String(id));
     }
 
@@ -567,8 +567,12 @@
             fillSelect(area, filtered, selectedAreaId);
         }
 
-        gov.addEventListener('change', function(){ refreshCities(null); });
-        city.addEventListener('change', function(){ refreshAreas(null); });
+        gov.addEventListener('change', function() {
+            refreshCities(null);
+        });
+        city.addEventListener('change', function() {
+            refreshAreas(null);
+        });
 
         const initGov = gov.value;
         const initCity = city.value;
@@ -584,7 +588,7 @@
         const form = document.getElementById(formId);
         if (!form) return;
 
-        form.addEventListener('submit', function(e){
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const url = form.getAttribute('action');
@@ -597,8 +601,10 @@
                 data: fd,
                 processData: false,
                 contentType: false,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                success: function(resp){
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(resp) {
                     form.querySelectorAll('input[type="file"]').forEach(inp => inp.value = '');
                     $('#membersAjaxMsg').html(alertBox('success', resp.message || MEMBERS_TR.saved));
                     if (typeof onSuccess === 'function') onSuccess(resp);
@@ -615,7 +621,7 @@
                         initGeo(form);
                     }
                 },
-                error: function(xhr){
+                error: function(xhr) {
                     if (xhr.status === 422) {
                         const r = xhr.responseJSON || {};
                         $('#membersAjaxMsg').html(alertBox('danger', r.message || 'Validation Error', r.errors || null));
@@ -641,9 +647,9 @@
     function renderRow(member) {
         // member هنا من الكنترولر: snake_case
         const photo = member.photo_url;
-        const avatar = photo
-            ? `<img src="${photo}" class="rounded-circle" style="width:34px;height:34px;object-fit:cover">`
-            : `<span class="avatar-title rounded-circle bg-soft-primary text-primary"><i class="mdi mdi-account-outline"></i></span>`;
+        const avatar = photo ?
+            `<img src="${photo}" class="rounded-circle" style="width:34px;height:34px;object-fit:cover">` :
+            `<span class="avatar-title rounded-circle bg-soft-primary text-primary"><i class="mdi mdi-account-outline"></i></span>`;
 
         const email = member.email ? member.email : '-';
         const showUrl = routeWithId(MEMBERS_ROUTES.show, member.id);
@@ -722,18 +728,20 @@
         $.ajax({
             url: url,
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            success: function(resp){
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(resp) {
                 if (!resp || !resp.member) return;
                 if (typeof onSuccess === 'function') onSuccess(resp.member);
             },
-            error: function(){
+            error: function() {
                 $('#membersAjaxMsg').html(alertBox('danger', 'Failed to load member'));
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
 
         document.querySelectorAll('.member-form').forEach(f => {
             initFreezeToggle(f);
@@ -746,42 +754,47 @@
             dt = $('#membersTable').DataTable({
                 responsive: true,
                 pageLength: 10,
-                order: [[6, 'desc']],
+                order: [
+                    [6, 'desc']
+                ],
                 dom: "<'row align-items-center'<'col-md-6'l><'col-md-6 text-end'>>" +
-                     "<'row'<'col-12'tr>>" +
-                     "<'row align-items-center'<'col-md-5'i><'col-md-7'p>>",
+                    "<'row'<'col-12'tr>>" +
+                    "<'row align-items-center'<'col-md-5'i><'col-md-7'p>>",
             });
 
-            dt.on('order.dt search.dt draw.dt', function () {
+            dt.on('order.dt search.dt draw.dt', function() {
                 let i = 1;
-                dt.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell) {
+                dt.column(0, {
+                    search: 'applied',
+                    order: 'applied'
+                }).nodes().each(function(cell) {
                     cell.innerHTML = i++;
                 });
             }).draw();
 
-            dt.on('draw.dt', function () {
+            dt.on('draw.dt', function() {
                 initTooltips(document.getElementById('membersTable'));
             });
         }
 
         initTooltips(document);
 
-        $('#memberGlobalSearch').on('keyup change', function () {
+        $('#memberGlobalSearch').on('keyup change', function() {
             if (!dt) return;
             dt.search(this.value).draw();
         });
 
-        $('#filterBranch').on('change', function () {
+        $('#filterBranch').on('change', function() {
             if (!dt) return;
             dt.column(3).search(this.value).draw();
         });
 
-        $('#filterStatus').on('change', function () {
+        $('#filterStatus').on('change', function() {
             if (!dt) return;
             dt.column(5).search(this.value).draw();
         });
 
-        $('#btnResetFilters').on('click', function () {
+        $('#btnResetFilters').on('click', function() {
             $('#memberGlobalSearch').val('');
             $('#filterBranch').val('');
             $('#filterStatus').val('');
@@ -792,14 +805,14 @@
         });
 
         // Add / Edit forms AJAX
-        bindAjaxForm('addMemberForm', function(resp){
+        bindAjaxForm('addMemberForm', function(resp) {
             if (!dt || !resp || !resp.member) return;
             const rowHtml = renderRow(resp.member);
             const $row = $(rowHtml);
             dt.row.add($row).draw(false);
         });
 
-        bindAjaxForm('editMemberForm', function(resp){
+        bindAjaxForm('editMemberForm', function(resp) {
             if (!dt || !resp || !resp.member) return;
 
             const rowHtml = renderRow(resp.member);
@@ -812,7 +825,7 @@
         });
 
         // Delete modal fill + set correct action URL
-        $(document).on('click', '.btn-delete-member', function(){
+        $(document).on('click', '.btn-delete-member', function() {
             const id = $(this).data('id');
             $('#deleteMemberId').val(id);
             $('#deleteMemberName').text($(this).data('name'));
@@ -824,7 +837,7 @@
         });
 
         // Delete submit
-        $('#deleteMemberForm').on('submit', function(e){
+        $('#deleteMemberForm').on('submit', function(e) {
             e.preventDefault();
 
             const fd = new FormData(this);
@@ -835,8 +848,10 @@
                 data: fd,
                 processData: false,
                 contentType: false,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                success: function(resp){
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(resp) {
                     $('#membersAjaxMsg').html(alertBox('success', resp.message || MEMBERS_TR.saved));
                     const oldRow = document.querySelector(`tr[data-row-id="${resp.id}"]`);
                     if (dt && oldRow) dt.row(oldRow).remove().draw(false);
@@ -845,7 +860,7 @@
                     const m = bootstrap.Modal.getInstance(modalEl);
                     if (m) m.hide();
                 },
-                error: function(){
+                error: function() {
                     $('#membersAjaxMsg').html(alertBox('danger', 'Server Error'));
                 }
             });
@@ -854,12 +869,12 @@
         // VIEW modal (AJAX show)
         const viewModal = document.getElementById('viewMemberModal');
         if (viewModal) {
-            viewModal.addEventListener('show.bs.modal', function (event) {
+            viewModal.addEventListener('show.bs.modal', function(event) {
                 const btn = event.relatedTarget;
                 if (!btn) return;
 
                 const url = btn.getAttribute('data-show-url');
-                fetchMember(url, function(m){
+                fetchMember(url, function(m) {
 
                     // snake_case keys
                     document.getElementById('viewMemberTitle').textContent = m.full_name || '-';
@@ -887,13 +902,13 @@
                     document.getElementById('viewMemberJoin').textContent = m.join_date || '-';
 
                     document.getElementById('viewMemberStatusBadge').textContent = statusText(m.status);
-                    document.getElementById('viewMemberStatusText').textContent  = statusText(m.status);
+                    document.getElementById('viewMemberStatusText').textContent = statusText(m.status);
 
                     document.getElementById('viewMemberFreezeFrom').textContent = m.freeze_from || '-';
                     document.getElementById('viewMemberFreezeTo').textContent = m.freeze_to || '-';
 
-                    document.getElementById('viewMemberHeight').textContent = (m.height ?? '-') ;
-                    document.getElementById('viewMemberWeight').textContent = (m.weight ?? '-') ;
+                    document.getElementById('viewMemberHeight').textContent = (m.height ?? '-');
+                    document.getElementById('viewMemberWeight').textContent = (m.weight ?? '-');
 
                     document.getElementById('viewMemberMedical').textContent = m.medical_conditions || '-';
                     document.getElementById('viewMemberAllergies').textContent = m.allergies || '-';
@@ -915,6 +930,57 @@
                         img.style.display = 'none';
                         ph.style.display = 'inline-flex';
                     }
+
+                    // ── Subscriptions tab ──
+                    const subsWrap = document.getElementById('viewMemberSubscriptions');
+                    if (subsWrap) {
+                        const subs = m.subscriptions || [];
+                        if (subs.length === 0) {
+                            subsWrap.innerHTML = `<div class="text-center text-muted py-3"><i class="mdi mdi-calendar-remove-outline fs-3 d-block mb-1"></i>{{ trans('members.no_subscriptions') ?? 'لا توجد اشتراكات' }}</div>`;
+                        } else {
+                            let html = `<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0" style="font-size:0.82rem">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{{ trans('members.sub_plan') ?? 'الخطة' }}</th>
+                                        <th>{{ trans('members.sub_status') ?? 'الحالة' }}</th>
+                                        <th>{{ trans('members.sub_period') ?? 'الفترة' }}</th>
+                                        <th>{{ trans('members.sub_sessions') ?? 'الجلسات' }}</th>
+                                        <th>{{ trans('members.sub_amount') ?? 'المبلغ' }}</th>
+                                    </tr>
+                                </thead><tbody>`;
+
+                            const stMap = {
+                                active: ['success', '{{ trans("members.active") }}'],
+                                expired: ['danger', '{{ trans("members.expired") ?? "منتهي" }}'],
+                                cancelled: ['secondary', '{{ trans("members.cancelled") ?? "ملغي" }}'],
+                                frozen: ['info', '{{ trans("members.frozen") }}'],
+                            };
+
+                            subs.forEach(s => {
+                                const [cls, label] = stMap[s.status] || ['secondary', s.status];
+                                const pct = s.sessions_count > 0 ? Math.round((s.sessions_remaining / s.sessions_count) * 100) : 0;
+                                const barCls = pct < 25 ? 'bg-danger' : (pct < 50 ? 'bg-warning' : 'bg-success');
+
+                                html += `<tr>
+                                    <td class="fw-semibold">${s.plan_name}</td>
+                                    <td><span class="badge bg-${cls}">${label}</span></td>
+                                    <td><small>${s.start_date || '-'}<br>${s.end_date || '-'}</small></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="fw-semibold">${s.sessions_remaining}/${s.sessions_count}</span>
+                                        </div>
+                                        <div class="progress" style="height:5px;margin-top:3px">
+                                            <div class="progress-bar ${barCls}" style="width:${pct}%"></div>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">${s.total_amount}</td>
+                                </tr>`;
+                            });
+
+                            html += `</tbody></table></div>`;
+                            subsWrap.innerHTML = html;
+                        }
+                    }
                 });
             });
         }
@@ -922,12 +988,12 @@
         // EDIT modal (AJAX show + set correct update URL)
         const editModal = document.getElementById('editMemberModal');
         if (editModal) {
-            editModal.addEventListener('show.bs.modal', function (event) {
+            editModal.addEventListener('show.bs.modal', function(event) {
                 const btn = event.relatedTarget;
                 if (!btn) return;
 
                 const url = btn.getAttribute('data-show-url');
-                fetchMember(url, function(m){
+                fetchMember(url, function(m) {
 
                     // set correct form action (بدلاً من test)
                     const editForm = document.getElementById('editMemberForm');
@@ -971,7 +1037,7 @@
                         initFreezeToggle(editForm);
                         initGeo(editForm);
 
-                        const govEl  = editForm.querySelector('.gov-select');
+                        const govEl = editForm.querySelector('.gov-select');
                         const cityEl = editForm.querySelector('.city-select');
                         const areaEl = editForm.querySelector('.area-select');
 

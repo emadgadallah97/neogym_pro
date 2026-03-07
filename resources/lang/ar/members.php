@@ -90,4 +90,13 @@ return [
     'freeze_from_must_be_before_to' => 'تاريخ (تجميد من) يجب أن يكون قبل تاريخ (تجميد إلى).',
     'date_join' => 'تاريخ الانضمام',
 
+    // Subscriptions Tab
+    'no_subscriptions' => 'لا توجد اشتراكات مسجّلة',
+    'sub_plan' => 'الخطة',
+    'sub_status' => 'الحالة',
+    'sub_period' => 'الفترة',
+    'sub_sessions' => 'الجلسات',
+    'sub_amount' => 'المبلغ',
+    'expired' => 'منتهي',
+    'cancelled' => 'ملغي',
 ];

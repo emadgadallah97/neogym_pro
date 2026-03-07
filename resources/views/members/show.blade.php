@@ -238,9 +238,10 @@
 
                             {{-- SUBSCRIPTIONS --}}
                             <div class="tab-pane fade" id="view_tab_subscriptions" role="tabpanel">
-                                <div class="alert alert-warning mb-0">
-                                    <i class="mdi mdi-information-outline"></i>
-                                    {{ trans('members.subscriptions_placeholder') }}
+                                <div id="viewMemberSubscriptions">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="mdi mdi-loading mdi-spin fs-4"></i>
+                                    </div>
                                 </div>
                             </div>
 
