@@ -14,6 +14,14 @@ Route::group(
     function () {
         Route::group(['namespace' => 'sales'], function () {
 
+            // ✅ صفحة الاشتراكات الحالية (منفصلة) — قبل resource لتجنب تعارض مع {sales}
+            Route::get('sales/subscriptions-list', 'salescontroller@subscriptionsList')
+                ->name('sales.subscriptions_list');
+
+            // ✅ طباعة الفاتورة
+            Route::get('sales/{id}/invoice-print', 'salescontroller@invoicePrint')
+                ->name('sales.invoice_print');
+
             Route::resource('sales', 'salescontroller');
 
             // AJAX endpoints
@@ -60,9 +68,6 @@ Route::group(
 
             Route::post('sales/ajaxtrainer-session-price', [\App\Http\Controllers\sales\SubscriptionPtAddonSaleController::class, 'ajaxTrainerSessionPrice'])
                 ->name('sales.ajax.trainersessionprice');
-
-
-
         });
     },
 );

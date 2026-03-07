@@ -1,13 +1,8 @@
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label class="form-label">{{ trans('sales.plan_price_without_trainer') ?? 'سعر الاشتراك (بدون مدرب)' }}</label>
-        <input type="text" class="form-control" id="price_without_trainer_display" value="0.00" readonly>
-        <small class="text-muted">
-            {{ trans('sales.price_updates_by_branch_plan') ?? 'يتغير السعر حسب الفرع والخطة.' }}
-        </small>
-    </div>
+{{-- Hidden field: الـ JS يحتاجه لكنه لا يظهر للمستخدم --}}
+<input type="hidden" id="price_without_trainer_display" value="0.00">
 
-    <div class="col-md-6 mb-3">
+<div class="row">
+    <div class="col-12 mb-2">
         <label class="form-label">{{ trans('sales.branch_coaches_note') ?? 'المدربين' }}</label>
         <div class="form-text" id="coachesHint">
             {{ trans('sales.choose_branch_to_load_coaches') ?? 'اختر الفرع لعرض المدربين المتاحين.' }}
@@ -50,201 +45,203 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
 
-    const TOKEN = document.querySelector('input[name="_token"]')?.value || '';
+        const TOKEN = document.querySelector('input[name="_token"]')?.value || '';
 
-    const URL_BASE_PRICE = "{{ route('sales.ajax.plan_base_price') }}";
-    const URL_COACHES_BY_BRANCH = "{{ route('sales.ajax.coaches_by_branch') }}";
-    const URL_TRAINER_SESSION_PRICE = "{{ route('sales.ajax.trainer_session_price') }}";
+        const URL_BASE_PRICE = "{{ route('sales.ajax.plan_base_price') }}";
+        const URL_COACHES_BY_BRANCH = "{{ route('sales.ajax.coaches_by_branch') }}";
+        const URL_TRAINER_SESSION_PRICE = "{{ route('sales.ajax.trainer_session_price') }}";
 
-    const branchSel = document.getElementById('branch_id');
-    const planSel   = document.getElementById('subscriptions_plan_id');
+        const branchSel = document.getElementById('branch_id');
+        const planSel = document.getElementById('subscriptions_plan_id');
 
-    const priceWithoutTrainerDisplay = document.getElementById('price_without_trainer_display');
-    const coachesHint = document.getElementById('coachesHint');
+        const priceWithoutTrainerDisplay = document.getElementById('price_without_trainer_display');
+        const coachesHint = document.getElementById('coachesHint');
 
-    const tableBody = document.querySelector('#ptAddonsTable tbody');
-    const btnAdd = document.getElementById('btnAddPtAddon');
+        const tableBody = document.querySelector('#ptAddonsTable tbody');
+        const btnAdd = document.getElementById('btnAddPtAddon');
 
-    let coachesCache = []; // [{id,text}, ...]
-    let suppressPtEvents = false; // لمنع trigger change أثناء بناء الخيارات
+        let coachesCache = []; // [{id,text}, ...]
+        let suppressPtEvents = false; // لمنع trigger change أثناء بناء الخيارات
 
-    // AbortControllers لتقليل تكدس الطلبات
-    let abortBasePrice = null;
-    let abortCoaches = null;
+        // AbortControllers لتقليل تكدس الطلبات
+        let abortBasePrice = null;
+        let abortCoaches = null;
 
-    function debounce(fn, wait = 250) {
-        let t = null;
-        return function (...args) {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), wait);
-        };
-    }
-
-    function initSelect2IfNeeded(el) {
-        if (!(typeof $ !== 'undefined' && $.fn && $.fn.select2)) return;
-        const $el = $(el);
-        if (!$el.length) return;
-        if ($el.hasClass('select2-hidden-accessible')) return;
-
-        $el.select2({
-            placeholder: '{{ trans('settings_trans.choose') }}',
-            allowClear: true,
-            language: 'ar',
-            dir: 'rtl',
-            width: '100%'
-        });
-    }
-
-    function destroySelect2IfNeeded(el) {
-        if (!(typeof $ !== 'undefined' && $.fn && $.fn.select2)) return;
-        const $el = $(el);
-        if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
-    }
-
-    async function safeJson(res) {
-        const ct = (res.headers.get('content-type') || '').toLowerCase();
-        if (ct.includes('application/json')) return await res.json();
-        const text = await res.text();
-        throw new Error(text.substring(0, 200));
-    }
-
-    async function postJson(url, payload, abortCtrl = null) {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': TOKEN
-            },
-            body: JSON.stringify(payload || {}),
-            signal: abortCtrl ? abortCtrl.signal : undefined
-        });
-
-        const json = await safeJson(res);
-        if (!res.ok || !json || json.ok === false) {
-            const msg = (json && (json.message || json.error)) ? (json.message || json.error) : '{{ trans('sales.ajax_error_try_again') }}';
-            throw new Error(msg);
-        }
-        return json;
-    }
-
-    function renumberRows() {
-        Array.from(tableBody.children).forEach((tr, idx) => {
-            tr.querySelector('.row-index').textContent = idx + 1;
-            const trainerSel = tr.querySelector('.pt-trainer');
-            const countInp   = tr.querySelector('.pt-count');
-
-            trainerSel.name = `pt_addons[${idx}][trainer_id]`;
-            countInp.name   = `pt_addons[${idx}][sessions_count]`;
-        });
-    }
-
-    function computeRowTotal(tr) {
-        const price = parseFloat(tr.querySelector('.pt-price')?.value || '0');
-        const count = parseInt(tr.querySelector('.pt-count')?.value || '0', 10);
-        const total = Math.max(0, price * Math.max(0, count));
-        const totalEl = tr.querySelector('.pt-total');
-        if (totalEl) totalEl.value = total.toFixed(2);
-    }
-
-    function fillTrainerSelect(selectEl, selectedId = '') {
-        suppressPtEvents = true;
-
-        destroySelect2IfNeeded(selectEl);
-
-        const current = selectedId || selectEl.value || '';
-        selectEl.innerHTML = '';
-        selectEl.appendChild(new Option("{{ trans('settings_trans.choose') }}", ""));
-
-        coachesCache.forEach(c => {
-            selectEl.appendChild(new Option(c.text, c.id));
-        });
-
-        const exists = Array.from(selectEl.options).some(o => String(o.value) === String(current));
-        selectEl.value = exists ? current : '';
-
-        initSelect2IfNeeded(selectEl);
-
-        // تحديث UI فقط بدون trigger change (لتفادي تشغيل handler)
-        if (typeof $ !== 'undefined') {
-            $(selectEl).trigger('change.select2');
+        function debounce(fn, wait = 250) {
+            let t = null;
+            return function(...args) {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, args), wait);
+            };
         }
 
-        suppressPtEvents = false;
-    }
+        function initSelect2IfNeeded(el) {
+            if (!(typeof $ !== 'undefined' && $.fn && $.fn.select2)) return;
+            const $el = $(el);
+            if (!$el.length) return;
+            if ($el.hasClass('select2-hidden-accessible')) return;
 
-    const refreshAll = debounce(function () {
-        // ✅ نقطة واحدة فقط لتحديث preview+offers لمنع التكرار
-        window.salesRefreshAll && window.salesRefreshAll();
-    }, 200);
+            $el.select2({
+                placeholder: '{{ trans("settings_trans.choose") }}',
+                allowClear: true,
+                language: 'ar',
+                dir: 'rtl',
+                width: '100%'
+            });
+        }
 
-    async function loadBasePrice() {
-        const branchId = branchSel ? branchSel.value : '';
-        const planId   = planSel ? planSel.value : '';
+        function destroySelect2IfNeeded(el) {
+            if (!(typeof $ !== 'undefined' && $.fn && $.fn.select2)) return;
+            const $el = $(el);
+            if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+        }
 
-        priceWithoutTrainerDisplay.value = '0.00';
-        if (!branchId || !planId) return;
+        async function safeJson(res) {
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (ct.includes('application/json')) return await res.json();
+            const text = await res.text();
+            throw new Error(text.substring(0, 200));
+        }
 
-        try {
-            if (abortBasePrice) abortBasePrice.abort();
-            abortBasePrice = new AbortController();
+        async function postJson(url, payload, abortCtrl = null) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': TOKEN
+                },
+                body: JSON.stringify(payload || {}),
+                signal: abortCtrl ? abortCtrl.signal : undefined
+            });
 
-            const json = await postJson(URL_BASE_PRICE, {
+            const json = await safeJson(res);
+            if (!res.ok || !json || json.ok === false) {
+                const msg = (json && (json.message || json.error)) ? (json.message || json.error) : '{{ trans("sales.ajax_error_try_again") }}';
+                throw new Error(msg);
+            }
+            return json;
+        }
+
+        function renumberRows() {
+            Array.from(tableBody.children).forEach((tr, idx) => {
+                tr.querySelector('.row-index').textContent = idx + 1;
+                const trainerSel = tr.querySelector('.pt-trainer');
+                const countInp = tr.querySelector('.pt-count');
+
+                trainerSel.name = `pt_addons[${idx}][trainer_id]`;
+                countInp.name = `pt_addons[${idx}][sessions_count]`;
+            });
+        }
+
+        function computeRowTotal(tr) {
+            const price = parseFloat(tr.querySelector('.pt-price')?.value || '0');
+            const count = parseInt(tr.querySelector('.pt-count')?.value || '0', 10);
+            const total = Math.max(0, price * Math.max(0, count));
+            const totalEl = tr.querySelector('.pt-total');
+            if (totalEl) totalEl.value = total.toFixed(2);
+        }
+
+        function fillTrainerSelect(selectEl, selectedId = '') {
+            suppressPtEvents = true;
+
+            destroySelect2IfNeeded(selectEl);
+
+            const current = selectedId || selectEl.value || '';
+            selectEl.innerHTML = '';
+            selectEl.appendChild(new Option("{{ trans('settings_trans.choose') }}", ""));
+
+            coachesCache.forEach(c => {
+                selectEl.appendChild(new Option(c.text, c.id));
+            });
+
+            const exists = Array.from(selectEl.options).some(o => String(o.value) === String(current));
+            selectEl.value = exists ? current : '';
+
+            initSelect2IfNeeded(selectEl);
+
+            // تحديث UI فقط بدون trigger change (لتفادي تشغيل handler)
+            if (typeof $ !== 'undefined') {
+                $(selectEl).trigger('change.select2');
+            }
+
+            suppressPtEvents = false;
+        }
+
+        const refreshAll = debounce(function() {
+            // ✅ نقطة واحدة فقط لتحديث preview+offers لمنع التكرار
+            window.salesRefreshAll && window.salesRefreshAll();
+        }, 200);
+
+        async function loadBasePrice() {
+            const branchId = branchSel ? branchSel.value : '';
+            const planId = planSel ? planSel.value : '';
+
+            priceWithoutTrainerDisplay.value = '0.00';
+            if (!branchId || !planId) return;
+
+            try {
+                if (abortBasePrice) abortBasePrice.abort();
+                abortBasePrice = new AbortController();
+
+                const json = await postJson(URL_BASE_PRICE, {
+                    branch_id: parseInt(branchId, 10),
+                    subscriptions_plan_id: parseInt(planId, 10)
+                }, abortBasePrice);
+
+                const price = parseFloat(json.data.price_without_trainer || 0);
+                priceWithoutTrainerDisplay.value = price.toFixed(2);
+
+                // ✅ لا تنادي preview/offers هنا
+                refreshAll();
+            } catch (e) {
+                if (e && e.name === 'AbortError') return;
+                console.error(e);
+            }
+        }
+
+        async function loadCoachesByBranch() {
+            const branchId = branchSel ? branchSel.value : '';
+            coachesCache = [];
+
+            if (!branchId) {
+                coachesHint.textContent = "{{ trans('sales.choose_branch_to_load_coaches') ?? 'اختر الفرع لعرض المدربين المتاحين.' }}";
+                Array.from(tableBody.querySelectorAll('.pt-trainer')).forEach(sel => fillTrainerSelect(sel));
+                return;
+            }
+
+            try {
+                if (abortCoaches) abortCoaches.abort();
+                abortCoaches = new AbortController();
+
+                const json = await postJson(URL_COACHES_BY_BRANCH, {
+                    branch_id: parseInt(branchId, 10)
+                }, abortCoaches);
+                coachesCache = json.data || [];
+
+                coachesHint.textContent = (coachesCache.length === 0) ?
+                    "{{ trans('sales.no_coaches_in_branch') ?? 'لا يوجد مدربين مرتبطين بهذا الفرع.' }}" :
+                    "{{ trans('sales.coaches_loaded') ?? 'تم تحميل المدربين حسب الفرع المختار.' }}";
+
+                Array.from(tableBody.querySelectorAll('.pt-trainer')).forEach(sel => fillTrainerSelect(sel));
+            } catch (e) {
+                if (e && e.name === 'AbortError') return;
+                console.error(e);
+            }
+        }
+
+        async function fetchTrainerSessionPrice(branchId, trainerId) {
+            return await postJson(URL_TRAINER_SESSION_PRICE, {
                 branch_id: parseInt(branchId, 10),
-                subscriptions_plan_id: parseInt(planId, 10)
-            }, abortBasePrice);
-
-            const price = parseFloat(json.data.price_without_trainer || 0);
-            priceWithoutTrainerDisplay.value = price.toFixed(2);
-
-            // ✅ لا تنادي preview/offers هنا
-            refreshAll();
-        } catch (e) {
-            if (e && e.name === 'AbortError') return;
-            console.error(e);
-        }
-    }
-
-    async function loadCoachesByBranch() {
-        const branchId = branchSel ? branchSel.value : '';
-        coachesCache = [];
-
-        if (!branchId) {
-            coachesHint.textContent = "{{ trans('sales.choose_branch_to_load_coaches') ?? 'اختر الفرع لعرض المدربين المتاحين.' }}";
-            Array.from(tableBody.querySelectorAll('.pt-trainer')).forEach(sel => fillTrainerSelect(sel));
-            return;
+                trainer_id: parseInt(trainerId, 10)
+            });
         }
 
-        try {
-            if (abortCoaches) abortCoaches.abort();
-            abortCoaches = new AbortController();
-
-            const json = await postJson(URL_COACHES_BY_BRANCH, { branch_id: parseInt(branchId, 10) }, abortCoaches);
-            coachesCache = json.data || [];
-
-            coachesHint.textContent = (coachesCache.length === 0)
-                ? "{{ trans('sales.no_coaches_in_branch') ?? 'لا يوجد مدربين مرتبطين بهذا الفرع.' }}"
-                : "{{ trans('sales.coaches_loaded') ?? 'تم تحميل المدربين حسب الفرع المختار.' }}";
-
-            Array.from(tableBody.querySelectorAll('.pt-trainer')).forEach(sel => fillTrainerSelect(sel));
-        } catch (e) {
-            if (e && e.name === 'AbortError') return;
-            console.error(e);
-        }
-    }
-
-    async function fetchTrainerSessionPrice(branchId, trainerId) {
-        return await postJson(URL_TRAINER_SESSION_PRICE, {
-            branch_id: parseInt(branchId, 10),
-            trainer_id: parseInt(trainerId, 10)
-        });
-    }
-
-    function addPtRow() {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+        function addPtRow() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
             <td class="row-index">-</td>
             <td>
                 <select class="form-select form-select-sm pt-trainer select2">
@@ -267,76 +264,76 @@ document.addEventListener('DOMContentLoaded', function () {
             </td>
         `;
 
-        tableBody.appendChild(tr);
-        renumberRows();
-
-        const sel = tr.querySelector('.pt-trainer');
-        fillTrainerSelect(sel);
-        initSelect2IfNeeded(sel);
-
-        refreshAll();
-    }
-
-    if (btnAdd) btnAdd.addEventListener('click', addPtRow);
-
-    tableBody.addEventListener('click', function (e) {
-        if (e.target.closest('.btn-remove-pt-row')) {
-            e.target.closest('tr').remove();
+            tableBody.appendChild(tr);
             renumberRows();
+
+            const sel = tr.querySelector('.pt-trainer');
+            fillTrainerSelect(sel);
+            initSelect2IfNeeded(sel);
+
             refreshAll();
         }
-    });
 
-    // trainer change (تجاهل أثناء build options)
-    $(document).on('change', '.pt-trainer', async function () {
-        if (suppressPtEvents) return;
+        if (btnAdd) btnAdd.addEventListener('click', addPtRow);
 
-        const tr = this.closest('tr');
-        if (!tr) return;
+        tableBody.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-remove-pt-row')) {
+                e.target.closest('tr').remove();
+                renumberRows();
+                refreshAll();
+            }
+        });
 
-        const branchId = branchSel ? branchSel.value : '';
-        const trainerId = parseInt(this.value || '0', 10);
+        // trainer change (تجاهل أثناء build options)
+        $(document).on('change', '.pt-trainer', async function() {
+            if (suppressPtEvents) return;
 
-        if (!branchId || trainerId <= 0) {
-            tr.querySelector('.pt-price').value = '0.00';
+            const tr = this.closest('tr');
+            if (!tr) return;
+
+            const branchId = branchSel ? branchSel.value : '';
+            const trainerId = parseInt(this.value || '0', 10);
+
+            if (!branchId || trainerId <= 0) {
+                tr.querySelector('.pt-price').value = '0.00';
+                computeRowTotal(tr);
+                refreshAll();
+                return;
+            }
+
+            try {
+                const r = await fetchTrainerSessionPrice(branchId, trainerId);
+                tr.querySelector('.pt-price').value = Number(r.data.session_price ?? 0).toFixed(2);
+            } catch (e) {
+                console.error(e);
+                tr.querySelector('.pt-price').value = '0.00';
+            }
+
             computeRowTotal(tr);
             refreshAll();
-            return;
-        }
+        });
 
-        try {
-            const r = await fetchTrainerSessionPrice(branchId, trainerId);
-            tr.querySelector('.pt-price').value = Number(r.data.session_price ?? 0).toFixed(2);
-        } catch (e) {
-            console.error(e);
-            tr.querySelector('.pt-price').value = '0.00';
-        }
+        // sessions count change
+        $(document).on('change', '.pt-count', function() {
+            const tr = this.closest('tr');
+            if (!tr) return;
+            computeRowTotal(tr);
+            refreshAll();
+        });
 
-        computeRowTotal(tr);
-        refreshAll();
-    });
+        // ✅ branch/plan events: استخدم change فقط (بدون select2:select) لتجنب double triggers
+        $(document).on('change', '#branch_id', function() {
+            loadCoachesByBranch();
+            // بعد تغيير الفرع، سعر الخطة يتأثر فقط لو plan محدد
+            loadBasePrice();
+        });
 
-    // sessions count change
-    $(document).on('change', '.pt-count', function () {
-        const tr = this.closest('tr');
-        if (!tr) return;
-        computeRowTotal(tr);
-        refreshAll();
-    });
+        $(document).on('change', '#subscriptions_plan_id', function() {
+            loadBasePrice();
+        });
 
-    // ✅ branch/plan events: استخدم change فقط (بدون select2:select) لتجنب double triggers
-    $(document).on('change', '#branch_id', function () {
+        // initial
         loadCoachesByBranch();
-        // بعد تغيير الفرع، سعر الخطة يتأثر فقط لو plan محدد
         loadBasePrice();
     });
-
-    $(document).on('change', '#subscriptions_plan_id', function () {
-        loadBasePrice();
-    });
-
-    // initial
-    loadCoachesByBranch();
-    loadBasePrice();
-});
 </script>

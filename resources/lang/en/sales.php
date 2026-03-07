@@ -55,11 +55,6 @@ return [
     'sales_employee_hint' => 'Optional; commission will be calculated based on this employee settings.',
     'payment_method' => 'Payment method',
     'payment_other' => 'Other method',
-    'price_plan' => 'Plan price',
-    'price_pt_addons' => 'Trainer sessions price',
-    'total_discount' => 'Total discount',
-    'commission_base_amount' => 'Commission base amount',
-    'commission_amount' => 'Commission amount',
 
     // Subscription show
     'subscription_show_title' => 'Subscription details',
@@ -110,5 +105,88 @@ return [
     'end_date' => 'End date',
     'source_callcenter' => 'Call center',
 
+    // ✅ New restructuring keys
+    'save_and_print' => 'Save & Print Invoice',
+    'view_subscriptions_list' => 'View Current Subscriptions',
+    'back_to_sales' => 'Back to Sales',
+    'no_offer_selected' => 'No offer (choose manually)',
+
+    // Invoice print
+    'invoice' => 'Invoice',
+    'invoice_number' => 'Invoice Number',
+    'invoice_date' => 'Invoice Date',
+    'member_info' => 'Member Information',
+    'subscription_info' => 'Subscription Information',
+    'invoice_footer' => 'Thank you for your subscription',
+    'print' => 'Print',
+    'item' => 'Item',
+    'details' => 'Details',
+
+    // Invoice summary
+    'invoice_summary' => 'Invoice Summary',
+    'item_plan' => 'Plan',
+    'item_pt_addons' => 'PT Sessions (Trainer)',
+    'subtotal_gross' => 'Subtotal (before discount)',
+    'discount_offer' => 'Offer Discount',
+    'discount_coupon' => 'Coupon Discount',
+    'net_total' => 'Net Total',
+    'total_discount' => 'Total Discount',
+    'summary_hint' => 'Summary updates automatically based on plan/PT sessions/offer/coupon.',
+
+    // Commission
+    'commission_section' => 'Commission',
+    'commission_base_amount' => 'Commission Base',
+    'commission_amount' => 'Commission Amount',
+    'commission_estimated' => 'Estimated Commission',
+    'commission_value_type' => 'Commission Type',
+    'commission_value' => 'Commission Value',
+    'commission_base_gross' => 'Base = Gross (before discounts)',
+    'commission_base_net' => 'Base = Net (after discounts)',
+    'commission_type_percent' => 'Percentage %',
+    'commission_type_fixed' => 'Fixed Amount',
+    'commission_calculated_on_save' => 'Final commission is calculated on save based on employee settings.',
+
+    // Pricing
+    'price_plan' => 'Plan Price',
+    'price_pt_addons' => 'Trainer Sessions Price',
+    'gross_amount' => 'Gross Amount',
+    'offer_discount' => 'Offer Discount',
+    'amount_after_offer' => 'After Offer',
+    'no_offers_available' => 'No offers available',
+    'best_offer' => 'Best Offer',
+    'coupon_discount' => 'Coupon Discount',
+    'amount_after_coupon' => 'After Coupon',
+
+    // Payment
+    'cash' => 'Cash',
+    'card' => 'Card',
+    'transfer' => 'Transfer',
+    'instapay' => 'InstaPay',
+    'ewallet' => 'E-Wallet',
+    'cheque' => 'Cheque',
+    'payment_other' => 'Other',
+
+    // Messages
+    'savedsuccessfully' => 'Subscription saved successfully.',
+    'base_price_not_found' => 'No base price found for this plan in this branch.',
+    'coach_not_in_branch' => 'The selected trainer is not assigned to this branch.',
+    'coupon_valid' => 'Coupon is valid',
+    'coupon_invalid' => 'Coupon is invalid',
+    'coupon_empty' => 'Please enter coupon code first.',
+    'validate_coupon' => 'Validate & Apply',
+    'validating' => 'Validating...',
+    'offers_list' => 'Available Offers',
+    'selected_offer' => 'Selected Offer',
+    'offer_list_hint' => 'Select an offer to apply or leave without an offer.',
+    'session_price' => 'Session Price',
+    'per_page' => 'Rows per page',
+    'add_pt' => 'Add PT',
+
+    // Status
+    'status_active' => 'Active',
+    'status_expired' => 'Expired',
+    'status_frozen' => 'Frozen',
+    'status_cancelled' => 'Cancelled',
+    'status_pendingpayment' => 'Pending Payment',
 
 ];
