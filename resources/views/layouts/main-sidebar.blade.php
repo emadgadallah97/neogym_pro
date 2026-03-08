@@ -75,7 +75,8 @@
                 {{-- الاشتراكات --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font
-                        @if (Route::currentRouteName() == 'subscriptions_plans.create' || Route::currentRouteName() == 'subscriptions_plans.index') active @endif"
+                        @if (Route::currentRouteName() == 'subscriptions_plans.create' ||
+                                Route::currentRouteName() == 'subscriptions_plans.index') active @endif"
                         href="{{ url('/' . ($page = 'subscriptions_plans')) }}">
 
                         <i class="mdi mdi-calendar-check"></i>
@@ -134,7 +135,7 @@
                         <span data-key="t-widgets">{{ trans('main_trans.hr') }}</span>
                     </a>
                 </li>
-                {{--اداره علاقات العملاء--}}
+                {{-- اداره علاقات العملاء --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font
                         @if (Route::currentRouteName() == 'crm.create' || Route::currentRouteName() == 'crm.index') active @endif"
@@ -145,29 +146,35 @@
                     </a>
                 </li>
                 <!--user management-->
-                <li class="menu-title"><i class="ri-more-fill"></i> <span
-                        data-key="t-components">{{ trans('main_trans.user_management') }}</span></li>
-                <li class="nav-item">
-                    <a class="nav-link menu-link font" href="#sidebaruser_management" data-bs-toggle="collapse"
-                        role="button" aria-expanded="false" aria-controls="sidebarAuth">
-                        <i class="mdi mdi-account-lock-outline"></i> <span
-                            data-key="t-authentication">{{ trans('main_trans.users') }}</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebaruser_management">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                    aria-controls="sidebarSignIn"
-                                    data-key="t-signin">{{ trans('main_trans.user_add') }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                    aria-controls="sidebarSignUp"
-                                    data-key="t-signup">{{ trans('main_trans.user_management') }}</a>
-                            </li>
-                        </ul>
-                    </div>
+                <li class="menu-title">
+                    <i class="ri-more-fill"></i>
+                    <span data-key="t-components">{{ trans('main_trans.user_management') }}</span>
                 </li>
+
+                {{-- إدارة المستخدمين --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+        @if (Route::currentRouteName() == 'users.index' ||
+                Route::currentRouteName() == 'users.create' ||
+                Route::currentRouteName() == 'users.edit') active @endif"
+                        href="{{ route('users.index') }}">
+                        <i class="mdi mdi-account-multiple-outline"></i>
+                        <span data-key="t-users">{{ trans('main_trans.user_management') }}</span>
+                    </a>
+                </li>
+
+                {{-- إدارة الصلاحيات --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link font
+        @if (Route::currentRouteName() == 'roles.index' ||
+                Route::currentRouteName() == 'roles.create' ||
+                Route::currentRouteName() == 'roles.edit') active @endif"
+                        href="{{ route('roles.index') }}">
+                        <i class="mdi mdi-account-lock-outline"></i>
+                        <span data-key="t-roles">{{ trans('main_trans.roles_management') }}</span>
+                    </a>
+                </li>
+
 
                 <!--reports-->
                 <li class="menu-title"><i class="ri-more-fill"></i> <span

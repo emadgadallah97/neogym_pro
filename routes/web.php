@@ -73,6 +73,8 @@ require base_path('routes/accounting.php');
 require base_path('routes/reports.php');
 require base_path('routes/hr.php');
 require base_path('routes/crm.php');
+require base_path('routes/users.php');
+require base_path('routes/roles.php');
 
 
 
