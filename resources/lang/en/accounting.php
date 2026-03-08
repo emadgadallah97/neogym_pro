@@ -216,5 +216,7 @@ return [
     'programs_accounting' => 'Accounting Programs',
     'salaries' => 'Salaries',
     'ajax_error_try_again' => 'Something went wrong, try again.',
-
+'expenses_desc'      => 'Record and track facility expenses and classify them',
+'income_desc'        => 'Track facility revenues from various sources',
+'commissions_desc'   => 'Manage commissions and distribute them to employees ',
 ];

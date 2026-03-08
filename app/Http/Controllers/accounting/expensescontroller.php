@@ -14,26 +14,32 @@ use Illuminate\Support\Facades\DB;
 
 class expensescontroller extends Controller
 {
-    public function index()
+    // ─────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * فروع المستخدم الحالي — فارغة = admin يرى الكل
+     */
+    private function accessibleBranchIds(): array
     {
-        $Expenses = Expense::with(['type', 'branch', 'disburserEmployee', 'creator'])
-            ->orderByDesc('id')
-            ->get();
+        $user = Auth::user();
+        if (!$user->employee_id) return [];
 
-        // 1) استثناء غير النشط من الأنواع في الاختيار/الفلاتر
-        $ExpensesTypes = ExpensesType::where('status', 1)->orderByDesc('id')->get();
-
-        $BranchesList = Branch::select(['id', 'name'])
-            ->where('status', 1)
-            ->orderByDesc('id')
-            ->get();
-
-        return view('accounting.programs.expenses.index', compact('Expenses', 'ExpensesTypes', 'BranchesList'));
+        return DB::table('employee_branch')
+            ->where('employee_id', $user->employee_id)
+            ->pluck('branch_id')
+            ->map(fn($id) => (int)$id)
+            ->toArray();
     }
 
-    public function create()
+    /**
+     * التحقق أن الفرع المختار ضمن فروع المستخدم
+     */
+    private function userCanAccessBranch(int $branchId): bool
     {
-        return redirect()->route('expenses.index');
+        $ids = $this->accessibleBranchIds();
+        return empty($ids) || in_array($branchId, $ids);
     }
 
     private function employeeBelongsToBranch(?int $employeeId, int $branchId): bool
@@ -47,35 +53,73 @@ class expensescontroller extends Controller
             ->exists();
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Index
+    // ─────────────────────────────────────────────────────────────
+
+    public function index()
+    {
+        $branchIds = $this->accessibleBranchIds();
+
+        // ✅ عرض مصروفات فروع المستخدم فقط
+        $Expenses = Expense::with([
+            'type',
+            // ✅ withoutGlobalScope لإظهار اسم الفرع دائماً
+            'branch'            => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'disburserEmployee',
+            'creator',
+        ])
+        ->when(!empty($branchIds), fn($q) => $q->whereIn('branchid', $branchIds))
+        ->orderByDesc('id')
+        ->get();
+
+        $ExpensesTypes = ExpensesType::where('status', 1)->orderByDesc('id')->get();
+
+        // ✅ القائمة المنسدلة — فروع المستخدم فقط (Scope يعمل تلقائياً)
+        $BranchesList = Branch::select(['id', 'name'])
+            ->where('status', 1)
+            ->orderByDesc('id')
+            ->get();
+
+        return view('accounting.programs.expenses.index', compact('Expenses', 'ExpensesTypes', 'BranchesList'));
+    }
+
+    public function create()
+    {
+        return redirect()->route('expenses.index');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Store
+    // ─────────────────────────────────────────────────────────────
+
     public function store(Request $request)
     {
         $request->validate([
-            'branchid'       => ['required', 'integer', 'exists:branches,id'],
-            'expensestypeid' => ['required', 'integer', 'exists:expenses_types,id'],
-            'expensedate'    => ['required', 'date'],
-            'amount'         => ['required', 'numeric', 'min:0.01'],
-
-            'recipientname'       => ['required', 'string', 'max:255'],
-            'recipientphone'      => ['nullable', 'string', 'max:50'],
-            'recipientnationalid' => ['nullable', 'string', 'max:100'],
-
+            'branchid'              => ['required', 'integer', 'exists:branches,id'],
+            'expensestypeid'        => ['required', 'integer', 'exists:expenses_types,id'],
+            'expensedate'           => ['required', 'date'],
+            'amount'                => ['required', 'numeric', 'min:0.01'],
+            'recipientname'         => ['required', 'string', 'max:255'],
+            'recipientphone'        => ['nullable', 'string', 'max:50'],
+            'recipientnationalid'   => ['nullable', 'string', 'max:100'],
             'disbursedbyemployeeid' => ['nullable', 'integer', 'exists:employees,id'],
-
-            'description' => ['nullable', 'string'],
-            'notes'       => ['nullable', 'string'],
-
-            // iscancelled لا نفتحها في الإنشاء عادة
+            'description'           => ['nullable', 'string'],
+            'notes'                 => ['nullable', 'string'],
         ]);
 
-        $branchId = (int) $request->branchid;
-        $employeeId = $request->disbursedbyemployeeid ? (int) $request->disbursedbyemployeeid : null;
+        $branchId   = (int)$request->branchid;
+        $employeeId = $request->disbursedbyemployeeid ? (int)$request->disbursedbyemployeeid : null;
 
-        // 2 + 5) القائم بالصرف من نفس الفرع
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return redirect()->back()->withInput()->with('error', trans('accounting.branch_not_allowed'));
+        }
+
         if (!$this->employeeBelongsToBranch($employeeId, $branchId)) {
             return redirect()->back()->withInput()->with('error', trans('accounting.employee_not_in_branch'));
         }
 
-        // 1) منع اختيار نوع غير نشط (تحقق إضافي)
         $typeIsActive = ExpensesType::where('id', (int)$request->expensestypeid)->where('status', 1)->exists();
         if (!$typeIsActive) {
             return redirect()->back()->withInput()->with('error', trans('accounting.expense_type_inactive'));
@@ -84,27 +128,21 @@ class expensescontroller extends Controller
         DB::beginTransaction();
         try {
             Expense::create([
-                'branchid'       => $branchId,
-                'expensestypeid' => (int) $request->expensestypeid,
-                'expensedate'    => $request->expensedate,
-                'amount'         => $request->amount,
-
-                'recipientname'       => trim((string) $request->recipientname),
-                'recipientphone'      => $request->recipientphone ? trim((string) $request->recipientphone) : null,
-                'recipientnationalid' => $request->recipientnationalid ? trim((string) $request->recipientnationalid) : null,
-
+                'branchid'              => $branchId,
+                'expensestypeid'        => (int)$request->expensestypeid,
+                'expensedate'           => $request->expensedate,
+                'amount'                => $request->amount,
+                'recipientname'         => trim((string)$request->recipientname),
+                'recipientphone'        => $request->recipientphone        ? trim((string)$request->recipientphone)        : null,
+                'recipientnationalid'   => $request->recipientnationalid   ? trim((string)$request->recipientnationalid)   : null,
                 'disbursedbyemployeeid' => $employeeId,
-
-                'description' => $request->description,
-                'notes'       => $request->notes,
-
-                // 3) بديل status
-                'iscancelled' => false,
-                'cancelledat' => null,
-                'cancelledby' => null,
-
-                'useradd'    => Auth::check() ? Auth::user()->id : null,
-                'userupdate' => null,
+                'description'           => $request->description,
+                'notes'                 => $request->notes,
+                'iscancelled'           => false,
+                'cancelledat'           => null,
+                'cancelledby'           => null,
+                'useradd'               => Auth::check() ? Auth::user()->id : null,
+                'userupdate'            => null,
             ]);
 
             DB::commit();
@@ -115,77 +153,67 @@ class expensescontroller extends Controller
         }
     }
 
-    public function show($id)
-    {
-        return redirect()->route('expenses.index');
-    }
+    public function show($id)  { return redirect()->route('expenses.index'); }
+    public function edit($id)  { return redirect()->route('expenses.index'); }
 
-    public function edit($id)
-    {
-        return redirect()->route('expenses.index');
-    }
+    // ─────────────────────────────────────────────────────────────
+    // Update
+    // ─────────────────────────────────────────────────────────────
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'id'            => ['required', 'integer', 'exists:expenses,id'],
-            'branchid'       => ['required', 'integer', 'exists:branches,id'],
-            'expensestypeid' => ['required', 'integer', 'exists:expenses_types,id'],
-            'expensedate'    => ['required', 'date'],
-            'amount'         => ['required', 'numeric', 'min:0.01'],
-
-            'recipientname'       => ['required', 'string', 'max:255'],
-            'recipientphone'      => ['nullable', 'string', 'max:50'],
-            'recipientnationalid' => ['nullable', 'string', 'max:100'],
-
+            'id'                    => ['required', 'integer', 'exists:expenses,id'],
+            'branchid'              => ['required', 'integer', 'exists:branches,id'],
+            'expensestypeid'        => ['required', 'integer', 'exists:expenses_types,id'],
+            'expensedate'           => ['required', 'date'],
+            'amount'                => ['required', 'numeric', 'min:0.01'],
+            'recipientname'         => ['required', 'string', 'max:255'],
+            'recipientphone'        => ['nullable', 'string', 'max:50'],
+            'recipientnationalid'   => ['nullable', 'string', 'max:100'],
             'disbursedbyemployeeid' => ['nullable', 'integer', 'exists:employees,id'],
-
-            'description' => ['nullable', 'string'],
-            'notes'       => ['nullable', 'string'],
-
-            // 3) ملغي
-            'iscancelled' => ['nullable', 'boolean'],
+            'description'           => ['nullable', 'string'],
+            'notes'                 => ['nullable', 'string'],
+            'iscancelled'           => ['nullable', 'boolean'],
         ]);
 
-        $Expense = Expense::findOrFail((int) $request->id);
+        $Expense    = Expense::findOrFail((int)$request->id);
+        $branchId   = (int)$request->branchid;
+        $employeeId = $request->disbursedbyemployeeid ? (int)$request->disbursedbyemployeeid : null;
 
-        $branchId = (int) $request->branchid;
-        $employeeId = $request->disbursedbyemployeeid ? (int) $request->disbursedbyemployeeid : null;
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return redirect()->back()->withInput()->with('error', trans('accounting.branch_not_allowed'));
+        }
 
         if (!$this->employeeBelongsToBranch($employeeId, $branchId)) {
             return redirect()->back()->withInput()->with('error', trans('accounting.employee_not_in_branch'));
         }
 
-        // منع اختيار نوع غير نشط
         $typeIsActive = ExpensesType::where('id', (int)$request->expensestypeid)->where('status', 1)->exists();
         if (!$typeIsActive) {
             return redirect()->back()->withInput()->with('error', trans('accounting.expense_type_inactive'));
         }
 
-        $isCancelled = (bool) $request->iscancelled;
+        $isCancelled = (bool)$request->iscancelled;
 
         DB::beginTransaction();
         try {
             $Expense->update([
-                'branchid'       => $branchId,
-                'expensestypeid' => (int) $request->expensestypeid,
-                'expensedate'    => $request->expensedate,
-                'amount'         => $request->amount,
-
-                'recipientname'       => trim((string) $request->recipientname),
-                'recipientphone'      => $request->recipientphone ? trim((string) $request->recipientphone) : null,
-                'recipientnationalid' => $request->recipientnationalid ? trim((string) $request->recipientnationalid) : null,
-
+                'branchid'              => $branchId,
+                'expensestypeid'        => (int)$request->expensestypeid,
+                'expensedate'           => $request->expensedate,
+                'amount'                => $request->amount,
+                'recipientname'         => trim((string)$request->recipientname),
+                'recipientphone'        => $request->recipientphone        ? trim((string)$request->recipientphone)        : null,
+                'recipientnationalid'   => $request->recipientnationalid   ? trim((string)$request->recipientnationalid)   : null,
                 'disbursedbyemployeeid' => $employeeId,
-
-                'description' => $request->description,
-                'notes'       => $request->notes,
-
-                'iscancelled' => $isCancelled,
-                'cancelledat' => $isCancelled ? ($Expense->cancelledat ?? Carbon::now()) : null,
-                'cancelledby' => $isCancelled ? (Auth::check() ? Auth::user()->id : null) : null,
-
-                'userupdate' => Auth::check() ? Auth::user()->id : null,
+                'description'           => $request->description,
+                'notes'                 => $request->notes,
+                'iscancelled'           => $isCancelled,
+                'cancelledat'           => $isCancelled ? ($Expense->cancelledat ?? Carbon::now()) : null,
+                'cancelledby'           => $isCancelled ? (Auth::check() ? Auth::user()->id : null) : null,
+                'userupdate'            => Auth::check() ? Auth::user()->id : null,
             ]);
 
             DB::commit();
@@ -196,6 +224,10 @@ class expensescontroller extends Controller
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Destroy
+    // ─────────────────────────────────────────────────────────────
+
     public function destroy(Request $request, $id)
     {
         $request->validate([
@@ -204,8 +236,7 @@ class expensescontroller extends Controller
 
         DB::beginTransaction();
         try {
-            $Expense = Expense::findOrFail((int) $request->id);
-            $Expense->delete();
+            Expense::findOrFail((int)$request->id)->delete();
 
             DB::commit();
             return redirect()->back()->with('success', trans('accounting.deleted_success'));
@@ -215,32 +246,33 @@ class expensescontroller extends Controller
         }
     }
 
-    // AJAX: employees by branch
+    // ─────────────────────────────────────────────────────────────
+    // AJAX
+    // ─────────────────────────────────────────────────────────────
+
     public function ajaxEmployeesByBranch(Request $request)
     {
         $request->validate([
             'branchid' => ['required', 'integer', 'exists:branches,id'],
         ]);
 
-        $branchId = (int) $request->branchid;
+        $branchId = (int)$request->branchid;
+
+        // ✅ منع جلب موظفي فرع لا يملكه المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return response()->json(['ok' => false, 'data' => []]);
+        }
 
         $rows = Employee::query()
-            ->whereHas('branches', function ($q) use ($branchId) {
-                $q->where('branches.id', $branchId);
-            })
+            ->whereHas('branches', fn($q) => $q->where('branches.id', $branchId))
             ->orderByDesc('id')
             ->get()
-            ->map(function ($e) {
-                return [
-                    'id' => (int) $e->id,
-                    'text' => $e->full_name ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? '')),
-                ];
-            })
+            ->map(fn($e) => [
+                'id'   => (int)$e->id,
+                'text' => $e->full_name ?? trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? '')),
+            ])
             ->values();
 
-        return response()->json([
-            'ok' => true,
-            'data' => $rows,
-        ]);
+        return response()->json(['ok' => true, 'data' => $rows]);
     }
 }

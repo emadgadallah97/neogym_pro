@@ -17,25 +17,21 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class attendances_reportcontroller extends Controller
 {
+
     public function index(Request $request)
     {
-        // Unified actions (print / export / metrics)
         $action = (string)$request->get('action', '');
 
-        // Backward compatibility: ?print=1
         if (!$request->ajax() && (int)$request->get('print', 0) === 1) {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'print') {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'export_excel') {
             return $this->exportExcel($request);
         }
 
-        // Defaults (current month)
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
@@ -46,19 +42,19 @@ class attendances_reportcontroller extends Controller
             ]);
         }
 
-        // Ajax endpoints
         if ($request->ajax()) {
             if ($action === 'metrics') {
                 return response()->json($this->computeKpis($request));
             }
-
             return $this->datatable($request);
         }
 
-        $branches = Branch::query()
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branches = Branch::withoutGlobalScopes()
             ->select('id', 'name')
             ->whereNull('deleted_at')
-            ->orderByDesc('id')
+            ->where('status', 1)
+            ->orderBy('id')
             ->get();
 
         $users = User::query()
@@ -66,23 +62,21 @@ class attendances_reportcontroller extends Controller
             ->orderBy('name')
             ->get();
 
-        // We will load KPIs by AJAX after applying filters (like the old report UI)
         $kpis = [
-            'total' => 0,
+            'total'          => 0,
             'unique_members' => 0,
-            'cancelled' => 0,
-            'not_cancelled' => 0,
-            'manual' => 0,
-            'barcode' => 0,
-            'branches_used' => 0,
-            'guests_total' => 0,
+            'cancelled'      => 0,
+            'not_cancelled'  => 0,
+            'manual'         => 0,
+            'barcode'        => 0,
+            'branches_used'  => 0,
+            'guests_total'   => 0,
         ];
 
-        // خيارات مترجمة للفلاتر (القيم = مفاتيح ثابتة، والـ label مترجم)
         $filterOptions = [
             'member_statuses' => $this->memberStatusOptions(),
             'checkin_methods' => $this->checkinMethodOptions(),
-            'day_keys' => $this->dayKeyOptions(),
+            'day_keys'        => $this->dayKeyOptions(),
         ];
 
         return view('reports.attendances_report.index', [
@@ -475,18 +469,14 @@ class attendances_reportcontroller extends Controller
 
         $kpis = $this->computeKpis($request);
 
-        $settings = GeneralSetting::query()
-            ->where('status', 1)
-            ->first();
-
-        $orgName = '-';
+        $settings = GeneralSetting::query()->where('status', 1)->first();
+        $orgName  = '-';
         if ($settings) {
-            if (method_exists($settings, 'getTranslation')) {
-                $orgName = $settings->getTranslation('name', app()->getLocale())
-                    ?: ($settings->getTranslation('name', 'ar') ?: $settings->getTranslation('name', 'en'));
-            } else {
-                $orgName = $settings->name ?? '-';
-            }
+            $orgName = method_exists($settings, 'getTranslation')
+                ? ($settings->getTranslation('name', app()->getLocale())
+                    ?: ($settings->getTranslation('name', 'ar')
+                        ?: $settings->getTranslation('name', 'en')))
+                : ($settings->name ?? '-');
         }
 
         $chips = [];
@@ -497,31 +487,23 @@ class attendances_reportcontroller extends Controller
         }
 
         if (!empty((array)$request->get('branch_ids', []))) {
-            $branchNames = Branch::query()
+            // ✅ كل الفروع بغض النظر عن GlobalScope
+            $branchNames = Branch::withoutGlobalScopes()
                 ->whereIn('id', array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', [])))))
                 ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
+                ->map(fn($b) => method_exists($b, 'getTranslation')
+                    ? $b->getTranslation('name', app()->getLocale())
+                    : ($b->name ?? ''))
                 ->filter()
                 ->values()
                 ->implode('، ');
+
             $chips[] = __('reports.att_filter_branches') . ': ' . ($branchNames ?: '---');
         }
 
-        if ($request->filled('member_term')) {
-            $chips[] = __('reports.att_filter_member') . ': ' . $request->get('member_term');
-        }
-
-        if ($request->filled('member_status')) {
-            $chips[] = __('reports.att_filter_member_status') . ': ' .
-                $this->translateMemberStatus($request->get('member_status'));
-        }
-
-        if ($request->filled('checkin_method')) {
-            $chips[] = __('reports.att_filter_method') . ': ' .
-                $this->translateCheckinMethod($request->get('checkin_method'));
-        }
+        if ($request->filled('member_term'))    $chips[] = __('reports.att_filter_member')        . ': ' . $request->get('member_term');
+        if ($request->filled('member_status'))  $chips[] = __('reports.att_filter_member_status') . ': ' . $this->translateMemberStatus($request->get('member_status'));
+        if ($request->filled('checkin_method')) $chips[] = __('reports.att_filter_method')        . ': ' . $this->translateCheckinMethod($request->get('checkin_method'));
 
         if ($request->filled('is_cancelled')) {
             $chips[] = __('reports.att_filter_cancelled') . ': ' .
@@ -536,21 +518,10 @@ class attendances_reportcontroller extends Controller
             $chips[] = __('reports.att_filter_recorded_by') . ': ' . ($userNames ?: '---');
         }
 
-        if ($request->filled('device_id')) {
-            $chips[] = __('reports.att_filter_device') . ': ' . $request->get('device_id');
-        }
-
-        if ($request->filled('gate_id')) {
-            $chips[] = __('reports.att_filter_gate') . ': ' . $request->get('gate_id');
-        }
-
-        if ($request->filled('day_key')) {
-            $chips[] = __('reports.att_filter_day_key') . ': ' . $this->translateDayKey($request->get('day_key'));
-        }
-
-        if ($request->filled('notes')) {
-            $chips[] = __('reports.att_filter_notes') . ': ' . $request->get('notes');
-        }
+        if ($request->filled('device_id')) $chips[] = __('reports.att_filter_device')  . ': ' . $request->get('device_id');
+        if ($request->filled('gate_id'))   $chips[] = __('reports.att_filter_gate')    . ': ' . $request->get('gate_id');
+        if ($request->filled('day_key'))   $chips[] = __('reports.att_filter_day_key') . ': ' . $this->translateDayKey($request->get('day_key'));
+        if ($request->filled('notes'))     $chips[] = __('reports.att_filter_notes')   . ': ' . $request->get('notes');
 
         $meta = [
             'title'        => __('reports.attendances_report_title'),
@@ -566,6 +537,7 @@ class attendances_reportcontroller extends Controller
             'rows'  => $rows,
         ]);
     }
+
 
     private function exportExcel(Request $request)
     {
@@ -897,7 +869,7 @@ class attendances_reportcontroller extends Controller
         ];
         if (isset($shortToFull[$k])) return $shortToFull[$k];
 
-        if (in_array($k, ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'], true)) {
+        if (in_array($k, ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'], true)) {
             return $k;
         }
 
@@ -958,7 +930,7 @@ class attendances_reportcontroller extends Controller
     private function dayKeyOptions(): array
     {
         // values are canonical keys to match DB (monday..sunday)
-        $days = ['saturday','sunday','monday','tuesday','wednesday','thursday','friday'];
+        $days = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
         $out = [];
         foreach ($days as $d) {

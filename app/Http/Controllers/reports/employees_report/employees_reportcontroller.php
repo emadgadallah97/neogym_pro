@@ -19,10 +19,8 @@ class employees_reportcontroller extends Controller
 {
     public function index(Request $request)
     {
-        // Unified actions (print / export / metrics)
         $action = (string)$request->get('action', '');
 
-        // Backward compatibility: ?print=1
         if (!$request->ajax() && (int)$request->get('print', 0) === 1) {
             return $this->print($request);
         }
@@ -35,19 +33,19 @@ class employees_reportcontroller extends Controller
             return $this->exportExcel($request);
         }
 
-        // Ajax endpoints
         if ($request->ajax()) {
             if ($action === 'metrics') {
                 return response()->json($this->computeKpis($request));
             }
-
             return $this->datatable($request);
         }
 
-        $branches = Branch::query()
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branches = Branch::withoutGlobalScopes()
             ->select('id', 'name')
             ->whereNull('deleted_at')
-            ->orderByDesc('id')
+            ->where('status', 1)
+            ->orderBy('id')
             ->get();
 
         $jobs = Job::query()
@@ -56,61 +54,53 @@ class employees_reportcontroller extends Controller
             ->orderByDesc('id')
             ->get();
 
-        // We will load KPIs by AJAX after applying filters
         $kpis = [
-            'total' => 0,
-            'active' => 0,
-            'inactive' => 0,
-            'coaches' => 0,
-            'male' => 0,
-            'female' => 0,
-            'jobs_used' => 0,
-            'branches_used' => 0,
+            'total'           => 0,
+            'active'          => 0,
+            'inactive'        => 0,
+            'coaches'         => 0,
+            'male'            => 0,
+            'female'          => 0,
+            'jobs_used'       => 0,
+            'branches_used'   => 0,
             'avg_base_salary' => 0,
         ];
 
         $filterOptions = [
-            'statuses' => $this->statusOptions(),
-            'genders' => $this->genderOptions(),
-            'coach_flags' => $this->coachOptions(),
-
-            // IMPORTANT: values are canonical DB values, labels are translated
-            'compensation_types' => $this->compensationTypeOptions(),
+            'statuses'               => $this->statusOptions(),
+            'genders'                => $this->genderOptions(),
+            'coach_flags'            => $this->coachOptions(),
+            'compensation_types'     => $this->compensationTypeOptions(),
             'commission_value_types' => $this->commissionValueTypeOptions(),
             'salary_transfer_methods' => $this->salaryTransferMethodOptions(),
         ];
 
         return view('reports.employees_report.index', [
             'branches' => $branches,
-            'jobs' => $jobs,
-            'kpis' => $kpis,
-            'filters' => [
-                'employee_term' => $request->get('employee_term'),
-                'branch_ids' => (array)$request->get('branch_ids', []),
-                'job_id' => $request->get('job_id'),
-
-                'status' => $request->get('status'),
-                'gender' => $request->get('gender'),
-                'is_coach' => $request->get('is_coach'),
-
-                'compensation_type' => $request->get('compensation_type'),
-                'commission_value_type' => $request->get('commission_value_type'),
+            'jobs'     => $jobs,
+            'kpis'     => $kpis,
+            'filters'  => [
+                'employee_term'          => $request->get('employee_term'),
+                'branch_ids'             => (array)$request->get('branch_ids', []),
+                'job_id'                 => $request->get('job_id'),
+                'status'                 => $request->get('status'),
+                'gender'                 => $request->get('gender'),
+                'is_coach'               => $request->get('is_coach'),
+                'compensation_type'      => $request->get('compensation_type'),
+                'commission_value_type'  => $request->get('commission_value_type'),
                 'salary_transfer_method' => $request->get('salary_transfer_method'),
-
-                'birth_date_from' => $request->get('birth_date_from'),
-                'birth_date_to' => $request->get('birth_date_to'),
-
-                'years_exp_from' => $request->get('years_exp_from'),
-                'years_exp_to' => $request->get('years_exp_to'),
-
-                'base_salary_from' => $request->get('base_salary_from'),
-                'base_salary_to' => $request->get('base_salary_to'),
-
-                'specialization' => $request->get('specialization'),
+                'birth_date_from'        => $request->get('birth_date_from'),
+                'birth_date_to'          => $request->get('birth_date_to'),
+                'years_exp_from'         => $request->get('years_exp_from'),
+                'years_exp_to'           => $request->get('years_exp_to'),
+                'base_salary_from'       => $request->get('base_salary_from'),
+                'base_salary_to'         => $request->get('base_salary_to'),
+                'specialization'         => $request->get('specialization'),
             ],
             'filterOptions' => $filterOptions,
         ]);
     }
+
 
     private function datatable(Request $request)
     {
@@ -467,18 +457,15 @@ class employees_reportcontroller extends Controller
 
         $kpis = $this->computeKpis($request);
 
-        $settings = GeneralSetting::query()
-            ->where('status', 1)
-            ->first();
+        $settings = GeneralSetting::query()->where('status', 1)->first();
 
         $orgName = '-';
         if ($settings) {
-            if (method_exists($settings, 'getTranslation')) {
-                $orgName = $settings->getTranslation('name', app()->getLocale())
-                    ?: ($settings->getTranslation('name', 'ar') ?: $settings->getTranslation('name', 'en'));
-            } else {
-                $orgName = $settings->name ?? '-';
-            }
+            $orgName = method_exists($settings, 'getTranslation')
+                ? ($settings->getTranslation('name', app()->getLocale())
+                    ?: ($settings->getTranslation('name', 'ar')
+                        ?: $settings->getTranslation('name', 'en')))
+                : ($settings->name ?? '-');
         }
 
         $chips = [];
@@ -489,38 +476,36 @@ class employees_reportcontroller extends Controller
 
         if (!empty((array)$request->get('branch_ids', []))) {
             $ids = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
-            $branchNames = Branch::query()
+
+            // ✅ كل الفروع بغض النظر عن GlobalScope
+            $branchNames = Branch::withoutGlobalScopes()
                 ->whereIn('id', $ids)
                 ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
+                ->map(fn($b) => method_exists($b, 'getTranslation')
+                    ? $b->getTranslation('name', app()->getLocale())
+                    : ($b->name ?? ''))
                 ->filter()
                 ->values()
                 ->implode('، ');
+
             $chips[] = __('reports.emp_filter_branches') . ': ' . ($branchNames ?: '---');
         }
 
         if ($request->filled('job_id')) {
             $job = Job::query()->where('id', (int)$request->get('job_id'))->first();
-            $jn = '-';
+            $jn  = '-';
             if ($job) {
-                $jn = method_exists($job, 'getTranslation') ? $job->getTranslation('name', app()->getLocale()) : ($job->name ?? '-');
+                $jn = method_exists($job, 'getTranslation')
+                    ? $job->getTranslation('name', app()->getLocale())
+                    : ($job->name ?? '-');
             }
             $chips[] = __('reports.emp_filter_job') . ': ' . ($jn ?: '---');
         }
 
-        if ($request->filled('status')) {
-            $chips[] = __('reports.emp_filter_status') . ': ' . $this->translateStatus($request->get('status'));
-        }
-        if ($request->filled('gender')) {
-            $chips[] = __('reports.emp_filter_gender') . ': ' . $this->translateGender($request->get('gender'));
-        }
-        if ($request->filled('is_coach')) {
-            $chips[] = __('reports.emp_filter_is_coach') . ': ' . $this->translateCoachFlag($request->get('is_coach'));
-        }
+        if ($request->filled('status'))  $chips[] = __('reports.emp_filter_status')  . ': ' . $this->translateStatus($request->get('status'));
+        if ($request->filled('gender'))  $chips[] = __('reports.emp_filter_gender')  . ': ' . $this->translateGender($request->get('gender'));
+        if ($request->filled('is_coach')) $chips[] = __('reports.emp_filter_is_coach') . ': ' . $this->translateCoachFlag($request->get('is_coach'));
 
-        // show translated labels, but filters are on original values
         if ($request->filled('compensation_type')) {
             $chips[] = __('reports.emp_filter_compensation_type') . ': ' . $this->translateCompensationType($request->get('compensation_type'));
         }
@@ -549,19 +534,20 @@ class employees_reportcontroller extends Controller
         }
 
         $meta = [
-            'title' => __('reports.employees_report_title'),
-            'org_name' => $orgName,
+            'title'        => __('reports.employees_report_title'),
+            'org_name'     => $orgName,
             'generated_at' => now('Africa/Cairo')->format('Y-m-d H:i'),
-            'total_count' => $rows->count(),
+            'total_count'  => $rows->count(),
         ];
 
         return view('reports.employees_report.print', [
-            'meta' => $meta,
+            'meta'  => $meta,
             'chips' => $chips,
-            'kpis' => $kpis,
-            'rows' => $rows,
+            'kpis'  => $kpis,
+            'rows'  => $rows,
         ]);
     }
+
 
     private function exportExcel(Request $request)
     {

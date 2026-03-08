@@ -220,4 +220,7 @@ return [
   'commissions_select_expense_type' => 'اختر نوع المصروف',
   'commissions_select_branch' => 'اختر الفرع',
   'commissions_select_disbursed_by' => 'القائم بالصرف (اختياري)',
+  'expenses_desc'      => 'تسجيل ومتابعة مصروفات المنشأة وتصنيفها',
+'income_desc'        => 'متابعة إيرادات المنشأة من مختلف المصادر',
+'commissions_desc'   => 'إدارة العمولات وتوزيعها على الموظفين ',
 ];

@@ -23,7 +23,6 @@ class pt_addons_reportcontroller extends Controller
         if (!$request->ajax() && $action === 'print') {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'export_excel') {
             return $this->exportExcel($request);
         }
@@ -32,18 +31,18 @@ class pt_addons_reportcontroller extends Controller
             if ($action === 'metrics') {
                 return response()->json($this->computeKpis($request));
             }
-
             if ($action === 'group') {
                 return response()->json($this->groupSummary($request));
             }
-
             return $this->datatable($request);
         }
 
-        $branches = Branch::query()
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branches = Branch::withoutGlobalScopes()
             ->select('id', 'name')
             ->whereNull('deleted_at')
-            ->orderByDesc('id')
+            ->where('status', 1)
+            ->orderBy('id')
             ->get();
 
         $trainers = DB::table('employees as e')
@@ -68,56 +67,47 @@ class pt_addons_reportcontroller extends Controller
             ->pluck('ms.source')
             ->toArray();
 
-        // UPDATED: Removed payment-related KPIs
         $kpis = [
-            'addons_count' => 0,
-            'total_amount_sum' => 0,
-            'sessions_total_sum' => 0,
-            'sessions_used_sum' => 0,
+            'addons_count'           => 0,
+            'total_amount_sum'       => 0,
+            'sessions_total_sum'     => 0,
+            'sessions_used_sum'      => 0,
             'sessions_remaining_sum' => 0,
-            'unique_subscriptions' => 0,
-            'unique_members' => 0,
+            'unique_subscriptions'   => 0,
+            'unique_members'         => 0,
         ];
 
-        // UPDATED: Removed payment filters (payment_state, payment_status)
         $filters = [
-            'date_from' => $request->get('date_from'),
-            'date_to' => $request->get('date_to'),
-
-            'branch_ids' => (array)$request->get('branch_ids', []),
-
-            'trainer_id' => $request->get('trainer_id'),
-            'member_id' => $request->get('member_id'),
+            'date_from'              => $request->get('date_from'),
+            'date_to'                => $request->get('date_to'),
+            'branch_ids'             => (array)$request->get('branch_ids', []),
+            'trainer_id'             => $request->get('trainer_id'),
+            'member_id'              => $request->get('member_id'),
             'member_subscription_id' => $request->get('member_subscription_id'),
-
-            'source' => $request->get('source'),
-
-            'only_remaining' => $request->get('only_remaining', '0'),
-
-            'sessions_from' => $request->get('sessions_from'),
-            'sessions_to' => $request->get('sessions_to'),
-
-            'amount_from' => $request->get('amount_from'),
-            'amount_to' => $request->get('amount_to'),
-
-            'group_by' => $request->get('group_by', 'trainer'),
+            'source'                 => $request->get('source'),
+            'only_remaining'         => $request->get('only_remaining', '0'),
+            'sessions_from'          => $request->get('sessions_from'),
+            'sessions_to'            => $request->get('sessions_to'),
+            'amount_from'            => $request->get('amount_from'),
+            'amount_to'              => $request->get('amount_to'),
+            'group_by'               => $request->get('group_by', 'trainer'),
         ];
 
-        // UPDATED: Removed payment_states, payment_statuses
         $filterOptions = [
-            'yes_no' => $this->yesNoOptions(),
+            'yes_no'   => $this->yesNoOptions(),
             'group_by' => $this->groupByOptions(),
-            'sources' => $sources,
+            'sources'  => $sources,
         ];
 
         return view('reports.pt_addons_report.index', [
-            'branches' => $branches,
-            'trainers' => $trainers,
-            'kpis' => $kpis,
-            'filters' => $filters,
+            'branches'      => $branches,
+            'trainers'      => $trainers,
+            'kpis'          => $kpis,
+            'filters'       => $filters,
             'filterOptions' => $filterOptions,
         ]);
     }
+
 
     // ===================== Datatable =====================
 
@@ -697,36 +687,39 @@ class pt_addons_reportcontroller extends Controller
         $chips = [];
 
         if ($request->filled('date_from') || $request->filled('date_to')) {
-            $chips[] = ($this->tr('reports.pt_filter_date', 'الفترة')) . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_date', 'الفترة')) . ': ' .
+                ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
         }
 
         $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
         if (!empty($branchIds)) {
-            $branchNames = Branch::query()
+            // ✅ كل الفروع بغض النظر عن GlobalScope
+            $branchNames = Branch::withoutGlobalScopes()
                 ->whereIn('id', $branchIds)
                 ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
+                ->map(fn($b) => method_exists($b, 'getTranslation')
+                    ? $b->getTranslation('name', app()->getLocale())
+                    : ($b->name ?? ''))
                 ->filter()
                 ->values()
                 ->implode('، ');
+
             $chips[] = ($this->tr('reports.pt_filter_branches', 'الفروع')) . ': ' . ($branchNames ?: '---');
         }
 
-        foreach ([
-            'trainer_id' => 'pt_filter_trainer',
-            'member_id' => 'pt_filter_member',
-            'member_subscription_id' => 'pt_filter_subscription',
-            'source' => 'pt_filter_source',
-        ] as $key => $labelKey) {
+        foreach (
+            [
+                'trainer_id'             => 'pt_filter_trainer',
+                'member_id'              => 'pt_filter_member',
+                'member_subscription_id' => 'pt_filter_subscription',
+                'source'                 => 'pt_filter_source',
+            ] as $key => $labelKey
+        ) {
             if ($request->filled($key)) {
                 $val = $request->get($key);
-
                 if ($key === 'source') {
                     $val = $this->sourceValueLabel((string)$val);
                 }
-
                 $chips[] = ($this->tr('reports.' . $labelKey, $key)) . ': ' . $val;
             }
         }
@@ -739,11 +732,13 @@ class pt_addons_reportcontroller extends Controller
         }
 
         if ($request->filled('sessions_from') || $request->filled('sessions_to')) {
-            $chips[] = ($this->tr('reports.pt_filter_sessions', 'الحصص')) . ': ' . ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_sessions', 'الحصص')) . ': ' .
+                ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
         }
 
         if ($request->filled('amount_from') || $request->filled('amount_to')) {
-            $chips[] = ($this->tr('reports.pt_filter_amount', 'القيمة')) . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
+            $chips[] = ($this->tr('reports.pt_filter_amount', 'القيمة')) . ': ' .
+                ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
         }
 
         if ($request->filled('group_by')) {
@@ -752,6 +747,7 @@ class pt_addons_reportcontroller extends Controller
 
         return $chips;
     }
+
 
     // ===================== Options =====================
 

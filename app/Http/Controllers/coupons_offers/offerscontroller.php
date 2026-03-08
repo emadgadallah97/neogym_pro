@@ -151,20 +151,34 @@ class offerscontroller extends Controller
 
     public function show($id)
     {
-        $Offer = Offer::with(['plans', 'types', 'branches', 'durations'])->findOrFail($id);
+        $Offer = Offer::with([
+            'plans',
+            'types',
+            // ✅ withoutGlobalScope لعرض كل الفروع المرتبطة بالعرض
+            'branches'  => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'durations',
+        ])->findOrFail($id);
+
         return view('coupons_offers.offers.show', compact('Offer'));
     }
 
     public function edit($id)
     {
-        $Offer = Offer::with(['plans', 'types', 'branches', 'durations'])->findOrFail($id);
+        $Offer = Offer::with([
+            'plans',
+            'types',
+            // ✅ withoutGlobalScope لعرض الفروع المحددة مسبقاً في العرض
+            'branches'  => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'durations',
+        ])->findOrFail($id);
 
-        $Plans = $this->activePlansList();
-        $Types = $this->activeTypesList();
-        $Branches = $this->activeBranchesList();
+        $Plans    = $this->activePlansList();  // ✅ DB::table يتجاوز الـ Scope
+        $Types    = $this->activeTypesList();  // ✅ DB::table يتجاوز الـ Scope
+        $Branches = $this->activeBranchesList(); // ✅ DB::table يتجاوز الـ Scope
 
         return view('coupons_offers.offers.edit', compact('Offer', 'Plans', 'Types', 'Branches'));
     }
+
 
     public function update(OfferRequest $request, $id)
     {

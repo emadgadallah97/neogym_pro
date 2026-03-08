@@ -25,17 +25,26 @@ class memberscontroller extends Controller
     {
         $this->autoUnfreezeExpiredMembers();
 
-        $Members = Member::with(['branch'])
+        // ✅ عرض كل الأعضاء مع فروعهم بدون قيد
+        $Members = Member::with([
+            'branch' => function ($q) {
+                $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class);
+            },
+        ])->orderByDesc('id')->get();
+
+        // ✅ كل الفروع للقوائم المنسدلة (إضافة/تعديل/فلتر)
+        $Branches = Branch::withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class)
+            ->where('status', 1)
             ->orderByDesc('id')
             ->get();
 
-        $Branches = Branch::orderByDesc('id')->get();
         $Governments = \App\models\government::orderByDesc('id')->get();
-        $Cities = \App\models\City::orderByDesc('id')->get();
-        $Areas = \App\models\area::orderByDesc('id')->get();
+        $Cities      = \App\models\City::orderByDesc('id')->get();
+        $Areas       = \App\models\area::orderByDesc('id')->get();
 
         return view('members.index', compact('Members', 'Branches', 'Governments', 'Cities', 'Areas'));
     }
+
 
     public function store(Request $request)
     {
@@ -120,7 +129,16 @@ class memberscontroller extends Controller
 
     public function show(Request $request, $id)
     {
-        $member = Member::with(['branch', 'government', 'city', 'area'])->findOrFail($id);
+        // ✅ جلب بيانات الفرع بدون قيد لضمان ظهور اسمه بغض النظر عن فرع المستخدم
+        $member = Member::with([
+            'branch' => function ($q) {
+                $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class);
+            },
+            'government',
+            'city',
+            'area',
+        ])->findOrFail($id);
+
         $this->autoUnfreezeExpiredMembers();
 
         if ($request->ajax()) {
@@ -132,6 +150,7 @@ class memberscontroller extends Controller
 
         return redirect()->route('members.index');
     }
+
     public function destroy(Request $request, $id)
     {
         $memberId = $request->input('id') ?? $id;

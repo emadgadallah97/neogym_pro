@@ -23,7 +23,6 @@ class sales_reportcontroller extends Controller
         if (!$request->ajax() && $action === 'print') {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'export_excel') {
             return $this->exportExcel($request);
         }
@@ -32,18 +31,18 @@ class sales_reportcontroller extends Controller
             if ($action === 'metrics') {
                 return response()->json($this->computeKpis($request));
             }
-
             if ($action === 'group') {
                 return response()->json($this->groupSummary($request));
             }
-
             return $this->datatable($request);
         }
 
-        $branches = Branch::query()
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branches = Branch::withoutGlobalScopes()
             ->select('id', 'name')
             ->whereNull('deleted_at')
-            ->orderByDesc('id')
+            ->where('status', 1)
+            ->orderBy('id')
             ->get();
 
         $types = DB::table('subscriptions_types as st')
@@ -78,61 +77,54 @@ class sales_reportcontroller extends Controller
             ->toArray();
 
         $kpis = [
-            'subs_count' => 0,
-            'total_sales' => 0,
-            'avg_sale' => 0,
-            'total_discount' => 0,
-            'offer_discount' => 0,
-            'coupon_discount' => 0,
-            'pt_addons_sales' => 0,
+            'subs_count'        => 0,
+            'total_sales'       => 0,
+            'avg_sale'          => 0,
+            'total_discount'    => 0,
+            'offer_discount'    => 0,
+            'coupon_discount'   => 0,
+            'pt_addons_sales'   => 0,
             'offers_used_count' => 0,
             'coupons_used_count' => 0,
         ];
 
         $filters = [
-            'date_from' => $request->get('date_from'),
-            'date_to' => $request->get('date_to'),
-            'branch_ids' => (array)$request->get('branch_ids', []),
-
-            'status' => $request->get('status'),
-            'type_id' => $request->get('type_id'),
-            'plan_id' => $request->get('plan_id'),
-            'source' => $request->get('source'),
+            'date_from'         => $request->get('date_from'),
+            'date_to'           => $request->get('date_to'),
+            'branch_ids'        => (array)$request->get('branch_ids', []),
+            'status'            => $request->get('status'),
+            'type_id'           => $request->get('type_id'),
+            'plan_id'           => $request->get('plan_id'),
+            'source'            => $request->get('source'),
             'sales_employee_id' => $request->get('sales_employee_id'),
-
-            'has_offer' => $request->get('has_offer'),
-            'has_coupon' => $request->get('has_coupon'),
-
-            'amount_from' => $request->get('amount_from'),
-            'amount_to' => $request->get('amount_to'),
-
-            'discount_from' => $request->get('discount_from'),
-            'discount_to' => $request->get('discount_to'),
-
-            // NEW: member search (name/code)
-            'member_q' => $request->get('member_q'),
-
-            'group_by' => $request->get('group_by', 'branch'),
+            'has_offer'         => $request->get('has_offer'),
+            'has_coupon'        => $request->get('has_coupon'),
+            'amount_from'       => $request->get('amount_from'),
+            'amount_to'         => $request->get('amount_to'),
+            'discount_from'     => $request->get('discount_from'),
+            'discount_to'       => $request->get('discount_to'),
+            'member_q'          => $request->get('member_q'),
+            'group_by'          => $request->get('group_by', 'branch'),
         ];
 
         $filterOptions = [
             'statuses' => $this->subscriptionStatusOptions(),
-            'yes_no' => $this->yesNoOptions(),
+            'yes_no'   => $this->yesNoOptions(),
             'group_by' => $this->groupByOptions(),
-            'sources' => $sources,
+            'sources'  => $sources,
         ];
 
         return view('reports.sales_report.index', [
-            'branches' => $branches,
-            'types' => $types,
-            'plans' => $plans,
+            'branches'       => $branches,
+            'types'          => $types,
+            'plans'          => $plans,
             'salesEmployees' => $salesEmployees,
-
-            'kpis' => $kpis,
-            'filters' => $filters,
-            'filterOptions' => $filterOptions,
+            'kpis'           => $kpis,
+            'filters'        => $filters,
+            'filterOptions'  => $filterOptions,
         ]);
     }
+
 
     private function datatable(Request $request)
     {
@@ -161,7 +153,7 @@ class sales_reportcontroller extends Controller
             5 => 'ms.source',          // source
             6 => 'ms.total_discount',  // discounts
             7 => 'ms.total_amount',    // amounts
-            8 => DB::raw("offer_name"),// offer/coupon
+            8 => DB::raw("offer_name"), // offer/coupon
             9 => DB::raw("sales_employee_name"),
             10 => 'ms.id',
         ];
@@ -395,7 +387,7 @@ class sales_reportcontroller extends Controller
                 $like = '%' . $mq . '%';
                 $q->where(function ($w) use ($like, $memberNameExpr) {
                     $w->orWhere('m.member_code', 'like', $like)
-                      ->orWhere(DB::raw("COALESCE($memberNameExpr,'')"), 'like', $like);
+                        ->orWhere(DB::raw("COALESCE($memberNameExpr,'')"), 'like', $like);
                 });
             }
         }
@@ -409,21 +401,21 @@ class sales_reportcontroller extends Controller
         $q->where(function ($w) use ($s, $like, $salesEmployeeNameExpr, $memberNameExpr) {
             if (is_numeric($s)) {
                 $w->orWhere('ms.id', (int)$s)
-                  ->orWhere('ms.member_id', (int)$s)
-                  ->orWhere('ms.branch_id', (int)$s);
+                    ->orWhere('ms.member_id', (int)$s)
+                    ->orWhere('ms.branch_id', (int)$s);
             }
 
             $w->orWhere('ms.plan_code', 'like', $like)
-              ->orWhere('ms.plan_name', 'like', $like)
-              ->orWhere('ms.source', 'like', $like)
-              ->orWhere('ms.status', 'like', $like)
-              ->orWhere(DB::raw("COALESCE(b.name,'')"), 'like', $like)
-              ->orWhere(DB::raw("COALESCE(st.name,'')"), 'like', $like)
-              ->orWhere(DB::raw("COALESCE($salesEmployeeNameExpr,'')"), 'like', $like)
+                ->orWhere('ms.plan_name', 'like', $like)
+                ->orWhere('ms.source', 'like', $like)
+                ->orWhere('ms.status', 'like', $like)
+                ->orWhere(DB::raw("COALESCE(b.name,'')"), 'like', $like)
+                ->orWhere(DB::raw("COALESCE(st.name,'')"), 'like', $like)
+                ->orWhere(DB::raw("COALESCE($salesEmployeeNameExpr,'')"), 'like', $like)
 
-              // NEW: member search in global search too
-              ->orWhere('m.member_code', 'like', $like)
-              ->orWhere(DB::raw("COALESCE($memberNameExpr,'')"), 'like', $like);
+                // NEW: member search in global search too
+                ->orWhere('m.member_code', 'like', $like)
+                ->orWhere(DB::raw("COALESCE($memberNameExpr,'')"), 'like', $like);
         });
     }
 
@@ -840,56 +832,57 @@ class sales_reportcontroller extends Controller
         $chips = [];
 
         if ($request->filled('date_from') || $request->filled('date_to')) {
-            $chips[] = __('reports.sales_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
+            $chips[] = __('reports.sales_filter_date') . ': ' .
+                ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
         }
 
         $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
         if (!empty($branchIds)) {
-            $branchNames = Branch::query()
+            // ✅ كل الفروع بغض النظر عن GlobalScope
+            $branchNames = Branch::withoutGlobalScopes()
                 ->whereIn('id', $branchIds)
                 ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
+                ->map(fn($b) => method_exists($b, 'getTranslation')
+                    ? $b->getTranslation('name', app()->getLocale())
+                    : ($b->name ?? ''))
                 ->filter()
                 ->values()
                 ->implode('، ');
+
             $chips[] = __('reports.sales_filter_branches') . ': ' . ($branchNames ?: '---');
         }
 
-        foreach ([
-            'status' => 'sales_filter_status',
-            'source' => 'sales_filter_source',
-            'sales_employee_id' => 'sales_filter_sales_employee',
-            'member_q' => 'sales_filter_member_q',
-        ] as $key => $labelKey) {
+        foreach (
+            [
+                'status'            => 'sales_filter_status',
+                'source'            => 'sales_filter_source',
+                'sales_employee_id' => 'sales_filter_sales_employee',
+                'member_q'          => 'sales_filter_member_q',
+            ] as $key => $labelKey
+        ) {
             if ($request->filled($key)) {
                 $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
             }
         }
 
-        if ($request->filled('type_id')) {
-            $chips[] = __('reports.sales_filter_type') . ': ' . $request->get('type_id');
-        }
-
-        if ($request->filled('plan_id')) {
-            $chips[] = __('reports.sales_filter_plan') . ': ' . $request->get('plan_id');
-        }
+        if ($request->filled('type_id'))  $chips[] = __('reports.sales_filter_type') . ': ' . $request->get('type_id');
+        if ($request->filled('plan_id'))  $chips[] = __('reports.sales_filter_plan') . ': ' . $request->get('plan_id');
 
         if ($request->filled('has_offer')) {
             $chips[] = __('reports.sales_filter_has_offer') . ': ' . $this->translateYesNo($request->get('has_offer'));
         }
-
         if ($request->filled('has_coupon')) {
             $chips[] = __('reports.sales_filter_has_coupon') . ': ' . $this->translateYesNo($request->get('has_coupon'));
         }
 
         if ($request->filled('amount_from') || $request->filled('amount_to')) {
-            $chips[] = __('reports.sales_filter_amount') . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
+            $chips[] = __('reports.sales_filter_amount') . ': ' .
+                ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
         }
 
         if ($request->filled('discount_from') || $request->filled('discount_to')) {
-            $chips[] = __('reports.sales_filter_discount') . ': ' . ($request->get('discount_from') ?: '---') . ' ⟶ ' . ($request->get('discount_to') ?: '---');
+            $chips[] = __('reports.sales_filter_discount') . ': ' .
+                ($request->get('discount_from') ?: '---') . ' ⟶ ' . ($request->get('discount_to') ?: '---');
         }
 
         if ($request->filled('group_by')) {
@@ -898,6 +891,7 @@ class sales_reportcontroller extends Controller
 
         return $chips;
     }
+
 
     // ================= Options / translations =================
 

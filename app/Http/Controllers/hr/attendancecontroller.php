@@ -19,14 +19,48 @@ use Illuminate\Support\Facades\Log;
 
 class attendancecontroller extends Controller
 {
+    // ─────────────────────────────────────────
+    // Helpers — Branch Access
+    // ─────────────────────────────────────────
+
+    private function accessibleBranchIds(): array
+    {
+        $user = Auth::user();
+        if (!$user->employee_id) return [];
+
+        return DB::table('employee_branch')
+            ->where('employee_id', $user->employee_id)
+            ->pluck('branch_id')
+            ->map(fn($id) => (int)$id)
+            ->toArray();
+    }
+
+    private function userCanAccessBranch(int $branchId): bool
+    {
+        $ids = $this->accessibleBranchIds();
+        return empty($ids) || in_array($branchId, $ids);
+    }
+
+    // ─────────────────────────────────────────
+    // Index
+    // ─────────────────────────────────────────
+
     public function index(Request $request)
     {
+        $branchIds = $this->accessibleBranchIds();
+
+        // ✅ Scope يعمل تلقائياً — فروع المستخدم فقط
         $branches = Branch::where('status', 1)->orderBy('id')->get();
 
-        // Default: daily
-        $mode       = $request->get('mode', 'daily'); // monthly | daily
-        $branchId   = (int)($request->get('branch_id', Auth::user()->branch_id ?? 0));
-        $employeeId = (int)($request->get('employee_id', 0));
+        $mode          = $request->get('mode', 'daily');
+        $defaultBranch = !empty($branchIds) ? $branchIds[0] : 0;
+        $branchId      = (int)($request->get('branch_id', $defaultBranch));
+        $employeeId    = (int)($request->get('employee_id', 0));
+
+        // ✅ التحقق أن الفرع المطلوب ضمن فروع المستخدم
+        if ($branchId > 0 && !$this->userCanAccessBranch($branchId)) {
+            $branchId = $defaultBranch;
+        }
 
         $today = Carbon::today();
         $month = $request->get('month', $today->format('Y-m'));
@@ -43,36 +77,39 @@ class attendancecontroller extends Controller
             : $this->buildMonthlyRows($branchId, $employees, $month);
 
         return view('hr.attendance.index', compact(
-            'branches',
-            'employees',
-            'rows',
-            'mode',
-            'branchId',
-            'employeeId',
-            'month',
-            'date'
+            'branches', 'employees', 'rows',
+            'mode', 'branchId', 'employeeId', 'month', 'date'
         ));
     }
+
+    // ─────────────────────────────────────────
+    // AJAX: Employees by Branch
+    // ─────────────────────────────────────────
 
     public function employeesByBranch(Request $request)
     {
         $branchId = (int)$request->get('branch_id', 0);
+
+        // ✅ منع جلب موظفي فرع لا يملكه المستخدم
+        if ($branchId > 0 && !$this->userCanAccessBranch($branchId)) {
+            return response()->json(['success' => false, 'data' => []]);
+        }
+
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
 
-        $data = $employees->map(function ($e) {
-            return [
-                'id'   => $e->id,
-                'name' => $e->full_name ?? $e->getFullNameAttribute(),
-                'code' => $e->code,
-            ];
-        });
+        $data = $employees->map(fn($e) => [
+            'id'   => $e->id,
+            'name' => $e->full_name ?? $e->getFullNameAttribute(),
+            'code' => $e->code,
+        ]);
 
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     // ─────────────────────────────────────────
-    // Manual CRUD (AJAX)
+    // Store
     // ─────────────────────────────────────────
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -84,19 +121,22 @@ class attendancecontroller extends Controller
             'notes'       => 'nullable|string|max:1000',
         ]);
 
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch((int)$data['branch_id'])) {
+            return response()->json(['success' => false, 'message' => trans('accounting.branch_not_allowed')], 403);
+        }
+
         $employee = employee::findOrFail($data['employee_id']);
 
         if (!$this->isEmployeePrimaryInBranch($employee->id, (int)$data['branch_id'])) {
             return response()->json(['success' => false, 'message' => trans('hr.employee_not_in_branch')], 422);
         }
 
-        // date هنا = تاريخ الدخول (check_in) كما اتفقنا
         $shift = $this->getEmployeeShiftForDate($employee->id, (int)$data['branch_id'], $data['date']);
 
-        $checkInDT  = $data['check_in'] ? Carbon::parse($data['date'] . ' ' . $data['check_in']) : null;
+        $checkInDT  = $data['check_in']  ? Carbon::parse($data['date'] . ' ' . $data['check_in'])  : null;
         $checkOutDT = $data['check_out'] ? Carbon::parse($data['date'] . ' ' . $data['check_out']) : null;
 
-        // ✅ دعم الليلي: تطبيع التاريخ/الوقت للانصراف (قد يكون اليوم التالي)
         [$checkInDT, $checkOutDT] = $this->normalizeCheckTimes($shift, $data['date'], $checkInDT, $checkOutDT);
 
         $attendance = HrAttendance::where('employee_id', $employee->id)
@@ -104,7 +144,7 @@ class attendancecontroller extends Controller
             ->first();
 
         if (!$attendance) {
-            $attendance = new HrAttendance();
+            $attendance              = new HrAttendance();
             $attendance->employee_id = $employee->id;
             $attendance->branch_id   = (int)$data['branch_id'];
             $attendance->date        = $data['date'];
@@ -112,19 +152,14 @@ class attendancecontroller extends Controller
             $attendance->user_add    = Auth::id();
         }
 
-        $attendance->check_in  = $checkInDT;
-        $attendance->check_out = $checkOutDT;
-        $attendance->notes     = $data['notes'] ?? null;
-
+        $attendance->check_in    = $checkInDT;
+        $attendance->check_out   = $checkOutDT;
+        $attendance->notes       = $data['notes'] ?? null;
         $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out, $shift, $attendance->date);
-
-        $attendance->status = $this->normalizeAttendanceStatus(
+        $attendance->status      = $this->normalizeAttendanceStatus(
             $this->calcStatus($shift, $attendance->date, $attendance->check_in, $attendance->check_out, (float)$attendance->total_hours)
         );
-
-        // ✅ source enum: fingerprint/manual/system
-        $attendance->source = $this->normalizeAttendanceSource($attendance->source ?: 'manual');
-
+        $attendance->source      = $this->normalizeAttendanceSource($attendance->source ?: 'manual');
         $attendance->save();
 
         return response()->json([
@@ -134,23 +169,31 @@ class attendancecontroller extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────
+    // Show
+    // ─────────────────────────────────────────
+
     public function show($id)
     {
         $att = HrAttendance::findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'data' => [
+            'data'    => [
                 'id'          => $att->id,
                 'employee_id' => $att->employee_id,
                 'branch_id'   => $att->branch_id,
                 'date'        => Carbon::parse($att->date)->toDateString(),
-                'check_in'    => $att->check_in ? Carbon::parse($att->check_in)->format('H:i') : null,
+                'check_in'    => $att->check_in  ? Carbon::parse($att->check_in)->format('H:i')  : null,
                 'check_out'   => $att->check_out ? Carbon::parse($att->check_out)->format('H:i') : null,
                 'notes'       => $att->notes,
-            ]
+            ],
         ]);
     }
+
+    // ─────────────────────────────────────────
+    // Update
+    // ─────────────────────────────────────────
 
     public function update(Request $request, $id)
     {
@@ -165,6 +208,11 @@ class attendancecontroller extends Controller
             'notes'       => 'nullable|string|max:1000',
         ]);
 
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch((int)$data['branch_id'])) {
+            return response()->json(['success' => false, 'message' => trans('accounting.branch_not_allowed')], 403);
+        }
+
         $employee = employee::findOrFail($data['employee_id']);
 
         if (!$this->isEmployeePrimaryInBranch($employee->id, (int)$data['branch_id'])) {
@@ -173,15 +221,14 @@ class attendancecontroller extends Controller
 
         $shift = $this->getEmployeeShiftForDate($employee->id, (int)$data['branch_id'], $data['date']);
 
-        $checkInDT  = $data['check_in'] ? Carbon::parse($data['date'] . ' ' . $data['check_in']) : null;
+        $checkInDT  = $data['check_in']  ? Carbon::parse($data['date'] . ' ' . $data['check_in'])  : null;
         $checkOutDT = $data['check_out'] ? Carbon::parse($data['date'] . ' ' . $data['check_out']) : null;
 
-        // ✅ دعم الليلي
         [$checkInDT, $checkOutDT] = $this->normalizeCheckTimes($shift, $data['date'], $checkInDT, $checkOutDT);
 
         $att->employee_id = $employee->id;
         $att->branch_id   = (int)$data['branch_id'];
-        $att->date        = $data['date']; // تاريخ الدخول
+        $att->date        = $data['date'];
         $att->check_in    = $checkInDT;
         $att->check_out   = $checkOutDT;
         $att->notes       = $data['notes'] ?? null;
@@ -189,14 +236,10 @@ class attendancecontroller extends Controller
         if (!$att->source) $att->source = 'manual';
 
         $att->total_hours = $this->calcHours($att->check_in, $att->check_out, $shift, $att->date);
-
-        $att->status = $this->normalizeAttendanceStatus(
+        $att->status      = $this->normalizeAttendanceStatus(
             $this->calcStatus($shift, $att->date, $att->check_in, $att->check_out, (float)$att->total_hours)
         );
-
-        // ✅ source enum
-        $att->source = $this->normalizeAttendanceSource($att->source);
-
+        $att->source      = $this->normalizeAttendanceSource($att->source);
         $att->save();
 
         return response()->json([
@@ -206,13 +249,15 @@ class attendancecontroller extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────
+    // Destroy
+    // ─────────────────────────────────────────
+
     public function destroy($id)
     {
-        $att = HrAttendance::findOrFail($id);
-
-        $employee = employee::find($att->employee_id);
-        $shift    = $this->getEmployeeShiftForDate($att->employee_id, $att->branch_id, Carbon::parse($att->date)->toDateString());
-
+        $att        = HrAttendance::findOrFail($id);
+        $employee   = employee::find($att->employee_id);
+        $shift      = $this->getEmployeeShiftForDate($att->employee_id, $att->branch_id, Carbon::parse($att->date)->toDateString());
         $employeeId = $att->employee_id;
         $branchId   = $att->branch_id;
         $dateStr    = Carbon::parse($att->date)->toDateString();
@@ -227,23 +272,32 @@ class attendancecontroller extends Controller
                 'branch_id'   => $branchId,
                 'date'        => $dateStr,
                 'absent_row'  => $this->virtualAbsentRowDto($employee, $branchId, $dateStr, $shift),
-            ]
+            ],
         ]);
     }
 
     // ─────────────────────────────────────────
     // Processing Logs
     // ─────────────────────────────────────────
+
     public function processIndex(Request $request)
     {
+        $branchIds = $this->accessibleBranchIds();
+
+        // ✅ Scope يعمل تلقائياً
         $branches = Branch::where('status', 1)->orderBy('id')->get();
         $devices  = HrDevice::orderBy('id')->get();
 
-        $branchId = (int)($request->get('branch_id', Auth::user()->branch_id ?? 0));
-        $deviceId = (int)$request->get('device_id', 0);
-        $date     = $request->get('date', Carbon::today()->toDateString());
+        $defaultBranch = !empty($branchIds) ? $branchIds[0] : 0;
+        $branchId      = (int)($request->get('branch_id', $defaultBranch));
+        $deviceId      = (int)$request->get('device_id', 0);
+        $date          = $request->get('date', Carbon::today()->toDateString());
 
-        // ✅ لدعم الليلي: اعرض Logs اليوم + اليوم التالي (ستظل "غير معالجة" حتى تُشغّل المعالجة)
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if ($branchId > 0 && !$this->userCanAccessBranch($branchId)) {
+            $branchId = $defaultBranch;
+        }
+
         $from = Carbon::parse($date)->startOfDay();
         $to   = Carbon::parse($date)->addDay()->endOfDay();
 
@@ -260,7 +314,9 @@ class attendancecontroller extends Controller
 
         $logs = $logsQ->orderBy('punch_time')->get();
 
-        return view('hr.attendance.process', compact('branches', 'devices', 'branchId', 'deviceId', 'date', 'logs'));
+        return view('hr.attendance.process', compact(
+            'branches', 'devices', 'branchId', 'deviceId', 'date', 'logs'
+        ));
     }
 
     public function processRun(Request $request)
@@ -272,13 +328,17 @@ class attendancecontroller extends Controller
         ]);
 
         $branchId = (int)$data['branch_id'];
-        $dateStr  = $data['date']; // ✅ هذا هو تاريخ الدخول المطلوب معالجته
+        $dateStr  = $data['date'];
         $deviceId = (int)($data['device_id'] ?? 0);
 
-        $employees = $this->getEmployeesByPrimaryBranch($branchId);
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return response()->json(['success' => false, 'message' => trans('accounting.branch_not_allowed')], 403);
+        }
+
+        $employees   = $this->getEmployeesByPrimaryBranch($branchId);
         $employeeIds = $employees->pluck('id')->toArray();
 
-        // ✅ لجلب كل ما قد يخص وردية اليوم (اليوم + اليوم التالي)
         $from = Carbon::parse($dateStr)->startOfDay();
         $to   = Carbon::parse($dateStr)->addDay()->endOfDay();
 
@@ -288,8 +348,7 @@ class attendancecontroller extends Controller
 
         if ($deviceId > 0) $logsQ->where('device_id', $deviceId);
 
-        $logs = $logsQ->orderBy('punch_time')->get()->groupBy('employee_id');
-
+        $logs    = $logsQ->orderBy('punch_time')->get()->groupBy('employee_id');
         $created = 0;
         $updated = 0;
         $processedLogs = 0;
@@ -303,7 +362,6 @@ class attendancecontroller extends Controller
                 $shift = $this->getEmployeeShiftForDate((int)$empId, $branchId, $dateStr);
                 if (!$shift) continue;
 
-                // نافذة الوردية لليوم (تاريخ الدخول)
                 [$winStart, $winEnd] = $this->shiftWindow($shift, $dateStr);
 
                 $empLogs = collect($logs[(int)$empId] ?? [])->filter(function ($l) use ($winStart, $winEnd) {
@@ -311,27 +369,19 @@ class attendancecontroller extends Controller
                     return $t->betweenIncluded($winStart, $winEnd);
                 })->values();
 
-                if ($empLogs->count() === 0) {
-                    continue;
-                }
+                if ($empLogs->count() === 0) continue;
 
-                $first = $empLogs->first();
-                $last  = $empLogs->last();
-
+                $first    = $empLogs->first();
+                $last     = $empLogs->last();
                 $checkIn  = Carbon::parse($first->punch_time);
-                $checkOut = Carbon::parse($last->punch_time);
+                $checkOut = $empLogs->count() === 1 ? null : Carbon::parse($last->punch_time);
 
-                if ($empLogs->count() === 1) {
-                    $checkOut = null;
-                }
-
-                // ✅ date = تاريخ الدخول (check_in date الذي اخترته للتجميع)
                 $attendance = HrAttendance::where('employee_id', (int)$empId)
                     ->whereDate('date', $dateStr)
                     ->first();
 
                 if (!$attendance) {
-                    $attendance = new HrAttendance();
+                    $attendance              = new HrAttendance();
                     $attendance->employee_id = (int)$empId;
                     $attendance->branch_id   = $branchId;
                     $attendance->date        = $dateStr;
@@ -342,22 +392,18 @@ class attendancecontroller extends Controller
                     $updated++;
                 }
 
-                $attendance->device_id  = $deviceId > 0 ? $deviceId : ($first->device_id ?? null);
-                $attendance->check_in   = $checkIn;
-                $attendance->check_out  = $checkOut;
+                $attendance->device_id = $deviceId > 0 ? $deviceId : ($first->device_id ?? null);
+                $attendance->check_in  = $checkIn;
+                $attendance->check_out = $checkOut;
 
-                // ✅ normalize times (لو حصل أي انعكاس) + حساب ساعات مع الليلي
                 [$attendance->check_in, $attendance->check_out] =
                     $this->normalizeCheckTimes($shift, $dateStr, $attendance->check_in, $attendance->check_out);
 
                 $attendance->total_hours = $this->calcHours($attendance->check_in, $attendance->check_out, $shift, $attendance->date);
-
-                $attendance->status = $this->normalizeAttendanceStatus(
+                $attendance->status      = $this->normalizeAttendanceStatus(
                     $this->calcStatus($shift, $attendance->date, $attendance->check_in, $attendance->check_out, (float)$attendance->total_hours)
                 );
-
-                $attendance->source = $this->normalizeAttendanceSource($attendance->source ?: 'fingerprint');
-
+                $attendance->source      = $this->normalizeAttendanceSource($attendance->source ?: 'fingerprint');
                 $attendance->save();
 
                 foreach ($empLogs as $log) {
@@ -371,17 +417,10 @@ class attendancecontroller extends Controller
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-
-            Log::error('attendance.processRun error', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-            ]);
+            Log::error('attendance.processRun error', ['message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
 
             $msg = trans('hr.error_occurred');
-            if (config('app.debug')) {
-                $msg = $e->getMessage() . ' @' . basename($e->getFile()) . ':' . $e->getLine();
-            }
+            if (config('app.debug')) $msg = $e->getMessage() . ' @' . basename($e->getFile()) . ':' . $e->getLine();
 
             return response()->json(['success' => false, 'message' => $msg], 500);
         }
@@ -389,13 +428,14 @@ class attendancecontroller extends Controller
         return response()->json([
             'success' => true,
             'message' => trans('hr.logs_processed_success'),
-            'data'    => ['created' => $created, 'updated' => $updated, 'logs' => $processedLogs]
+            'data'    => ['created' => $created, 'updated' => $updated, 'logs' => $processedLogs],
         ]);
     }
 
     // ─────────────────────────────────────────
     // Builders
     // ─────────────────────────────────────────
+
     private function buildDailyRows(int $branchId, $employees, string $dateStr): array
     {
         $date = Carbon::parse($dateStr)->toDateString();
@@ -405,8 +445,7 @@ class attendancecontroller extends Controller
             $shift = $this->getEmployeeShiftForDate($emp->id, $branchId, $date);
             if (!$this->isWorkingDay($shift, $date)) continue;
 
-            $att = HrAttendance::where('employee_id', $emp->id)->whereDate('date', $date)->first();
-
+            $att    = HrAttendance::where('employee_id', $emp->id)->whereDate('date', $date)->first();
             $rows[] = $att
                 ? $this->attendanceRowDto($att, $emp, $shift, false)
                 : $this->virtualAbsentRowDto($emp, $branchId, $date, $shift);
@@ -417,9 +456,8 @@ class attendancecontroller extends Controller
 
     private function buildMonthlyRows(int $branchId, $employees, string $month): array
     {
-        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $end   = (clone $start)->endOfMonth();
-
+        $start  = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end    = (clone $start)->endOfMonth();
         $period = CarbonPeriod::create($start, $end);
 
         $att = HrAttendance::whereIn('employee_id', $employees->pluck('id')->toArray())
@@ -432,11 +470,10 @@ class attendancecontroller extends Controller
         foreach ($employees as $emp) {
             foreach ($period as $day) {
                 $dateStr = $day->toDateString();
-                $shift = $this->getEmployeeShiftForDate($emp->id, $branchId, $dateStr);
+                $shift   = $this->getEmployeeShiftForDate($emp->id, $branchId, $dateStr);
                 if (!$this->isWorkingDay($shift, $dateStr)) continue;
 
-                $key = $emp->id . '|' . $dateStr;
-
+                $key    = $emp->id . '|' . $dateStr;
                 $rows[] = (isset($att[$key]) && $att[$key]->first())
                     ? $this->attendanceRowDto($att[$key]->first(), $emp, $shift, false)
                     : $this->virtualAbsentRowDto($emp, $branchId, $dateStr, $shift);
@@ -451,21 +488,21 @@ class attendancecontroller extends Controller
         $dateStr = Carbon::parse($a->date)->toDateString();
 
         return [
-            'is_virtual'     => $isVirtual ? 1 : 0,
-            'attendance_id'  => $a->id,
-            'row_dom_id'     => 'row-att-' . $a->id,
-            'employee_id'    => $emp->id,
-            'employee_name'  => $emp->full_name ?? $emp->getFullNameAttribute(),
-            'employee_code'  => $emp->code,
-            'branch_id'      => $a->branch_id,
-            'date'           => $dateStr,
-            'shift_name'     => $shift?->name ?? trans('hr.no_shift'),
-            'check_in'       => $a->check_in ? Carbon::parse($a->check_in)->format('H:i') : '—',
-            'check_out'      => $a->check_out ? Carbon::parse($a->check_out)->format('H:i') : '—',
-            'total_hours'    => $a->total_hours ? number_format((float)$a->total_hours, 2) : '0.00',
-            'status'         => $a->status ?? 'present',
-            'source'         => $a->source ?? 'system',
-            'notes'          => $a->notes ?? '',
+            'is_virtual'    => $isVirtual ? 1 : 0,
+            'attendance_id' => $a->id,
+            'row_dom_id'    => 'row-att-' . $a->id,
+            'employee_id'   => $emp->id,
+            'employee_name' => $emp->full_name ?? $emp->getFullNameAttribute(),
+            'employee_code' => $emp->code,
+            'branch_id'     => $a->branch_id,
+            'date'          => $dateStr,
+            'shift_name'    => $shift?->name ?? trans('hr.no_shift'),
+            'check_in'      => $a->check_in  ? Carbon::parse($a->check_in)->format('H:i')  : '—',
+            'check_out'     => $a->check_out ? Carbon::parse($a->check_out)->format('H:i') : '—',
+            'total_hours'   => $a->total_hours ? number_format((float)$a->total_hours, 2) : '0.00',
+            'status'        => $a->status  ?? 'present',
+            'source'        => $a->source  ?? 'system',
+            'notes'         => $a->notes   ?? '',
         ];
     }
 
@@ -493,17 +530,14 @@ class attendancecontroller extends Controller
     // ─────────────────────────────────────────
     // Night shift helpers
     // ─────────────────────────────────────────
+
     private function isShiftOvernight(?HrShift $shift): bool
     {
         if (!$shift) return false;
 
         try {
-            $st = Carbon::parse($shift->start_time)->format('H:i');
-            $en = Carbon::parse($shift->end_time)->format('H:i');
-
-            $s = Carbon::createFromFormat('H:i', $st);
-            $e = Carbon::createFromFormat('H:i', $en);
-
+            $s = Carbon::createFromFormat('H:i', Carbon::parse($shift->start_time)->format('H:i'));
+            $e = Carbon::createFromFormat('H:i', Carbon::parse($shift->end_time)->format('H:i'));
             return $e->lessThanOrEqualTo($s);
         } catch (\Throwable $e) {
             return false;
@@ -512,21 +546,16 @@ class attendancecontroller extends Controller
 
     private function shiftWindow(HrShift $shift, string $dateStr): array
     {
-        // نافذة تجميع البصمات لليوم (تاريخ الدخول)
         $dateStr = Carbon::parse($dateStr)->toDateString();
 
         $start = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->start_time)->format('H:i:s'));
         $end   = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->end_time)->format('H:i:s'));
 
-        if ($this->isShiftOvernight($shift)) {
-            $end->addDay();
-        }
+        if ($this->isShiftOvernight($shift)) $end->addDay();
 
-        // buffers لتجميع بصمات قبل/بعد الوقت الرسمي
         $start = (clone $start)->subHours(4);
         $end   = (clone $end)->addHours(6);
 
-        // لا ننزل قبل بداية اليوم (لأننا نعالج حسب تاريخ الدخول)
         $dayStart = Carbon::parse($dateStr)->startOfDay();
         if ($start->lessThan($dayStart)) $start = $dayStart;
 
@@ -535,21 +564,16 @@ class attendancecontroller extends Controller
 
     private function normalizeCheckTimes(?HrShift $shift, string $dateStr, $checkIn, $checkOut): array
     {
-        if (!$shift) return [$checkIn, $checkOut];
+        if (!$shift || !$checkOut) return [$checkIn, $checkOut];
 
-        if (!$checkOut) return [$checkIn, $checkOut];
-
-        $dateStr = Carbon::parse($dateStr)->toDateString();
+        $dateStr   = Carbon::parse($dateStr)->toDateString();
         $overnight = $this->isShiftOvernight($shift);
+        $out       = Carbon::parse($checkOut);
 
-        $out = Carbon::parse($checkOut);
-
-        // لو الوردية ليلية والانصراف مُدخل على نفس يوم الدخول لكن وقته صباحي => اعتبره اليوم التالي
         if ($overnight) {
             $endTime = Carbon::parse($shift->end_time)->format('H:i');
             $outTime = $out->format('H:i');
 
-            // لو الانصراف وقت <= نهاية الوردية، غالباً اليوم التالي
             if ($out->toDateString() === $dateStr && $outTime <= $endTime) {
                 $out->addDay();
             }
@@ -557,13 +581,7 @@ class attendancecontroller extends Controller
 
         if ($checkIn) {
             $in = Carbon::parse($checkIn);
-
-            // لو الانصراف <= الدخول في وردية ليلية => اعتبره اليوم التالي
-            if ($overnight && $out->lessThanOrEqualTo($in)) {
-                $out->addDay();
-            }
-
-            // لو ليست ليلية وبالخطأ out <= in: نتركها كما هي (سيحسب 0 ساعات)
+            if ($overnight && $out->lessThanOrEqualTo($in)) $out->addDay();
         }
 
         return [$checkIn ? Carbon::parse($checkIn) : null, $out];
@@ -572,6 +590,7 @@ class attendancecontroller extends Controller
     // ─────────────────────────────────────────
     // Core calculations
     // ─────────────────────────────────────────
+
     private function calcHours($checkIn, $checkOut, ?HrShift $shift = null, ?string $attendanceDate = null): float
     {
         if (!$checkIn || !$checkOut) return 0;
@@ -580,7 +599,6 @@ class attendancecontroller extends Controller
         $out = Carbon::parse($checkOut);
 
         if ($out->lessThanOrEqualTo($in)) {
-            // ✅ في الوردية الليلية: قد يكون الانصراف بعد منتصف الليل
             if ($shift && $this->isShiftOvernight($shift)) {
                 $out = (clone $out)->addDay();
             } else {
@@ -599,80 +617,50 @@ class attendancecontroller extends Controller
         if (!$this->isWorkingDay($shift, $dateStr)) return 'absent';
         if (!$checkIn) return 'absent';
 
-        $scheduledIn = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->start_time)->format('H:i:s'));
+        $scheduledIn  = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->start_time)->format('H:i:s'));
         $scheduledOut = Carbon::parse($dateStr . ' ' . Carbon::parse($shift->end_time)->format('H:i:s'));
 
-        if ($this->isShiftOvernight($shift)) {
-            $scheduledOut->addDay();
-        }
+        if ($this->isShiftOvernight($shift)) $scheduledOut->addDay();
 
         $graceIn = (clone $scheduledIn)->addMinutes((int)$shift->grace_minutes);
+        $status  = 'present';
 
-        $status = 'present';
-
-        if (Carbon::parse($checkIn)->greaterThan($graceIn)) {
-            $status = 'late';
-        }
-
-        if ($checkIn && !$checkOut) {
-            $status = 'half_day';
-        }
-
-        if ($hours > 0 && $hours < (float)$shift->min_full_hours) {
-            $status = 'half_day';
-        }
+        if (Carbon::parse($checkIn)->greaterThan($graceIn)) $status = 'late';
+        if ($checkIn && !$checkOut)                          $status = 'half_day';
+        if ($hours > 0 && $hours < (float)$shift->min_full_hours) $status = 'half_day';
 
         return $status;
     }
 
     private function normalizeAttendanceStatus(string $status): string
     {
-        $status = strtolower(trim($status));
-        $allowed = ['present','absent','late','half_day','leave'];
+        $status  = strtolower(trim($status));
+        $allowed = ['present', 'absent', 'late', 'half_day', 'leave'];
 
         if (in_array($status, $allowed, true)) return $status;
 
-        $map = [
-            'halfday'  => 'half_day',
-            'half-day' => 'half_day',
-            'half day' => 'half_day',
-        ];
+        $map = ['halfday' => 'half_day', 'half-day' => 'half_day', 'half day' => 'half_day'];
 
-        if (isset($map[$status])) return $map[$status];
-
-        return 'present';
+        return $map[$status] ?? 'present';
     }
 
-    // ✅ source enum = fingerprint/manual/system
     private function normalizeAttendanceSource(string $source): string
     {
-        $source = strtolower(trim($source));
-        $allowed = ['fingerprint','manual','system'];
+        $source  = strtolower(trim($source));
+        $allowed = ['fingerprint', 'manual', 'system'];
 
         if (in_array($source, $allowed, true)) return $source;
 
-        $map = [
-            'device'    => 'fingerprint',
-            'finger'    => 'fingerprint',
-            'biometric' => 'fingerprint',
-            'machine'   => 'fingerprint',
-            'import'    => 'fingerprint',
-        ];
+        $map = ['device' => 'fingerprint', 'finger' => 'fingerprint', 'biometric' => 'fingerprint', 'machine' => 'fingerprint', 'import' => 'fingerprint'];
 
-        if (isset($map[$source]) && in_array($map[$source], $allowed, true)) {
-            return $map[$source];
-        }
-
-        return 'system';
+        return isset($map[$source]) ? $map[$source] : 'system';
     }
 
     private function isWorkingDay(?HrShift $shift, string $dateStr): bool
     {
         if (!$shift) return true;
 
-        $dow = Carbon::parse($dateStr)->dayOfWeek;
-
-        return match ($dow) {
+        return match (Carbon::parse($dateStr)->dayOfWeek) {
             0 => (bool)$shift->sun,
             1 => (bool)$shift->mon,
             2 => (bool)$shift->tue,
@@ -690,12 +678,8 @@ class attendancecontroller extends Controller
             ->where('employee_id', $employeeId)
             ->where('branch_id', $branchId)
             ->where('status', 1)
-            ->where(function ($w) use ($dateStr) {
-                $w->whereNull('start_date')->orWhere('start_date', '<=', $dateStr);
-            })
-            ->where(function ($w) use ($dateStr) {
-                $w->whereNull('end_date')->orWhere('end_date', '>=', $dateStr);
-            })
+            ->where(fn($w) => $w->whereNull('start_date')->orWhere('start_date', '<=', $dateStr))
+            ->where(fn($w) => $w->whereNull('end_date')->orWhere('end_date', '>=', $dateStr))
             ->orderByDesc('id')
             ->first();
 
@@ -709,12 +693,12 @@ class attendancecontroller extends Controller
         if ($branchId <= 0) return collect([]);
 
         return employee::whereHas('branches', function ($q) use ($branchId) {
-                $q->where('branches.id', $branchId)
-                  ->where('employee_branch.is_primary', 1);
-            })
-            ->where('status', 1)
-            ->orderBy('id')
-            ->get();
+            $q->where('branches.id', $branchId)
+              ->where('employee_branch.is_primary', 1);
+        })
+        ->where('status', 1)
+        ->orderBy('id')
+        ->get();
     }
 
     private function isEmployeePrimaryInBranch(int $employeeId, int $branchId): bool

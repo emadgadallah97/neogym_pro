@@ -1,16 +1,16 @@
 <?php
-// app/Http/Controllers/crm/CrmMembersController.php
 
 namespace App\Http\Controllers\crm;
 
 use App\Http\Controllers\Controller;
-use App\Models\crm\crmfollowup;
+use App\Models\crm\CrmFollowup;
 use App\Models\general\Branch;
 use App\Models\members\Member;
+use App\Models\Scopes\ExcludeProspectsScope;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Scopes\ExcludeProspectsScope;
+
 class CrmMembersController extends Controller
 {
     protected function segmentsMetaData(): array
@@ -32,13 +32,9 @@ class CrmMembersController extends Controller
 
     public function index(Request $request)
     {
-        // ✅ [تعديل] قبول 'all' بجانب باقي الـ segments
-        $segmentsMeta = $this->segmentsMetaData();
+        $segmentsMeta  = $this->segmentsMetaData();
         $validSegments = array_merge(['all'], array_keys($segmentsMeta));
-        $segment  = in_array($request->segment, $validSegments)
-                    ? $request->segment
-                    : 'expiring7';
-
+        $segment  = in_array($request->segment, $validSegments) ? $request->segment : 'expiring7';
         $search   = $request->search;
         $branchId = $request->branch_id;
         $today    = Carbon::today();
@@ -54,19 +50,28 @@ class CrmMembersController extends Controller
             });
         }
 
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
+        if ($branchId) $query->where('branch_id', $branchId);
 
-        $members   = $query->with('branch')->paginate(20)->withQueryString();
-        $memberIds = $members->pluck('id')->toArray();
+        $members = $query
+            ->with([
+                // ✅ branch يظهر دائماً بغض النظر عن GlobalScope
+                'branch' => fn($bq) => $bq->withoutGlobalScopes(),
+            ])
+            ->paginate(20)
+            ->withQueryString();
 
+        $memberIds       = $members->pluck('id')->toArray();
         $latestSubs      = $this->getLatestSubscriptions($memberIds, $segment, $today);
         $lastAttendances = $this->getLastAttendances($memberIds);
         $unpaidAmounts   = ($segment === 'debt') ? $this->getUnpaidAmounts($memberIds) : collect();
         $segmentCounts   = $this->getSegmentCounts($today);
-        $branches        = Branch::where('status', 1)->get();
         $segmentsMeta    = $this->segmentsMetaData();
+
+        // ✅ كل الفروع النشطة — withoutGlobalScopes لتجاوز BranchAccessScope
+        $branches = Branch::withoutGlobalScopes()
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get();
 
         return view('crm.members.index', compact(
             'members', 'segment', 'segmentCounts', 'branches',
@@ -81,8 +86,12 @@ class CrmMembersController extends Controller
 
     public function show($id)
     {
-        $member = Member::with('branch')->findOrFail($id);
-        $today  = Carbon::today();
+        $member = Member::with([
+            // ✅ branch يظهر دائماً
+            'branch' => fn($bq) => $bq->withoutGlobalScopes(),
+        ])->findOrFail($id);
+
+        $today = Carbon::today();
 
         // ── 1) الاشتراك الحالي + PT Addon ──────────────────
         $activeSub = DB::table('member_subscriptions')
@@ -101,9 +110,7 @@ class CrmMembersController extends Controller
                 ->first();
 
             if ($ptAddon && $ptAddon->trainer_id) {
-                $trainer = DB::table('employees')
-                    ->where('id', $ptAddon->trainer_id)
-                    ->first();
+                $trainer = DB::table('employees')->where('id', $ptAddon->trainer_id)->first();
                 $ptAddon->trainer_name = $trainer
                     ? trim(($trainer->first_name ?? '') . ' ' . ($trainer->last_name ?? ''))
                     : '—';
@@ -130,7 +137,7 @@ class CrmMembersController extends Controller
             });
 
         // ── 5) سجل المتابعات CRM ───────────────────────────
-        $followups = crmfollowup::where('member_id', $id)
+        $followups = CrmFollowup::where('member_id', $id)
             ->orderByDesc('created_at')
             ->get();
 
@@ -154,15 +161,10 @@ class CrmMembersController extends Controller
         $segmentsMeta = $this->segmentsMetaData();
 
         return view('crm.members.show', compact(
-            'member',
-            'activeSub',
-            'ptAddon',
-            'attendanceStats',
-            'financialStats',
-            'allSubscriptions',
-            'followups',
-            'recentAttendances',
-            'unpaidInvoices',
+            'member', 'activeSub', 'ptAddon',
+            'attendanceStats', 'financialStats',
+            'allSubscriptions', 'followups',
+            'recentAttendances', 'unpaidInvoices',
             'segmentsMeta'
         ));
     }
@@ -173,70 +175,45 @@ class CrmMembersController extends Controller
 
     private function buildSegmentQuery(string $segment, Carbon $today)
     {
-        switch ($segment) {
+        return match ($segment) {
+            'all' => Member::query()->orderByDesc('id'),
 
-            // ✅ [تعديل] تاب الكل — بدون فلترة
-            case 'all':
-                return Member::query()->orderByDesc('id');
+            'expiring7' => Member::whereHas('subscriptions', fn($q) => $q
+                ->where('status', 'active')
+                ->whereBetween('end_date', [
+                    $today->toDateString(),
+                    $today->copy()->addDays(7)->toDateString(),
+                ])
+            ),
 
-            case 'expiring7':
-                return Member::whereHas('subscriptions', function ($q) use ($today) {
-                    $q->where('status', 'active')
-                      ->whereBetween('end_date', [
-                          $today->toDateString(),
-                          $today->copy()->addDays(7)->toDateString(),
-                      ]);
-                });
+            'expiring30' => Member::whereHas('subscriptions', fn($q) => $q
+                ->where('status', 'active')
+                ->whereBetween('end_date', [
+                    $today->copy()->addDays(8)->toDateString(),
+                    $today->copy()->addDays(30)->toDateString(),
+                ])
+            ),
 
-            case 'expiring30':
-                return Member::whereHas('subscriptions', function ($q) use ($today) {
-                    $q->where('status', 'active')
-                      ->whereBetween('end_date', [
-                          $today->copy()->addDays(8)->toDateString(),
-                          $today->copy()->addDays(30)->toDateString(),
-                      ]);
-                });
+            'expired' => Member::whereHas('subscriptions', fn($q) => $q->where('status', 'expired'))
+                ->whereDoesntHave('subscriptions', fn($q) => $q->where('status', 'active')),
 
-            case 'expired':
-                return Member::whereHas('subscriptions', function ($q) {
-                    $q->where('status', 'expired');
-                })->whereDoesntHave('subscriptions', function ($q) {
-                    $q->where('status', 'active');
-                });
+            'frozen' => Member::where('status', 'frozen'),
 
-            case 'frozen':
-                return Member::where('status', 'frozen');
-
-            case 'inactive':
-                $recentIds = DB::table('attendances')
-                    ->where('attendance_date', '>=', $today->copy()->subDays(14)->toDateString())
-                    ->where('is_cancelled', false)
-                    ->whereNull('deleted_at')
-                    ->distinct()->pluck('member_id');
-
-                $activeSubIds = DB::table('member_subscriptions')
+            'inactive' => Member::where('status', 'active')
+                ->whereIn('id', DB::table('member_subscriptions')
                     ->where('status', 'active')
                     ->where('end_date', '>=', $today->toDateString())
-                    ->whereNull('deleted_at')
-                    ->distinct()->pluck('member_id');
+                    ->whereNull('deleted_at')->distinct()->pluck('member_id'))
+                ->whereNotIn('id', DB::table('attendances')
+                    ->where('attendance_date', '>=', $today->copy()->subDays(14)->toDateString())
+                    ->where('is_cancelled', false)
+                    ->whereNull('deleted_at')->distinct()->pluck('member_id')),
 
-                return Member::where('status', 'active')
-                    ->whereIn('id', $activeSubIds)
-                    ->whereNotIn('id', $recentIds);
+            'new'  => Member::where('join_date', '>=', $today->copy()->subDays(30)->toDateString()),
+            'debt' => Member::whereHas('invoices', fn($q) => $q->where('status', 'unpaid')),
 
-            case 'new':
-                return Member::where('join_date', '>=',
-                    $today->copy()->subDays(30)->toDateString()
-                );
-
-            case 'debt':
-                return Member::whereHas('invoices', function ($q) {
-                    $q->where('status', 'unpaid');
-                });
-
-            default:
-                return Member::query()->orderByDesc('id');
-        }
+            default => Member::query()->orderByDesc('id'),
+        };
     }
 
     // ══════════════════════════════════════════════════════
@@ -251,7 +228,6 @@ class CrmMembersController extends Controller
             ->whereIn('member_id', $ids)
             ->whereNull('deleted_at');
 
-        // ✅ [تعديل] للـ 'all' نجلب الاشتراك النشط فقط لعرضه في العمود
         if (in_array($segment, ['expiring7', 'expiring30', 'inactive', 'all'])) {
             $q->where('status', 'active');
         }
@@ -289,11 +265,7 @@ class CrmMembersController extends Controller
             ->where('status', 'unpaid')
             ->whereNull('deleted_at')
             ->groupBy('member_id')
-            ->select(
-                'member_id',
-                DB::raw('SUM(total) as unpaid_total'),
-                DB::raw('COUNT(*) as unpaid_count')
-            )
+            ->select('member_id', DB::raw('SUM(total) as unpaid_total'), DB::raw('COUNT(*) as unpaid_count'))
             ->get()
             ->keyBy('member_id');
     }
@@ -311,39 +283,26 @@ class CrmMembersController extends Controller
             ->whereNull('deleted_at')->distinct()->pluck('member_id');
 
         return [
-            // ✅ [تعديل] إضافة عداد تاب الكل
             'all' => Member::count(),
 
             'expiring7' => DB::table('member_subscriptions')
                 ->where('status', 'active')
-                ->whereBetween('end_date', [
-                    $today->toDateString(),
-                    $today->copy()->addDays(7)->toDateString(),
-                ])
+                ->whereBetween('end_date', [$today->toDateString(), $today->copy()->addDays(7)->toDateString()])
                 ->whereNull('deleted_at')->distinct()->count('member_id'),
 
             'expiring30' => DB::table('member_subscriptions')
                 ->where('status', 'active')
-                ->whereBetween('end_date', [
-                    $today->copy()->addDays(8)->toDateString(),
-                    $today->copy()->addDays(30)->toDateString(),
-                ])
+                ->whereBetween('end_date', [$today->copy()->addDays(8)->toDateString(), $today->copy()->addDays(30)->toDateString()])
                 ->whereNull('deleted_at')->distinct()->count('member_id'),
 
             'expired' => Member::whereHas('subscriptions', fn($q) => $q->where('status', 'expired'))
                 ->whereDoesntHave('subscriptions', fn($q) => $q->where('status', 'active'))
                 ->count(),
 
-            'frozen' => Member::where('status', 'frozen')->count(),
-
-            'inactive' => Member::where('status', 'active')
-                ->whereIn('id', $activeSubIds)
-                ->whereNotIn('id', $recentIds)
-                ->count(),
-
-            'new'  => Member::where('join_date', '>=', $today->copy()->subDays(30)->toDateString())->count(),
-
-            'debt' => Member::whereHas('invoices', fn($q) => $q->where('status', 'unpaid'))->count(),
+            'frozen'   => Member::where('status', 'frozen')->count(),
+            'inactive' => Member::where('status', 'active')->whereIn('id', $activeSubIds)->whereNotIn('id', $recentIds)->count(),
+            'new'      => Member::where('join_date', '>=', $today->copy()->subDays(30)->toDateString())->count(),
+            'debt'     => Member::whereHas('invoices', fn($q) => $q->where('status', 'unpaid'))->count(),
         ];
     }
 
@@ -360,17 +319,13 @@ class CrmMembersController extends Controller
             ->orderByDesc('attendance_date')
             ->get();
 
-        $totalDays = $rows->count();
-        $lastVisit = $rows->first()?->attendance_date;
-
-        $last90 = $rows->filter(
-            fn($r) => Carbon::parse($r->attendance_date)->gte($today->copy()->subDays(90))
-        )->count();
+        $totalDays  = $rows->count();
+        $lastVisit  = $rows->first()?->attendance_date;
+        $last90     = $rows->filter(fn($r) => Carbon::parse($r->attendance_date)->gte($today->copy()->subDays(90)))->count();
         $avgPerWeek = $last90 > 0 ? round($last90 / (90 / 7), 1) : 0;
-
-        $thisMonth = $rows->filter(
-            fn($r) => Carbon::parse($r->attendance_date)->month === $today->month
-                   && Carbon::parse($r->attendance_date)->year  === $today->year
+        $thisMonth  = $rows->filter(fn($r) =>
+            Carbon::parse($r->attendance_date)->month === $today->month &&
+            Carbon::parse($r->attendance_date)->year  === $today->year
         )->count();
 
         return (object) [
@@ -397,9 +352,9 @@ class CrmMembersController extends Controller
             ->first();
 
         return (object) [
-            'total_paid'    => (float) $totalPaid,
-            'unpaid_total'  => (float) ($unpaid->total ?? 0),
-            'unpaid_count'  => (int)   ($unpaid->cnt   ?? 0),
+            'total_paid'   => (float)$totalPaid,
+            'unpaid_total' => (float)($unpaid->total ?? 0),
+            'unpaid_count' => (int)($unpaid->cnt     ?? 0),
         ];
     }
 
@@ -420,18 +375,13 @@ class CrmMembersController extends Controller
 
         if (is_string($planName)) {
             $decoded = json_decode($planName, true);
-
             if (is_array($decoded)) {
                 return $decoded[app()->getLocale()]
                     ?? $decoded['ar']
                     ?? $decoded['en']
                     ?? (count($decoded) ? array_values($decoded)[0] : '—');
             }
-
-            if (is_string($decoded) && !empty($decoded)) {
-                return $decoded;
-            }
-
+            if (is_string($decoded) && !empty($decoded)) return $decoded;
             return $planName;
         }
 
@@ -442,49 +392,40 @@ class CrmMembersController extends Controller
     //  AJAX — Member Search for Select2
     // ══════════════════════════════════════════════════════
 
-public function searchAjax(Request $request): \Illuminate\Http\JsonResponse
-{
-    $q             = trim((string) $request->get('q', ''));
-    $branchId      = $request->get('branch_id');
+    public function searchAjax(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q             = trim((string)$request->get('q', ''));
+        $branchId      = $request->get('branch_id');
+        $withProspects = $request->boolean('with_prospects');
 
-    // ✅ إظهار الأعضاء المحتملين عند الطلب (من موديل المتابعات)
-    $withProspects = $request->boolean('with_prospects');
+        $query = Member::query()
+            ->select('id', 'first_name', 'last_name', 'member_code', 'phone', 'branch_id', 'type');
 
-    $query = Member::query()
-        ->select('id', 'first_name', 'last_name', 'member_code', 'phone', 'branch_id', 'type');
+        if ($withProspects) {
+            $query->withoutGlobalScope(ExcludeProspectsScope::class);
+        }
 
-    // ✅ رفع ExcludeProspectsScope إذا طُلب، وإلا أعضاء عاديون فقط
-    if ($withProspects) {
-        $query->withoutGlobalScope(ExcludeProspectsScope::class);
+        if (!empty($branchId)) $query->where('branch_id', $branchId);
+
+        if ($q !== '') {
+            $query->where(fn($sq) =>
+                $sq->where('first_name',    'like', "%{$q}%")
+                   ->orWhere('last_name',   'like', "%{$q}%")
+                   ->orWhere('member_code', 'like', "%{$q}%")
+                   ->orWhere('phone',       'like', "%{$q}%")
+            );
+        }
+
+        $members = $query->limit(20)->get()->map(fn($m) => [
+            'id'        => $m->id,
+            'text'      => trim("{$m->first_name} {$m->last_name}")
+                            . ($m->member_code ? " — {$m->member_code}" : '')
+                            . ($m->type === 'prospect' ? ' 🟢 ' . trans('crm.prospect_member') : ''),
+            'phone'     => $m->phone     ?? '',
+            'branch_id' => $m->branch_id,
+            'type'      => $m->type      ?? 'member',
+        ]);
+
+        return response()->json($members);
     }
-
-    if (!empty($branchId)) {
-        $query->where('branch_id', $branchId);
-    }
-
-    if ($q !== '') {
-        $query->where(function ($sq) use ($q) {
-            $sq->where('first_name',    'like', "%{$q}%")
-               ->orWhere('last_name',   'like', "%{$q}%")
-               ->orWhere('member_code', 'like', "%{$q}%")
-               ->orWhere('phone',       'like', "%{$q}%");
-        });
-    }
-
-    $members = $query->limit(20)->get()->map(fn($m) => [
-        'id'        => $m->id,
-
-        // ✅ إضافة (محتمل) بجانب اسم العضو المحتمل للتمييز
-        'text'      => trim("{$m->first_name} {$m->last_name}")
-                        . ($m->member_code ? " — {$m->member_code}" : '')
-                        . ($m->type === 'prospect' ? ' 🟢 ' . trans('crm.prospect_member') : ''),
-
-        'phone'     => $m->phone ?? '',
-        'branch_id' => $m->branch_id,
-        'type'      => $m->type ?? 'member',
-    ]);
-
-    return response()->json($members);
-}
-
 }

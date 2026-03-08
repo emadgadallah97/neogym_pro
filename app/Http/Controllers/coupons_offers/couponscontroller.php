@@ -171,21 +171,36 @@ class couponscontroller extends Controller
 
     public function show($id)
     {
-        $Coupon = Coupon::with(['plans', 'types', 'branches', 'durations', 'usages'])->findOrFail($id);
+        $Coupon = Coupon::with([
+            'plans',
+            'types',
+            // ✅ withoutGlobalScope لعرض كل الفروع المرتبطة بالكوبون
+            'branches' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'durations',
+            'usages',
+        ])->findOrFail($id);
+
         return view('coupons_offers.coupons.show', compact('Coupon'));
     }
 
     public function edit($id)
     {
-        $Coupon = Coupon::with(['plans', 'types', 'branches', 'durations'])->findOrFail($id);
+        $Coupon = Coupon::with([
+            'plans',
+            'types',
+            // ✅ withoutGlobalScope لعرض الفروع المحددة مسبقاً في الكوبون
+            'branches' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'durations',
+        ])->findOrFail($id);
 
-        $Plans = $this->activePlansList();
-        $Types = $this->activeTypesList();
-        $Branches = $this->activeBranchesList();
-        $Members = $this->membersList();
+        $Plans    = $this->activePlansList();
+        $Types    = $this->activeTypesList();
+        $Branches = $this->activeBranchesList(); // ✅ DB::table يتجاوز الـ Scope تلقائياً
+        $Members  = $this->membersList();
 
         return view('coupons_offers.coupons.edit', compact('Coupon', 'Plans', 'Types', 'Branches', 'Members'));
     }
+
 
     public function update(CouponRequest $request, $id)
     {

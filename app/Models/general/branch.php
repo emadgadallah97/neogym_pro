@@ -5,6 +5,7 @@ namespace App\Models\general;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Scopes\BranchAccessScope;
 
 class Branch extends Model
 {
@@ -29,4 +30,17 @@ class Branch extends Model
     public $translatable = ['name'];
 
     protected $dates = ['deleted_at'];
+        /**
+     * ✅ تطبيق الـ Scope تلقائياً على كل استعلام
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new BranchAccessScope());
+    }
+
+//     // جلب كل الفروع بدون قيد
+// $allBranches = Branch::withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class)
+//     ->where('status', 1)
+//     ->get();
+
 }

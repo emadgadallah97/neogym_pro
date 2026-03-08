@@ -16,100 +16,91 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class subscriptions_reportcontroller extends Controller
 {
-    public function index(Request $request)
-    {
-        $action = (string)$request->get('action', '');
+public function index(Request $request)
+{
+    $action = (string)$request->get('action', '');
 
-        if (!$request->ajax() && (int)$request->get('print', 0) === 1) {
-            return $this->print($request);
-        }
-
-        if (!$request->ajax() && $action === 'print') {
-            return $this->print($request);
-        }
-
-        if (!$request->ajax() && $action === 'export_excel') {
-            return $this->exportExcel($request);
-        }
-
-        if ($request->ajax()) {
-            if ($action === 'metrics') {
-                return response()->json($this->computeKpis($request));
-            }
-            return $this->datatable($request);
-        }
-
-        $branches = Branch::query()
-            ->select('id', 'name')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
-
-        $types = DB::table('subscriptions_types as st')
-            ->whereNull('st.deleted_at')
-            ->select('st.id', 'st.name', 'st.status')
-            ->orderByDesc('st.id')
-            ->get();
-
-        $periodTypes = [
-            'daily',
-            'weekly',
-            'monthly',
-            'quarterly',
-            'semi_yearly',
-            'yearly',
-            'other',
-        ];
-
-        $kpis = [
-            'total' => 0,
-            'active' => 0,
-            'inactive' => 0,
-            'types_used' => 0,
-            'allow_freeze' => 0,
-            'allow_guest' => 0,
-            'notify_before_end' => 0,
-            'avg_duration_days' => 0,
-            'avg_sessions_count' => 0,
-            'avg_price' => 0,
-            'branches_used' => 0,
-        ];
-
-        $filterOptions = [
-            'statuses' => $this->statusOptions(),
-            'yes_no' => $this->yesNoOptions(),
-            'period_types' => $this->periodTypeOptions($periodTypes),
-        ];
-
-        return view('reports.subscriptions_report.index', [
-            'branches' => $branches,
-            'types' => $types,
-            'periodTypes' => $periodTypes,
-            'kpis' => $kpis,
-            'filters' => [
-                'plan_term' => $request->get('plan_term'),
-                'type_id' => $request->get('type_id'),
-                'branch_ids' => (array)$request->get('branch_ids', []),
-
-                'status' => $request->get('status'),
-                'sessions_period_type' => $request->get('sessions_period_type'),
-
-                'allow_guest' => $request->get('allow_guest'),
-                'allow_freeze' => $request->get('allow_freeze'),
-                'notify_before_end' => $request->get('notify_before_end'),
-
-                'duration_from' => $request->get('duration_from'),
-                'duration_to' => $request->get('duration_to'),
-
-                'sessions_from' => $request->get('sessions_from'),
-                'sessions_to' => $request->get('sessions_to'),
-
-                'price_from' => $request->get('price_from'),
-                'price_to' => $request->get('price_to'),
-            ],
-            'filterOptions' => $filterOptions,
-        ]);
+    if (!$request->ajax() && (int)$request->get('print', 0) === 1) {
+        return $this->print($request);
     }
+    if (!$request->ajax() && $action === 'print') {
+        return $this->print($request);
+    }
+    if (!$request->ajax() && $action === 'export_excel') {
+        return $this->exportExcel($request);
+    }
+
+    if ($request->ajax()) {
+        if ($action === 'metrics') {
+            return response()->json($this->computeKpis($request));
+        }
+        return $this->datatable($request);
+    }
+
+    // ✅ كل الفروع بغض النظر عن GlobalScope
+    $branches = Branch::withoutGlobalScopes()
+        ->select('id', 'name')
+        ->whereNull('deleted_at')
+        ->where('status', 1)
+        ->orderBy('id')
+        ->get();
+
+    $types = DB::table('subscriptions_types as st')
+        ->whereNull('st.deleted_at')
+        ->select('st.id', 'st.name', 'st.status')
+        ->orderByDesc('st.id')
+        ->get();
+
+    $periodTypes = [
+        'daily', 'weekly', 'monthly',
+        'quarterly', 'semi_yearly', 'yearly', 'other',
+    ];
+
+    $kpis = [
+        'total'              => 0,
+        'active'             => 0,
+        'inactive'           => 0,
+        'types_used'         => 0,
+        'allow_freeze'       => 0,
+        'allow_guest'        => 0,
+        'notify_before_end'  => 0,
+        'avg_duration_days'  => 0,
+        'avg_sessions_count' => 0,
+        'avg_price'          => 0,
+        'branches_used'      => 0,
+    ];
+
+    $filterOptions = [
+        'statuses'     => $this->statusOptions(),
+        'yes_no'       => $this->yesNoOptions(),
+        'period_types' => $this->periodTypeOptions($periodTypes),
+    ];
+
+    return view('reports.subscriptions_report.index', [
+        'branches'    => $branches,
+        'types'       => $types,
+        'periodTypes' => $periodTypes,
+        'kpis'        => $kpis,
+        'filters'     => [
+            'plan_term'            => $request->get('plan_term'),
+            'type_id'              => $request->get('type_id'),
+            'branch_ids'           => (array)$request->get('branch_ids', []),
+            'status'               => $request->get('status'),
+            'sessions_period_type' => $request->get('sessions_period_type'),
+            'allow_guest'          => $request->get('allow_guest'),
+            'allow_freeze'         => $request->get('allow_freeze'),
+            'notify_before_end'    => $request->get('notify_before_end'),
+            'duration_from'        => $request->get('duration_from'),
+            'duration_to'          => $request->get('duration_to'),
+            'sessions_from'        => $request->get('sessions_from'),
+            'sessions_to'          => $request->get('sessions_to'),
+            'price_from'           => $request->get('price_from'),
+            'price_to'             => $request->get('price_to'),
+        ],
+        'filterOptions' => $filterOptions,
+    ]);
+}
+
 
     private function datatable(Request $request)
     {
@@ -472,101 +463,93 @@ class subscriptions_reportcontroller extends Controller
         ];
     }
 
-    private function print(Request $request)
-    {
-        $rows = $this->buildQuery($request, false)
-            ->orderBy('sp.id', 'desc')
-            ->get();
+private function print(Request $request)
+{
+    $rows = $this->buildQuery($request, false)
+        ->orderBy('sp.id', 'desc')
+        ->get();
 
-        $kpis = $this->computeKpis($request);
+    $kpis = $this->computeKpis($request);
 
-        $settings = GeneralSetting::query()->where('status', 1)->first();
+    $settings = GeneralSetting::query()->where('status', 1)->first();
 
-        $orgName = '-';
-        if ($settings) {
-            if (method_exists($settings, 'getTranslation')) {
-                $orgName = $settings->getTranslation('name', app()->getLocale())
-                    ?: ($settings->getTranslation('name', 'ar') ?: $settings->getTranslation('name', 'en'));
-            } else {
-                $orgName = $settings->name ?? '-';
-            }
-        }
-
-        $chips = [];
-
-        if ($request->filled('plan_term')) {
-            $chips[] = __('reports.sub_filter_plan') . ': ' . $request->get('plan_term');
-        }
-
-        $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
-        if (!empty($branchIds)) {
-            $branchNames = Branch::query()
-                ->whereIn('id', $branchIds)
-                ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
-                ->filter()
-                ->values()
-                ->implode('، ');
-            $chips[] = __('reports.sub_filter_branches') . ': ' . ($branchNames ?: '---');
-        }
-
-        if ($request->filled('type_id')) {
-            $t = DB::table('subscriptions_types')->whereNull('deleted_at')->where('id', (int)$request->get('type_id'))->first();
-            $tn = $t ? $this->nameJsonOrText($t->name ?? null, app()->getLocale()) : '';
-            $chips[] = __('reports.sub_filter_type') . ': ' . ($tn ?: '---');
-        }
-
-        if ($request->filled('status')) {
-            $chips[] = __('reports.sub_filter_status') . ': ' . $this->translateStatus($request->get('status'));
-        }
-
-        if ($request->filled('sessions_period_type')) {
-            $chips[] = __('reports.sub_filter_period_type') . ': ' . $this->translatePeriodType($request->get('sessions_period_type'));
-        }
-
-        if ($request->filled('allow_guest')) {
-            $chips[] = __('reports.sub_filter_allow_guest') . ': ' . $this->translateYesNo($request->get('allow_guest'));
-        }
-
-        if ($request->filled('allow_freeze')) {
-            $chips[] = __('reports.sub_filter_allow_freeze') . ': ' . $this->translateYesNo($request->get('allow_freeze'));
-        }
-
-        if ($request->filled('notify_before_end')) {
-            $chips[] = __('reports.sub_filter_notify_before_end') . ': ' . $this->translateYesNo($request->get('notify_before_end'));
-        }
-
-        if ($request->filled('duration_from') || $request->filled('duration_to')) {
-            $chips[] = __('reports.sub_filter_duration_days') . ': ' .
-                ($request->get('duration_from') ?: '---') . ' ⟶ ' . ($request->get('duration_to') ?: '---');
-        }
-
-        if ($request->filled('sessions_from') || $request->filled('sessions_to')) {
-            $chips[] = __('reports.sub_filter_sessions_count') . ': ' .
-                ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
-        }
-
-        if ($request->filled('price_from') || $request->filled('price_to')) {
-            $chips[] = __('reports.sub_filter_price') . ': ' .
-                ($request->get('price_from') ?: '---') . ' ⟶ ' . ($request->get('price_to') ?: '---');
-        }
-
-        $meta = [
-            'title' => __('reports.subscriptions_report_title'),
-            'org_name' => $orgName,
-            'generated_at' => now('Africa/Cairo')->format('Y-m-d H:i'),
-            'total_count' => $rows->count(),
-        ];
-
-        return view('reports.subscriptions_report.print', [
-            'meta' => $meta,
-            'chips' => $chips,
-            'kpis' => $kpis,
-            'rows' => $rows,
-        ]);
+    $orgName = '-';
+    if ($settings) {
+        $orgName = method_exists($settings, 'getTranslation')
+            ? ($settings->getTranslation('name', app()->getLocale())
+                ?: ($settings->getTranslation('name', 'ar')
+                ?: $settings->getTranslation('name', 'en')))
+            : ($settings->name ?? '-');
     }
+
+    $chips = [];
+
+    if ($request->filled('plan_term')) {
+        $chips[] = __('reports.sub_filter_plan') . ': ' . $request->get('plan_term');
+    }
+
+    $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
+    if (!empty($branchIds)) {
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branchNames = Branch::withoutGlobalScopes()
+            ->whereIn('id', $branchIds)
+            ->get()
+            ->map(fn($b) => method_exists($b, 'getTranslation')
+                ? $b->getTranslation('name', app()->getLocale())
+                : ($b->name ?? ''))
+            ->filter()
+            ->values()
+            ->implode('، ');
+
+        $chips[] = __('reports.sub_filter_branches') . ': ' . ($branchNames ?: '---');
+    }
+
+    if ($request->filled('type_id')) {
+        $t  = DB::table('subscriptions_types')->whereNull('deleted_at')->where('id', (int)$request->get('type_id'))->first();
+        $tn = $t ? $this->nameJsonOrText($t->name ?? null, app()->getLocale()) : '';
+        $chips[] = __('reports.sub_filter_type') . ': ' . ($tn ?: '---');
+    }
+
+    if ($request->filled('status')) {
+        $chips[] = __('reports.sub_filter_status') . ': ' . $this->translateStatus($request->get('status'));
+    }
+
+    if ($request->filled('sessions_period_type')) {
+        $chips[] = __('reports.sub_filter_period_type') . ': ' . $this->translatePeriodType($request->get('sessions_period_type'));
+    }
+
+    if ($request->filled('allow_guest'))       $chips[] = __('reports.sub_filter_allow_guest')       . ': ' . $this->translateYesNo($request->get('allow_guest'));
+    if ($request->filled('allow_freeze'))      $chips[] = __('reports.sub_filter_allow_freeze')      . ': ' . $this->translateYesNo($request->get('allow_freeze'));
+    if ($request->filled('notify_before_end')) $chips[] = __('reports.sub_filter_notify_before_end') . ': ' . $this->translateYesNo($request->get('notify_before_end'));
+
+    if ($request->filled('duration_from') || $request->filled('duration_to')) {
+        $chips[] = __('reports.sub_filter_duration_days') . ': ' .
+            ($request->get('duration_from') ?: '---') . ' ⟶ ' . ($request->get('duration_to') ?: '---');
+    }
+    if ($request->filled('sessions_from') || $request->filled('sessions_to')) {
+        $chips[] = __('reports.sub_filter_sessions_count') . ': ' .
+            ($request->get('sessions_from') ?: '---') . ' ⟶ ' . ($request->get('sessions_to') ?: '---');
+    }
+    if ($request->filled('price_from') || $request->filled('price_to')) {
+        $chips[] = __('reports.sub_filter_price') . ': ' .
+            ($request->get('price_from') ?: '---') . ' ⟶ ' . ($request->get('price_to') ?: '---');
+    }
+
+    $meta = [
+        'title'        => __('reports.subscriptions_report_title'),
+        'org_name'     => $orgName,
+        'generated_at' => now('Africa/Cairo')->format('Y-m-d H:i'),
+        'total_count'  => $rows->count(),
+    ];
+
+    return view('reports.subscriptions_report.print', [
+        'meta'  => $meta,
+        'chips' => $chips,
+        'kpis'  => $kpis,
+        'rows'  => $rows,
+    ]);
+}
+
 
     private function exportExcel(Request $request)
     {

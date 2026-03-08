@@ -12,25 +12,33 @@ class devicescontroller extends Controller
 {
     public function index()
     {
-        $devices         = HrDevice::with('branch')->latest()->get();
-        $branches        = Branch::where('status', 1)->orderBy('id')->get();
+        // ✅ إعدادات — يرى كل الأجهزة بغض النظر عن الفرع
+        $devices = HrDevice::with([
+            'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        ])->latest()->get();
+
+        // ✅ كل الفروع متاحة لتعيين جهاز عليها
+        $branches = Branch::withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class)
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get();
+
         $totalDevices    = $devices->count();
         $activeDevices   = $devices->where('status', 'active')->count();
         $inactiveDevices = $devices->where('status', 'inactive')->count();
 
         return view('hr.devices.index', compact(
-            'devices',
-            'branches',
-            'totalDevices',
-            'activeDevices',
-            'inactiveDevices'
+            'devices', 'branches',
+            'totalDevices', 'activeDevices', 'inactiveDevices'
         ));
     }
 
-    public function create()
-    {
-        return redirect()->route('devices.index');
-    }
+    public function create() { return redirect()->route('devices.index'); }
+    public function edit($id) { return redirect()->route('devices.index'); }
+
+    // ─────────────────────────────────────────
+    // Store
+    // ─────────────────────────────────────────
 
     public function store(Request $request)
     {
@@ -60,24 +68,21 @@ class devicescontroller extends Controller
             'user_add'      => Auth::id(),
         ]);
 
-        $device->load('branch');
+        // ✅ withoutGlobalScope لضمان ظهور اسم الفرع دائماً
+        $device->load([
+            'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => trans('hr.device_created_success'),
-            'data'    => [
-                'id'            => $device->id,
-                'name'          => $device->name,
-                'branch_name'   => $device->branch?->name ?? '—',
-                'serial_number' => $device->serial_number,
-                'ip_address'    => $device->ip_address ?? '—',
-                'status'        => $device->status,
-                'status_label'  => $device->status === 'active'
-                    ? '<span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>' . trans('hr.active') . '</span>'
-                    : '<span class="badge bg-danger-subtle text-danger fs-11"><i class="ri-close-circle-line me-1"></i>' . trans('hr.inactive') . '</span>',
-            ],
+            'data'    => $this->deviceDto($device),
         ]);
     }
+
+    // ─────────────────────────────────────────
+    // Show
+    // ─────────────────────────────────────────
 
     public function show($id)
     {
@@ -97,10 +102,9 @@ class devicescontroller extends Controller
         ]);
     }
 
-    public function edit($id)
-    {
-        return redirect()->route('devices.index');
-    }
+    // ─────────────────────────────────────────
+    // Update
+    // ─────────────────────────────────────────
 
     public function update(Request $request, $id)
     {
@@ -131,24 +135,21 @@ class devicescontroller extends Controller
             'notes'         => $request->notes,
         ]);
 
-        $device->load('branch');
+        // ✅ withoutGlobalScope لضمان ظهور اسم الفرع دائماً
+        $device->load([
+            'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => trans('hr.device_updated_success'),
-            'data'    => [
-                'id'            => $device->id,
-                'name'          => $device->name,
-                'branch_name'   => $device->branch?->name ?? '—',
-                'serial_number' => $device->serial_number,
-                'ip_address'    => $device->ip_address ?? '—',
-                'status'        => $device->status,
-                'status_label'  => $device->status === 'active'
-                    ? '<span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>' . trans('hr.active') . '</span>'
-                    : '<span class="badge bg-danger-subtle text-danger fs-11"><i class="ri-close-circle-line me-1"></i>' . trans('hr.inactive') . '</span>',
-            ],
+            'data'    => $this->deviceDto($device),
         ]);
     }
+
+    // ─────────────────────────────────────────
+    // Destroy
+    // ─────────────────────────────────────────
 
     public function destroy($id)
     {
@@ -167,5 +168,24 @@ class devicescontroller extends Controller
             'success' => true,
             'message' => trans('hr.device_deleted_success'),
         ]);
+    }
+
+    // ─────────────────────────────────────────
+    // DTO
+    // ─────────────────────────────────────────
+
+    private function deviceDto(HrDevice $device): array
+    {
+        return [
+            'id'            => $device->id,
+            'name'          => $device->name,
+            'branch_name'   => $device->branch?->name ?? '—',
+            'serial_number' => $device->serial_number,
+            'ip_address'    => $device->ip_address ?? '—',
+            'status'        => $device->status,
+            'status_label'  => $device->status === 'active'
+                ? '<span class="badge bg-success-subtle text-success fs-11"><i class="ri-checkbox-circle-line me-1"></i>' . trans('hr.active') . '</span>'
+                : '<span class="badge bg-danger-subtle text-danger fs-11"><i class="ri-close-circle-line me-1"></i>' . trans('hr.inactive') . '</span>',
+        ];
     }
 }

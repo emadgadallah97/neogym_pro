@@ -19,16 +19,56 @@ use Illuminate\Support\Facades\Validator;
 
 class advancescontroller extends Controller
 {
+    // ─────────────────────────────────────────
+    // Helpers — Branch Access
+    // ─────────────────────────────────────────
+
+    private function accessibleBranchIds(): array
+    {
+        $user = Auth::user();
+        if (!$user->employee_id) return [];
+
+        return DB::table('employee_branch')
+            ->where('employee_id', $user->employee_id)
+            ->pluck('branch_id')
+            ->map(fn($id) => (int)$id)
+            ->toArray();
+    }
+
+    private function userCanAccessBranch(int $branchId): bool
+    {
+        $ids = $this->accessibleBranchIds();
+        return empty($ids) || in_array($branchId, $ids);
+    }
+
+    // ─────────────────────────────────────────
+    // Index
+    // ─────────────────────────────────────────
+
     public function index(Request $request)
     {
+        $branchIds = $this->accessibleBranchIds();
+
+        // ✅ Scope يعمل تلقائياً — فروع المستخدم فقط
         $branches = Branch::where('status', 1)->orderBy('id')->get();
 
-        $branchId   = (int)($request->get('branch_id', Auth::user()->branch_id ?? 0));
-        $employeeId = (int)($request->get('employee_id', 0));
+        // Default branch: أول فرع متاح للمستخدم
+        $defaultBranch = !empty($branchIds) ? $branchIds[0] : 0;
+        $branchId      = (int)($request->get('branch_id', $defaultBranch));
+        $employeeId    = (int)($request->get('employee_id', 0));
+
+        // ✅ التحقق أن الفرع المطلوب ضمن فروع المستخدم
+        if ($branchId > 0 && !$this->userCanAccessBranch($branchId)) {
+            $branchId = $defaultBranch;
+        }
 
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
 
-        $q = HrAdvance::with(['employee', 'branch'])->orderByDesc('id');
+        $q = HrAdvance::with([
+            'employee',
+            // ✅ withoutGlobalScope لضمان ظهور اسم الفرع دائماً
+            'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        ])->orderByDesc('id');
 
         if ($branchId > 0) {
             $q->where('branch_id', $branchId);
@@ -42,41 +82,50 @@ class advancescontroller extends Controller
             $q->where('employee_id', $employeeId);
         }
 
-        $rows = $q->get();
-
+        $rows          = $q->get();
         $ExpensesTypes = ExpensesType::where('status', 1)->orderByDesc('id')->get();
 
         return view('hr.advances.index', compact(
-            'branches',
-            'branchId',
-            'employees',
-            'employeeId',
-            'rows',
-            'ExpensesTypes'
+            'branches', 'branchId', 'employees', 'employeeId', 'rows', 'ExpensesTypes'
         ));
     }
 
+    // ─────────────────────────────────────────
+    // AJAX: Employees by Branch
+    // ─────────────────────────────────────────
+
     public function employeesByBranch(Request $request)
     {
-        $branchId  = (int)$request->get('branch_id', 0);
+        $branchId = (int)$request->get('branch_id', 0);
+
+        // ✅ منع جلب موظفي فرع لا يملكه المستخدم
+        if ($branchId > 0 && !$this->userCanAccessBranch($branchId)) {
+            return response()->json(['success' => false, 'data' => []]);
+        }
+
         $employees = $this->getEmployeesByPrimaryBranch($branchId);
 
-        $data = $employees->map(function ($e) {
-            return [
-                'id'   => $e->id,
-                'name' => $e->full_name ?? $e->getFullNameAttribute(),
-                'code' => $e->code,
-            ];
-        });
+        $data = $employees->map(fn($e) => [
+            'id'   => $e->id,
+            'name' => $e->full_name ?? $e->getFullNameAttribute(),
+            'code' => $e->code,
+        ]);
 
         return response()->json(['success' => true, 'data' => $data]);
     }
 
+    // ─────────────────────────────────────────
+    // Show
+    // ─────────────────────────────────────────
+
     public function show($id)
     {
-        $a = HrAdvance::with(['employee', 'branch', 'installments' => function ($q) {
-            $q->orderBy('month');
-        }])->findOrFail($id);
+        $a = HrAdvance::with([
+            'employee',
+            // ✅ withoutGlobalScope لضمان ظهور اسم الفرع
+            'branch'       => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'installments' => fn($q) => $q->orderBy('month'),
+        ])->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -84,12 +133,24 @@ class advancescontroller extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────
+    // Store
+    // ─────────────────────────────────────────
+
     public function store(Request $request)
     {
         $data = $this->validateAdvance($request);
 
         $employeeId = (int)$data['employee_id'];
         $branchId   = (int)$data['branch_id'];
+
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->t('accounting.branch_not_allowed', [], 'غير مسموح بالوصول لهذا الفرع'),
+            ], 403);
+        }
 
         if (!$this->isEmployeePrimaryInBranch($employeeId, $branchId)) {
             return response()->json([
@@ -130,7 +191,10 @@ class advancescontroller extends Controller
 
             DB::commit();
 
-            $a->load(['employee', 'branch']);
+            $a->load([
+                'employee',
+                'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -143,6 +207,10 @@ class advancescontroller extends Controller
             return response()->json(['success' => false, 'message' => $this->errorMsg($e)], 500);
         }
     }
+
+    // ─────────────────────────────────────────
+    // Update
+    // ─────────────────────────────────────────
 
     public function update(Request $request, $id)
     {
@@ -159,6 +227,14 @@ class advancescontroller extends Controller
 
         $employeeId = (int)$data['employee_id'];
         $branchId   = (int)$data['branch_id'];
+
+        // ✅ التحقق أن الفرع ضمن فروع المستخدم
+        if (!$this->userCanAccessBranch($branchId)) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->t('accounting.branch_not_allowed', [], 'غير مسموح بالوصول لهذا الفرع'),
+            ], 403);
+        }
 
         if (!$this->isEmployeePrimaryInBranch($employeeId, $branchId)) {
             return response()->json([
@@ -201,7 +277,6 @@ class advancescontroller extends Controller
                 $a->start_month         = $newStartMonth;
                 $a->save();
             } else {
-                // approved: إعادة جدولة غير المدفوع فقط
                 $paidQ = $a->installments()->where(function ($w) {
                     $w->where('is_paid', true)->orWhereNotNull('payroll_id');
                 });
@@ -227,9 +302,7 @@ class advancescontroller extends Controller
                 $remainingCount  = $newCount - $paidCount;
 
                 if ($remainingAmount <= 0) {
-                    $a->installments()->where(function ($w) {
-                        $w->where('is_paid', false)->whereNull('payroll_id');
-                    })->delete();
+                    $a->installments()->where(fn($w) => $w->where('is_paid', false)->whereNull('payroll_id'))->delete();
 
                     $a->total_amount        = $newTotal;
                     $a->installments_count  = $newCount;
@@ -256,9 +329,7 @@ class advancescontroller extends Controller
                         }
                     }
 
-                    $a->installments()->where(function ($w) {
-                        $w->where('is_paid', false)->whereNull('payroll_id');
-                    })->delete();
+                    $a->installments()->where(fn($w) => $w->where('is_paid', false)->whereNull('payroll_id'))->delete();
 
                     $this->createInstallmentsForRemaining($a, $remainingAmount, $remainingCount, $baseMonth);
 
@@ -275,7 +346,10 @@ class advancescontroller extends Controller
 
             DB::commit();
 
-            $a->load(['employee', 'branch']);
+            $a->load([
+                'employee',
+                'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -289,14 +363,16 @@ class advancescontroller extends Controller
         }
     }
 
+    // ─────────────────────────────────────────
+    // Destroy
+    // ─────────────────────────────────────────
+
     public function destroy($id)
     {
         $a = HrAdvance::with('installments')->findOrFail($id);
 
         try {
-            $hasPaid = $a->installments()->where(function ($w) {
-                $w->where('is_paid', true)->orWhereNotNull('payroll_id');
-            })->exists();
+            $hasPaid = $a->installments()->where(fn($w) => $w->where('is_paid', true)->orWhereNotNull('payroll_id'))->exists();
 
             if ($hasPaid) {
                 return response()->json([
@@ -325,6 +401,7 @@ class advancescontroller extends Controller
     // ─────────────────────────────────────────
     // Workflow: approve / reject
     // ─────────────────────────────────────────
+
     public function approve($id)
     {
         $a = HrAdvance::with('installments')->findOrFail($id);
@@ -341,7 +418,10 @@ class advancescontroller extends Controller
             $this->doApproveLogic($a);
             DB::commit();
 
-            $a->load(['employee', 'branch']);
+            $a->load([
+                'employee',
+                'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -393,12 +473,7 @@ class advancescontroller extends Controller
                 ? ($a->employee->full_name ?? trim(($a->employee->first_name ?? '') . ' ' . ($a->employee->last_name ?? '')))
                 : ('#' . $a->employee_id);
 
-            // ✅ الإصلاح: استخدام t() بدلاً من trans() مباشرة لضمان عدم حفظ المفتاح
-            $description = $this->t(
-                'hr.advance_expense_description',
-                ['name' => $empName],
-                'سلفة موظف - ' . $empName
-            );
+            $description = $this->t('hr.advance_expense_description', ['name' => $empName], 'سلفة موظف - ' . $empName);
 
             Expense::create([
                 'branchid'              => $a->branch_id,
@@ -421,7 +496,10 @@ class advancescontroller extends Controller
 
             DB::commit();
 
-            $a->load(['employee', 'branch']);
+            $a->load([
+                'employee',
+                'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -463,7 +541,10 @@ class advancescontroller extends Controller
             $a->save();
             DB::commit();
 
-            $a->load(['employee', 'branch']);
+            $a->load([
+                'employee',
+                'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -480,6 +561,7 @@ class advancescontroller extends Controller
     // ─────────────────────────────────────────
     // Validation + Helpers
     // ─────────────────────────────────────────
+
     private function validateAdvance(Request $request, ?int $ignoreId = null): array
     {
         $validator = Validator::make($request->all(), [
@@ -607,16 +689,14 @@ class advancescontroller extends Controller
                 ? $a->installments
                 : $a->installments()->orderBy('month')->get();
 
-            $dto['installments'] = $inst->map(function ($i) {
-                return [
-                    'id'         => $i->id,
-                    'month'      => $i->month    ? Carbon::parse($i->month)->format('Y-m')       : null,
-                    'amount'     => number_format((float)$i->amount, 2, '.', ''),
-                    'is_paid'    => (int)$i->is_paid,
-                    'payroll_id' => $i->payroll_id,
-                    'paid_date'  => $i->paid_date ? Carbon::parse($i->paid_date)->toDateString() : null,
-                ];
-            })->values();
+            $dto['installments'] = $inst->map(fn($i) => [
+                'id'         => $i->id,
+                'month'      => $i->month    ? Carbon::parse($i->month)->format('Y-m')       : null,
+                'amount'     => number_format((float)$i->amount, 2, '.', ''),
+                'is_paid'    => (int)$i->is_paid,
+                'payroll_id' => $i->payroll_id,
+                'paid_date'  => $i->paid_date ? Carbon::parse($i->paid_date)->toDateString() : null,
+            ])->values();
         }
 
         return $dto;
@@ -644,17 +724,9 @@ class advancescontroller extends Controller
             ->exists();
     }
 
-    /**
-     * ✅ الدالة المحورية للإصلاح:
-     * تتحقق من وجود مفتاح الترجمة أولاً، فإن لم يوجد تُرجع الـ fallback مباشرة
-     * بدلاً من حفظ اسم المفتاح في قاعدة البيانات.
-     */
     private function t(string $key, array $replace = [], string $fallback = ''): string
     {
-        if (Lang::has($key)) {
-            return trans($key, $replace);
-        }
-        // استبدال :placeholder يدوياً في الـ fallback
+        if (Lang::has($key)) return trans($key, $replace);
         foreach ($replace as $k => $v) {
             $fallback = str_replace(':' . $k, $v, $fallback);
         }

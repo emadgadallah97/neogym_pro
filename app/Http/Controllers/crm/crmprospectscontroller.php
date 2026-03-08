@@ -7,14 +7,13 @@ use App\Models\crm\CrmFollowup;
 use App\Models\members\Member;
 use App\Models\Scopes\ExcludeProspectsScope;
 use App\Models\general\Branch;
+use App\Imports\ProspectsImport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ProspectsImport;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CrmProspectsController extends Controller
 {
@@ -22,69 +21,65 @@ class CrmProspectsController extends Controller
     //  INDEX
     // ══════════════════════════════════════════════════════
 
-public function index(Request $request)
-{
-    $query = Member::prospects()
-        ->with(['branch', 'followups' => fn($q) => $q->latest()->limit(1)])
-        ->withCount('followups');
+    public function index(Request $request)
+    {
+        $query = Member::prospects()
+            ->with([
+                // ✅ branch يظهر دائماً بغض النظر عن GlobalScope
+                'branch'    => fn($bq) => $bq->withoutGlobalScopes(),
+                'followups' => fn($q)  => $q->latest()->limit(1),
+            ])
+            ->withCount('followups');
 
-    if ($request->filled('search')) {
-        $s = $request->search;
-        $query->where(function ($q) use ($s) {
-            $q->where('first_name', 'like', "%{$s}%")
-              ->orWhere('last_name',  'like', "%{$s}%")
-              ->orWhere('phone',      'like', "%{$s}%")
-              ->orWhere('email',      'like', "%{$s}%");
-        });
-    }
-
-    if ($request->filled('branch_id')) {
-        $query->where('branch_id', $request->branch_id);
-    }
-
-    if ($request->filled('gender')) {
-        $query->where('gender', $request->gender);
-    }
-
-    // ✅ فلتر تاريخ الإضافة (created_at) — من / إلى
-    if ($request->filled('created_from') || $request->filled('created_to')) {
-
-        $from = $request->filled('created_from')
-            ? Carbon::createFromFormat('Y-m-d', $request->created_from)->startOfDay()
-            : null;
-
-        $to = $request->filled('created_to')
-            ? Carbon::createFromFormat('Y-m-d', $request->created_to)->endOfDay()
-            : null;
-
-        if ($from && $to) {
-            $query->whereBetween('created_at', [$from, $to]);
-        } elseif ($from) {
-            $query->where('created_at', '>=', $from);
-        } elseif ($to) {
-            $query->where('created_at', '<=', $to);
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) =>
+                $q->where('first_name', 'like', "%{$s}%")
+                  ->orWhere('last_name', 'like', "%{$s}%")
+                  ->orWhere('phone',     'like', "%{$s}%")
+                  ->orWhere('email',     'like', "%{$s}%")
+            );
         }
+
+        if ($request->filled('branch_id'))  $query->where('branch_id', $request->branch_id);
+        if ($request->filled('gender'))     $query->where('gender', $request->gender);
+
+        if ($request->filled('created_from') || $request->filled('created_to')) {
+            $from = $request->filled('created_from')
+                ? Carbon::createFromFormat('Y-m-d', $request->created_from)->startOfDay()
+                : null;
+            $to = $request->filled('created_to')
+                ? Carbon::createFromFormat('Y-m-d', $request->created_to)->endOfDay()
+                : null;
+
+            if ($from && $to)   $query->whereBetween('created_at', [$from, $to]);
+            elseif ($from)      $query->where('created_at', '>=', $from);
+            elseif ($to)        $query->where('created_at', '<=', $to);
+        }
+
+        if ($request->filled('followup_status')) {
+            match ($request->followup_status) {
+                'no_followup' => $query->whereDoesntHave('followups'),
+                'pending'     => $query->whereHas('followups', fn($q) => $q->where('status', 'pending')),
+                'overdue'     => $query->whereHas('followups', fn($q) =>
+                                     $q->where('status', 'pending')
+                                       ->whereNotNull('next_action_at')
+                                       ->whereDate('next_action_at', '<', Carbon::today())
+                                 ),
+                default       => null,
+            };
+        }
+
+        $prospects = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        // ✅ كل الفروع النشطة — withoutGlobalScopes لتجاوز BranchAccessScope
+        $branches = Branch::withoutGlobalScopes()
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get();
+
+        return view('crm.prospects.index', compact('prospects', 'branches'));
     }
-
-    if ($request->filled('followup_status')) {
-        match ($request->followup_status) {
-            'no_followup' => $query->whereDoesntHave('followups'),
-            'pending'     => $query->whereHas('followups', fn($q) => $q->where('status', 'pending')),
-            'overdue'     => $query->whereHas('followups', fn($q) =>
-                                $q->where('status', 'pending')
-                                  ->whereNotNull('next_action_at')
-                                  ->whereDate('next_action_at', '<', Carbon::today())
-                             ),
-            default       => null,
-        };
-    }
-
-    $prospects = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
-    $branches  = Branch::orderBy('id')->get();
-
-    return view('crm.prospects.index', compact('prospects', 'branches'));
-}
-
 
     // ══════════════════════════════════════════════════════
     //  CREATE
@@ -92,7 +87,8 @@ public function index(Request $request)
 
     public function create()
     {
-        $branches      = Branch::orderBy('id')->get();
+        // ✅ كل الفروع النشطة
+        $branches      = Branch::withoutGlobalScopes()->where('status', 1)->orderBy('id')->get();
         $followupTypes = CrmFollowup::getTypes();
 
         return view('crm.prospects.create', compact('branches', 'followupTypes'));
@@ -105,24 +101,18 @@ public function index(Request $request)
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'branch_id'       => 'required|exists:branches,id',
-            'first_name'      => 'required|string|max:100',
-            'last_name'       => 'required|string|max:100',
-            'phone'           => 'required|string|max:20',
-            'address'         => 'required|string|max:255',
-            'phone2'          => 'nullable|string|max:20',
-            'whatsapp'        => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:150',
-            'gender'          => 'nullable|in:male,female',
-            'notes'           => 'nullable|string|max:1000',
-
-            // متابعة اختيارية (datetime-local)
+            'branch_id'         => 'required|exists:branches,id',
+            'first_name'        => 'required|string|max:100',
+            'last_name'         => 'required|string|max:100',
+            'phone'             => 'required|string|max:20',
+            'address'           => 'required|string|max:255',
+            'phone2'            => 'nullable|string|max:20',
+            'whatsapp'          => 'nullable|string|max:20',
+            'email'             => 'nullable|email|max:150',
+            'gender'            => 'nullable|in:male,female',
+            'notes'             => 'nullable|string|max:1000',
             'create_followup'   => 'nullable|boolean',
-            'followup_type'     => [
-                'nullable',
-                'required_if:create_followup,1',
-                Rule::in(array_keys(CrmFollowup::typeLabels())),
-            ],
+            'followup_type'     => ['nullable', 'required_if:create_followup,1', Rule::in(array_keys(CrmFollowup::typeLabels()))],
             'followup_notes'    => 'nullable|string|max:500',
             'followup_datetime' => 'nullable|required_if:create_followup,1|date_format:Y-m-d\TH:i|after:now',
         ]);
@@ -146,8 +136,6 @@ public function index(Request $request)
         ]);
 
         if ($request->boolean('create_followup') && $request->filled('followup_type')) {
-            $followupAt = Carbon::createFromFormat('Y-m-d\TH:i', $request->followup_datetime);
-
             CrmFollowup::create([
                 'member_id'      => $prospect->id,
                 'branch_id'      => $prospect->branch_id,
@@ -155,14 +143,10 @@ public function index(Request $request)
                 'status'         => 'pending',
                 'priority'       => 'medium',
                 'notes'          => $request->followup_notes ?? trans('crm.followup_saved_msg'),
-                'next_action_at' => $followupAt,
+                'next_action_at' => Carbon::createFromFormat('Y-m-d\TH:i', $request->followup_datetime),
                 'created_by'     => Auth::id(),
                 'updated_by'     => Auth::id(),
             ]);
-
-            return redirect()
-                ->route('crm.prospects.show', $prospect->id)
-                ->with('success', trans('crm.followup_saved_msg'));
         }
 
         return redirect()
@@ -174,19 +158,25 @@ public function index(Request $request)
     //  SHOW
     // ══════════════════════════════════════════════════════
 
-public function show(int $id)
-{
-    $prospect = Member::withoutGlobalScope(ExcludeProspectsScope::class)
-        ->where('type', 'prospect')
-        ->with(['branch', 'followups' => fn($q) => $q->orderBy('created_at', 'desc')])
-        ->findOrFail($id);
+    public function show(int $id)
+    {
+        $prospect = Member::withoutGlobalScope(ExcludeProspectsScope::class)
+            ->where('type', 'prospect')
+            ->with([
+                // ✅ branch يظهر دائماً
+                'branch'   => fn($bq) => $bq->withoutGlobalScopes(),
+                'followups' => fn($q) => $q->orderBy('created_at', 'desc'),
+            ])
+            ->findOrFail($id);
 
-    // ✅ مطلوب لموديل إضافة المتابعة
-    $branches = Branch::where('status', 1)->get();
+        // ✅ كل الفروع النشطة
+        $branches = Branch::withoutGlobalScopes()
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get();
 
-    return view('crm.prospects.show', compact('prospect', 'branches'));
-}
-
+        return view('crm.prospects.show', compact('prospect', 'branches'));
+    }
 
     // ══════════════════════════════════════════════════════
     //  EDIT
@@ -198,7 +188,8 @@ public function show(int $id)
             ->where('type', 'prospect')
             ->findOrFail($id);
 
-        $branches      = Branch::orderBy('id')->get();
+        // ✅ كل الفروع النشطة
+        $branches      = Branch::withoutGlobalScopes()->where('status', 1)->orderBy('id')->get();
         $followupTypes = CrmFollowup::getTypes();
 
         return view('crm.prospects.edit', compact('prospect', 'branches', 'followupTypes'));
@@ -215,24 +206,18 @@ public function show(int $id)
             ->findOrFail($id);
 
         $validated = $request->validate([
-            'branch_id'       => 'required|exists:branches,id',
-            'first_name'      => 'required|string|max:100',
-            'last_name'       => 'required|string|max:100',
-            'phone'           => 'required|string|max:20',
-            'address'         => 'required|string|max:255',
-            'phone2'          => 'nullable|string|max:20',
-            'whatsapp'        => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:150',
-            'gender'          => 'nullable|in:male,female',
-            'notes'           => 'nullable|string|max:1000',
-
-            // متابعة اختيارية (datetime-local)
+            'branch_id'         => 'required|exists:branches,id',
+            'first_name'        => 'required|string|max:100',
+            'last_name'         => 'required|string|max:100',
+            'phone'             => 'required|string|max:20',
+            'address'           => 'required|string|max:255',
+            'phone2'            => 'nullable|string|max:20',
+            'whatsapp'          => 'nullable|string|max:20',
+            'email'             => 'nullable|email|max:150',
+            'gender'            => 'nullable|in:male,female',
+            'notes'             => 'nullable|string|max:1000',
             'create_followup'   => 'nullable|boolean',
-            'followup_type'     => [
-                'nullable',
-                'required_if:create_followup,1',
-                Rule::in(array_keys(CrmFollowup::typeLabels())),
-            ],
+            'followup_type'     => ['nullable', 'required_if:create_followup,1', Rule::in(array_keys(CrmFollowup::typeLabels()))],
             'followup_notes'    => 'nullable|string|max:500',
             'followup_datetime' => 'nullable|required_if:create_followup,1|date_format:Y-m-d\TH:i|after:now',
         ]);
@@ -252,8 +237,6 @@ public function show(int $id)
         ]);
 
         if ($request->boolean('create_followup') && $request->filled('followup_type')) {
-            $followupAt = Carbon::createFromFormat('Y-m-d\TH:i', $request->followup_datetime);
-
             CrmFollowup::create([
                 'member_id'      => $prospect->id,
                 'branch_id'      => $prospect->branch_id,
@@ -261,14 +244,10 @@ public function show(int $id)
                 'status'         => 'pending',
                 'priority'       => 'medium',
                 'notes'          => $request->followup_notes ?? trans('crm.followup_updated_msg'),
-                'next_action_at' => $followupAt,
+                'next_action_at' => Carbon::createFromFormat('Y-m-d\TH:i', $request->followup_datetime),
                 'created_by'     => Auth::id(),
                 'updated_by'     => Auth::id(),
             ]);
-
-            return redirect()
-                ->route('crm.prospects.show', $prospect->id)
-                ->with('success', trans('crm.followup_updated_msg'));
         }
 
         return redirect()
@@ -282,11 +261,10 @@ public function show(int $id)
 
     public function destroy(int $id)
     {
-        $prospect = Member::withoutGlobalScope(ExcludeProspectsScope::class)
+        Member::withoutGlobalScope(ExcludeProspectsScope::class)
             ->where('type', 'prospect')
-            ->findOrFail($id);
-
-        $prospect->delete();
+            ->findOrFail($id)
+            ->delete();
 
         return redirect()
             ->route('crm.prospects.index')
@@ -313,19 +291,12 @@ public function show(int $id)
 
             CrmFollowup::where('member_id', $prospect->id)
                 ->where('status', 'pending')
-                ->update([
-                    'status'     => 'done',
-                    'result'     => 'converted',
-                    'updated_by' => Auth::id(),
-                    'updated_at' => now(),
-                ]);
-
-            $firstType = collect(CrmFollowup::getTypes())->keys()->first();
+                ->update(['status' => 'done', 'result' => 'converted', 'updated_by' => Auth::id(), 'updated_at' => now()]);
 
             CrmFollowup::create([
                 'member_id'      => $prospect->id,
                 'branch_id'      => $prospect->branch_id,
-                'type'           => $firstType,
+                'type'           => collect(CrmFollowup::getTypes())->keys()->first(),
                 'status'         => 'done',
                 'priority'       => 'medium',
                 'result'         => 'converted',
@@ -359,21 +330,14 @@ public function show(int $id)
             ->where('type', 'prospect')
             ->findOrFail($id);
 
-        $request->validate([
-            'reason' => 'nullable|string|max:500',
-        ]);
+        $request->validate(['reason' => 'nullable|string|max:500']);
 
         DB::transaction(function () use ($prospect, $request) {
             $reason = $request->reason ?? 'غير محدد';
 
             CrmFollowup::where('member_id', $prospect->id)
                 ->where('status', 'pending')
-                ->update([
-                    'status'     => 'cancelled',
-                    'result'     => 'not_interested',
-                    'updated_by' => Auth::id(),
-                    'updated_at' => now(),
-                ]);
+                ->update(['status' => 'cancelled', 'result' => 'not_interested', 'updated_by' => Auth::id(), 'updated_at' => now()]);
 
             $prospect->update([
                 'notes'       => trim(($prospect->notes ?? '') . "\nسبب الإلغاء: {$reason}"),
@@ -405,14 +369,9 @@ public function show(int $id)
     public function importStore(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls|max:5120',
-
+            'file'              => 'required|file|mimes:xlsx,xls|max:5120',
             'create_followup'   => 'nullable|boolean',
-            'followup_type'     => [
-                'nullable',
-                'required_if:create_followup,1',
-                Rule::in(array_keys(CrmFollowup::typeLabels())),
-            ],
+            'followup_type'     => ['nullable', 'required_if:create_followup,1', Rule::in(array_keys(CrmFollowup::typeLabels()))],
             'followup_datetime' => 'nullable|required_if:create_followup,1|date_format:Y-m-d\TH:i|after:now',
         ]);
 
@@ -425,7 +384,6 @@ public function show(int $id)
             );
 
             Excel::import($import, $request->file('file'));
-
             $stats = $import->getStats();
 
             return redirect()
@@ -442,18 +400,14 @@ public function show(int $id)
 
     public function downloadTemplate()
     {
-        $headers = [
-            'branch_id', 'first_name', 'last_name', 'phone', 'address',
-            'phone2', 'whatsapp', 'email', 'gender', 'notes',
-        ];
-
+        $headers    = ['branch_id', 'first_name', 'last_name', 'phone', 'address', 'phone2', 'whatsapp', 'email', 'gender', 'notes'];
         $sampleData = [
-            [1, 'أحمد', 'محمد', '01012345678', 'المعادي، القاهرة', '01098765432', '01012345678', 'ahmed@example.com', 'male', 'عرف عنا من الفيسبوك'],
-            [1, 'فاطمة', 'علي', '01123456789', 'المهندسين، الجيزة', '', '01123456789', 'fatma@example.com', 'female', ''],
+            [1, 'أحمد', 'محمد', '01012345678', 'المعادي، القاهرة',    '01098765432', '01012345678', 'ahmed@example.com', 'male',   'عرف عنا من الفيسبوك'],
+            [1, 'فاطمة', 'علي', '01123456789', 'المهندسين، الجيزة', '',            '01123456789', 'fatma@example.com', 'female', ''],
         ];
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        $sheet       = $spreadsheet->getActiveSheet();
 
         $sheet->fromArray($headers, null, 'A1');
         $sheet->getStyle('A1:J1')->getFont()->setBold(true);
@@ -462,24 +416,19 @@ public function show(int $id)
             ->getStartColor()->setARGB('FFE0E0E0');
 
         $sheet->fromArray($sampleData, null, 'A2');
+        foreach (range('A', 'J') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
 
-        foreach (range('A', 'J') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $fileName = 'prospects_template_' . date('Y-m-d') . '.xlsx';
-
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
         header('Cache-Control: max-age=0');
 
-        $writer->save('php://output');
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save('php://output');
         exit;
     }
 
     // ══════════════════════════════════════════════════════
-    //  PRIVATE — توليد كود العضو عند التحويل فقط
+    //  PRIVATE
     // ══════════════════════════════════════════════════════
 
     private function generateMemberCode(Member $member): string

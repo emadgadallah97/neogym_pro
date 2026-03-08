@@ -27,11 +27,9 @@ class members_reportcontroller extends Controller
         if (!$request->ajax() && (int)$request->get('print', 0) === 1) {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'print') {
             return $this->print($request);
         }
-
         if (!$request->ajax() && $action === 'export_excel') {
             return $this->exportExcel($request);
         }
@@ -40,91 +38,70 @@ class members_reportcontroller extends Controller
             if ($action === 'metrics') {
                 return response()->json($this->computeKpis($request));
             }
-
             return $this->datatable($request);
         }
 
-        $branches = Branch::query()
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branches = Branch::withoutGlobalScopes()
             ->select('id', 'name')
             ->whereNull('deleted_at')
-            ->orderByDesc('id')
+            ->where('status', 1)
+            ->orderBy('id')
             ->get();
 
-        // Locations (may be big; still loaded once for now)
-        $governments = government::query()
-            ->select('id', 'name')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
-
-        $cities = City::query()
-            ->select('id', 'name', 'id_government')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
-
-        $areas = area::query()
-            ->select('id', 'name', 'id_city')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
+        $governments = government::query()->select('id', 'name')->whereNull('deleted_at')->orderByDesc('id')->get();
+        $cities      = City::query()->select('id', 'name', 'id_government')->whereNull('deleted_at')->orderByDesc('id')->get();
+        $areas       = area::query()->select('id', 'name', 'id_city')->whereNull('deleted_at')->orderByDesc('id')->get();
 
         $kpis = [
-            'total' => 0,
-            'active' => 0,
-            'inactive' => 0,
-            'frozen' => 0,
-            'frozen_now' => 0,
-            'male' => 0,
-            'female' => 0,
-            'branches_used' => 0,
-            'avg_height' => 0,
-            'avg_weight' => 0,
+            'total'          => 0,
+            'active'         => 0,
+            'inactive'       => 0,
+            'frozen'         => 0,
+            'frozen_now'     => 0,
+            'male'           => 0,
+            'female'         => 0,
+            'branches_used'  => 0,
+            'avg_height'     => 0,
+            'avg_weight'     => 0,
         ];
 
         $filterOptions = [
-            'statuses' => $this->statusOptions(),
-            'genders' => $this->genderOptions(),
+            'statuses'   => $this->statusOptions(),
+            'genders'    => $this->genderOptions(),
             'freeze_now' => $this->freezeNowOptions(),
         ];
 
         return view('reports.members_report.index', [
-            'branches' => $branches,
+            'branches'    => $branches,
             'governments' => $governments,
-            'cities' => $cities,
-            'areas' => $areas,
-            'kpis' => $kpis,
-            'filters' => [
-                'member_term' => $request->get('member_term'),
-
-                'branch_ids' => (array)$request->get('branch_ids', []),
-
-                'status' => $request->get('status'),
-                'gender' => $request->get('gender'),
-
+            'cities'      => $cities,
+            'areas'       => $areas,
+            'kpis'        => $kpis,
+            'filters'     => [
+                'member_term'    => $request->get('member_term'),
+                'branch_ids'     => (array)$request->get('branch_ids', []),
+                'status'         => $request->get('status'),
+                'gender'         => $request->get('gender'),
                 'join_date_from' => $request->get('join_date_from'),
-                'join_date_to' => $request->get('join_date_to'),
-
+                'join_date_to'   => $request->get('join_date_to'),
                 'birth_date_from' => $request->get('birth_date_from'),
-                'birth_date_to' => $request->get('birth_date_to'),
-
-                'government_id' => $request->get('government_id'),
-                'city_id' => $request->get('city_id'),
-                'area_id' => $request->get('area_id'),
-
-                'freeze_now' => $request->get('freeze_now'),
-                'freeze_from' => $request->get('freeze_from'),
-                'freeze_to' => $request->get('freeze_to'),
-
-                'height_from' => $request->get('height_from'),
-                'height_to' => $request->get('height_to'),
-
-                'weight_from' => $request->get('weight_from'),
-                'weight_to' => $request->get('weight_to'),
+                'birth_date_to'  => $request->get('birth_date_to'),
+                'government_id'  => $request->get('government_id'),
+                'city_id'        => $request->get('city_id'),
+                'area_id'        => $request->get('area_id'),
+                'freeze_now'     => $request->get('freeze_now'),
+                'freeze_from'    => $request->get('freeze_from'),
+                'freeze_to'      => $request->get('freeze_to'),
+                'height_from'    => $request->get('height_from'),
+                'height_to'      => $request->get('height_to'),
+                'weight_from'    => $request->get('weight_from'),
+                'weight_to'      => $request->get('weight_to'),
             ],
             'filterOptions' => $filterOptions,
         ]);
     }
+
 
     private function datatable(Request $request)
     {
@@ -469,18 +446,15 @@ class members_reportcontroller extends Controller
 
         $kpis = $this->computeKpis($request);
 
-        $settings = GeneralSetting::query()
-            ->where('status', 1)
-            ->first();
+        $settings = GeneralSetting::query()->where('status', 1)->first();
 
         $orgName = '-';
         if ($settings) {
-            if (method_exists($settings, 'getTranslation')) {
-                $orgName = $settings->getTranslation('name', app()->getLocale())
-                    ?: ($settings->getTranslation('name', 'ar') ?: $settings->getTranslation('name', 'en'));
-            } else {
-                $orgName = $settings->name ?? '-';
-            }
+            $orgName = method_exists($settings, 'getTranslation')
+                ? ($settings->getTranslation('name', app()->getLocale())
+                    ?: ($settings->getTranslation('name', 'ar')
+                        ?: $settings->getTranslation('name', 'en')))
+                : ($settings->name ?? '-');
         }
 
         $chips = [];
@@ -491,37 +465,35 @@ class members_reportcontroller extends Controller
 
         $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
         if (!empty($branchIds)) {
-            $branchNames = Branch::query()
+            // ✅ كل الفروع بغض النظر عن GlobalScope
+            $branchNames = Branch::withoutGlobalScopes()
                 ->whereIn('id', $branchIds)
                 ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
+                ->map(fn($b) => method_exists($b, 'getTranslation')
+                    ? $b->getTranslation('name', app()->getLocale())
+                    : ($b->name ?? ''))
                 ->filter()
                 ->values()
                 ->implode('، ');
+
             $chips[] = __('reports.mem_filter_branches') . ': ' . ($branchNames ?: '---');
         }
 
-        if ($request->filled('status')) {
-            $chips[] = __('reports.mem_filter_status') . ': ' . $this->translateStatus($request->get('status'));
-        }
-        if ($request->filled('gender')) {
-            $chips[] = __('reports.mem_filter_gender') . ': ' . $this->translateGender($request->get('gender'));
-        }
+        if ($request->filled('status')) $chips[] = __('reports.mem_filter_status') . ': ' . $this->translateStatus($request->get('status'));
+        if ($request->filled('gender')) $chips[] = __('reports.mem_filter_gender') . ': ' . $this->translateGender($request->get('gender'));
 
         if ($request->filled('government_id')) {
-            $g = government::query()->where('id', (int)$request->get('government_id'))->first();
+            $g  = government::query()->where('id', (int)$request->get('government_id'))->first();
             $gn = $g ? (method_exists($g, 'getTranslation') ? $g->getTranslation('name', app()->getLocale()) : ($g->name ?? '')) : '';
             $chips[] = __('reports.mem_filter_government') . ': ' . ($gn ?: '---');
         }
         if ($request->filled('city_id')) {
-            $c = City::query()->where('id', (int)$request->get('city_id'))->first();
+            $c  = City::query()->where('id', (int)$request->get('city_id'))->first();
             $cn = $c ? (method_exists($c, 'getTranslation') ? $c->getTranslation('name', app()->getLocale()) : ($c->name ?? '')) : '';
             $chips[] = __('reports.mem_filter_city') . ': ' . ($cn ?: '---');
         }
         if ($request->filled('area_id')) {
-            $a = area::query()->where('id', (int)$request->get('area_id'))->first();
+            $a  = area::query()->where('id', (int)$request->get('area_id'))->first();
             $an = $a ? (method_exists($a, 'getTranslation') ? $a->getTranslation('name', app()->getLocale()) : ($a->name ?? '')) : '';
             $chips[] = __('reports.mem_filter_area') . ': ' . ($an ?: '---');
         }
@@ -553,19 +525,20 @@ class members_reportcontroller extends Controller
         }
 
         $meta = [
-            'title' => __('reports.members_report_title'),
-            'org_name' => $orgName,
+            'title'        => __('reports.members_report_title'),
+            'org_name'     => $orgName,
             'generated_at' => now('Africa/Cairo')->format('Y-m-d H:i'),
-            'total_count' => $rows->count(),
+            'total_count'  => $rows->count(),
         ];
 
         return view('reports.members_report.print', [
-            'meta' => $meta,
+            'meta'  => $meta,
             'chips' => $chips,
-            'kpis' => $kpis,
-            'rows' => $rows,
+            'kpis'  => $kpis,
+            'rows'  => $rows,
         ]);
     }
+
 
     private function exportExcel(Request $request)
     {

@@ -12,6 +12,7 @@ use App\Services\attendances\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class attendancescontroller extends Controller
 {
@@ -22,33 +23,109 @@ class attendancescontroller extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request)
+    // ─────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * الفرع الأساسي للموظف المرتبط بالمستخدم.
+     * fallback: branch_id من جدول users (للتوافق مع القديم)
+     */
+    private function getPrimaryBranchId(): int
     {
         $user = Auth::user();
-        $branchId = (int)($user->branch_id ?? 0);
 
-        $dateFrom = $request->get('date_from', Carbon::now()->format('Y-m-d'));
-        $dateTo   = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        if ($user->employee_id) {
+            $primaryId = DB::table('employee_branch')
+                ->where('employee_id', $user->employee_id)
+                ->where('is_primary', 1)
+                ->value('branch_id');
+
+            if ($primaryId) {
+                return (int)$primaryId;
+            }
+        }
+
+        // fallback للتوافق مع المستخدمين غير المربوطين بموظف
+        return (int)($user->branch_id ?? 0);
+    }
+
+    /**
+     * جميع الفروع المرتبطة بالموظف (primary + أخرى) — للفلترة فقط.
+     * لو المستخدم غير مربوط بموظف يرجع array فارغ (يعني لا قيد على الفروع).
+     */
+    private function getAccessibleBranchIds(): array
+    {
+        $user = Auth::user();
+
+        if (!$user->employee_id) {
+            return []; // لا قيد — يرى كل الفروع
+        }
+
+        $ids = DB::table('employee_branch')
+            ->where('employee_id', $user->employee_id)
+            ->pluck('branch_id')
+            ->toArray();
+
+        return array_map('intval', $ids);
+    }
+
+    /**
+     * اسم الفرع من الـ Branch model (يراعي JSON name).
+     */
+    private function getBranchName(int $branchId): ?string
+    {
+        if ($branchId <= 0) return null;
+
+        // withoutGlobalScope لأننا قد نكون خارج نطاق الفروع المتاحة
+        $branch = Branch::withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class)
+            ->find($branchId);
+
+        if (!$branch) return null;
+
+        $locale = app()->getLocale();
+        $name = $branch->name;
+
+        if (is_array($name)) {
+            return $name[$locale] ?? ($name['ar'] ?? ($name['en'] ?? null));
+        }
+
+        if (is_string($name)) {
+            $decoded = json_decode($name, true);
+            if (is_array($decoded)) {
+                return $decoded[$locale] ?? ($decoded['ar'] ?? ($decoded['en'] ?? $name));
+            }
+            return $name;
+        }
+
+        return null;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Index
+    // ─────────────────────────────────────────────────────────────
+
+    public function index(Request $request)
+    {
+        // ✅ الفرع الأساسي للموظف هو فرع تسجيل الحضور
+        $branchId = $this->getPrimaryBranchId();
+
+        $dateFrom     = $request->get('date_from', Carbon::now()->format('Y-m-d'));
+        $dateTo       = $request->get('date_to',   Carbon::now()->format('Y-m-d'));
         $memberSearch = trim((string)$request->get('member', ''));
 
         try {
             $from = Carbon::parse($dateFrom)->toDateString();
             $to   = Carbon::parse($dateTo)->toDateString();
-            if ($from > $to) {
-                [$from, $to] = [$to, $from];
-            }
+            if ($from > $to) [$from, $to] = [$to, $from];
             $dateFrom = $from;
-            $dateTo = $to;
-        } catch (\Throwable $e) {
+            $dateTo   = $to;
+        } catch (\Throwable) {
             $dateFrom = Carbon::now()->format('Y-m-d');
             $dateTo   = Carbon::now()->format('Y-m-d');
         }
 
-        $branchName = null;
-        if ($branchId > 0) {
-            $branch = Branch::query()->find($branchId);
-            $branchName = $branch->name ?? $branch->branch_name ?? null;
-        }
+        $branchName = $this->getBranchName($branchId);
 
         return view('attendances.index', compact(
             'dateFrom',
@@ -59,25 +136,29 @@ class attendancescontroller extends Controller
         ));
     }
 
+    // ─────────────────────────────────────────────────────────────
     // DataTables server-side
+    // ─────────────────────────────────────────────────────────────
+
     public function datatable(Request $request)
     {
-        $user = Auth::user();
-        $branchId = (int)($user->branch_id ?? 0);
+        // ✅ الفرع الأساسي للعرض
+        $branchId = $this->getPrimaryBranchId();
 
-        $dateFrom = $request->get('date_from', Carbon::now()->format('Y-m-d'));
-        $dateTo   = $request->get('date_to', Carbon::now()->format('Y-m-d'));
+        // ✅ كل الفروع المتاحة للتحقق الإضافي (غير مستخدمة هنا لكن متاحة)
+        $accessibleBranchIds = $this->getAccessibleBranchIds();
+
+        $dateFrom     = $request->get('date_from', Carbon::now()->format('Y-m-d'));
+        $dateTo       = $request->get('date_to',   Carbon::now()->format('Y-m-d'));
         $memberSearch = trim((string)$request->get('member', ''));
 
         try {
             $from = Carbon::parse($dateFrom)->toDateString();
             $to   = Carbon::parse($dateTo)->toDateString();
-            if ($from > $to) {
-                [$from, $to] = [$to, $from];
-            }
+            if ($from > $to) [$from, $to] = [$to, $from];
             $dateFrom = $from;
-            $dateTo = $to;
-        } catch (\Throwable $e) {
+            $dateTo   = $to;
+        } catch (\Throwable) {
             $dateFrom = Carbon::now()->format('Y-m-d');
             $dateTo   = Carbon::now()->format('Y-m-d');
         }
@@ -85,19 +166,22 @@ class attendancescontroller extends Controller
         $draw   = (int)$request->input('draw', 1);
         $start  = (int)$request->input('start', 0);
         $length = (int)$request->input('length', 25);
-        if ($length <= 0) {
-            $length = 25;
-        }
+        if ($length <= 0) $length = 25;
 
         $dtSearch = trim((string)$request->input('search.value', ''));
 
-        // ① أضفنا guests في with()
         $baseQuery = Attendance::query()
             ->with(['member', 'branch', 'subscription', 'ptAddon', 'guests'])
-            ->when($branchId > 0, function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            })
             ->whereBetween('attendance_date', [$dateFrom, $dateTo]);
+
+        // ✅ فلترة الفروع:
+        //    - لو المستخدم مربوط بموظف => فلتر على فرعه الأساسي فقط
+        //    - لو غير مربوط (admin)    => يرى كل الفروع
+        if ($branchId > 0) {
+            $baseQuery->where('branch_id', $branchId);
+        } elseif (!empty($accessibleBranchIds)) {
+            $baseQuery->whereIn('branch_id', $accessibleBranchIds);
+        }
 
         $recordsTotal = (clone $baseQuery)->count();
 
@@ -107,12 +191,12 @@ class attendancescontroller extends Controller
             $filtered->whereHas('member', function ($mq) use ($memberSearch) {
                 $mq->where(function ($w) use ($memberSearch) {
                     $w->where('member_code', 'like', "%{$memberSearch}%")
-                        ->orWhere('first_name', 'like', "%{$memberSearch}%")
-                        ->orWhere('last_name', 'like', "%{$memberSearch}%")
-                        ->orWhere('phone', 'like', "%{$memberSearch}%")
-                        ->orWhere('phone2', 'like', "%{$memberSearch}%")
-                        ->orWhere('whatsapp', 'like', "%{$memberSearch}%")
-                        ->orWhere('email', 'like', "%{$memberSearch}%");
+                      ->orWhere('first_name',  'like', "%{$memberSearch}%")
+                      ->orWhere('last_name',   'like', "%{$memberSearch}%")
+                      ->orWhere('phone',       'like', "%{$memberSearch}%")
+                      ->orWhere('phone2',      'like', "%{$memberSearch}%")
+                      ->orWhere('whatsapp',    'like', "%{$memberSearch}%")
+                      ->orWhere('email',       'like', "%{$memberSearch}%");
                 });
             });
         }
@@ -125,9 +209,9 @@ class attendancescontroller extends Controller
                       $mq->where(function ($w) use ($dtSearch) {
                           $w->where('member_code', 'like', "%{$dtSearch}%")
                             ->orWhere('first_name', 'like', "%{$dtSearch}%")
-                            ->orWhere('last_name', 'like', "%{$dtSearch}%")
-                            ->orWhere('phone', 'like', "%{$dtSearch}%")
-                            ->orWhere('whatsapp', 'like', "%{$dtSearch}%");
+                            ->orWhere('last_name',  'like', "%{$dtSearch}%")
+                            ->orWhere('phone',      'like', "%{$dtSearch}%")
+                            ->orWhere('whatsapp',   'like', "%{$dtSearch}%");
                       });
                   });
             });
@@ -138,7 +222,6 @@ class attendancescontroller extends Controller
         $orderColumnIdx = (int)$request->input('order.0.column', 0);
         $orderDir = strtolower((string)$request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        // ② تحديث orderMap بعد إضافة عمود guests (index 8)، actions أصبح index 9
         $orderMap = [
             0 => 'id',
             1 => 'attendance_date',
@@ -167,7 +250,7 @@ class attendancescontroller extends Controller
             $sub = $row->subscription;
             $pt  = $row->ptAddon;
 
-            $baseTotal        = $sub->sessions_count ?? null;
+            $baseTotal        = $sub->sessions_count     ?? null;
             $baseRemainingNow = $sub->sessions_remaining ?? null;
 
             $baseHtml = '<div>' . e((string)$row->base_sessions_before) . ' → ' . e((string)$row->base_sessions_after) . '</div>'
@@ -177,7 +260,7 @@ class attendancescontroller extends Controller
                 . '</small>';
 
             if ($row->pt_sessions_before !== null) {
-                $ptTotal        = $pt->sessions_count ?? null;
+                $ptTotal        = $pt->sessions_count     ?? null;
                 $ptRemainingNow = $pt->sessions_remaining ?? null;
 
                 $ptHtml = '<div>' . e((string)$row->pt_sessions_before) . ' → ' . e((string)$row->pt_sessions_after) . '</div>'
@@ -189,7 +272,6 @@ class attendancescontroller extends Controller
                 $ptHtml = '-';
             }
 
-            // ③ status + badge PT deducted
             if ($row->is_cancelled) {
                 $statusHtml = '<span class="badge bg-danger">' . e(trans('attendances.cancelled')) . '</span>';
             } else {
@@ -202,7 +284,6 @@ class attendancescontroller extends Controller
                 }
             }
 
-            // ④ guests column
             $guestsHtml = '-';
             if ($row->guests && $row->guests->isNotEmpty()) {
                 $lines = '';
@@ -217,7 +298,6 @@ class attendancescontroller extends Controller
                 $guestsHtml = $lines;
             }
 
-            // Actions
             $actionsHtml = '-';
             if (!$row->is_cancelled) {
                 $actions = '';
@@ -251,7 +331,6 @@ class attendancescontroller extends Controller
                 $actionsHtml = $actions;
             }
 
-            // ⑤ أضفنا guests في $data[]
             $data[] = [
                 'id'              => $row->id,
                 'attendance_date' => optional($row->attendance_date)->format('Y-m-d'),
@@ -274,27 +353,34 @@ class attendancescontroller extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Kiosk
+    // ─────────────────────────────────────────────────────────────
+
     public function kiosk()
     {
         return view('attendances.kiosk');
     }
 
-    // Manual check-in (from admin screen)
+    // ─────────────────────────────────────────────────────────────
+    // Manual check-in
+    // ─────────────────────────────────────────────────────────────
+
     public function store(AttendanceManualRequest $request)
     {
-        $user = Auth::user();
-        $branchId = (int)($user->branch_id ?? 0);
+        // ✅ فرع الحضور = الفرع الأساسي للموظف
+        $branchId = $this->getPrimaryBranchId();
 
         if ($branchId <= 0) {
-            return redirect()->back()->withInput()->with('error', trans('attendances.user_branch_missing'));
+            return redirect()->back()->withInput()
+                ->with('error', trans('attendances.user_branch_missing'));
         }
 
         $memberCode = $request->input('member_code');
-
-        // Checkbox unchecked should be false (view sends hidden 0)
-        $deductPt = $request->boolean('deduct_pt');
+        $deductPt   = $request->boolean('deduct_pt');
 
         $res = $this->service->manualCheckIn($memberCode, $branchId, (int)Auth::id(), $deductPt);
+
         if (!$res['ok']) {
             return redirect()->back()->withInput()->with('error', $res['message']);
         }
@@ -302,26 +388,33 @@ class attendancescontroller extends Controller
         return redirect()->route('attendances.index')->with('success', $res['message']);
     }
 
-    // Barcode / global scan (JSON fast)
+    // ─────────────────────────────────────────────────────────────
+    // Barcode / Scan
+    // ─────────────────────────────────────────────────────────────
+
     public function scan(AttendanceScanRequest $request)
     {
-        $user = Auth::user();
-        $branchId = (int)($user->branch_id ?? 0);
+        // ✅ فرع الحضور = الفرع الأساسي للموظف
+        $branchId = $this->getPrimaryBranchId();
 
         if ($branchId <= 0) {
             return response()->json([
-                'ok' => false,
+                'ok'      => false,
                 'message' => trans('attendances.user_branch_missing'),
             ], 422);
         }
 
         $memberCode = $request->input('member_code');
-        $deductPt = $request->boolean('deduct_pt');
+        $deductPt   = $request->boolean('deduct_pt');
 
         $res = $this->service->scanCheckIn($memberCode, $branchId, (int)Auth::id(), $deductPt);
 
         return response()->json($res, $res['ok'] ? 200 : 422);
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Actions
+    // ─────────────────────────────────────────────────────────────
 
     public function cancel($attendance)
     {
@@ -362,8 +455,11 @@ class attendancescontroller extends Controller
         return redirect()->back()->with($res['ok'] ? 'success' : 'error', $res['message']);
     }
 
-    // Not used now (resource requires)
-    public function create() { return redirect()->route('attendances.index'); }
+    // ─────────────────────────────────────────────────────────────
+    // Unused resource methods
+    // ─────────────────────────────────────────────────────────────
+
+    public function create()  { return redirect()->route('attendances.index'); }
     public function show($id) { return redirect()->route('attendances.index'); }
     public function edit($id) { return redirect()->route('attendances.index'); }
     public function update(Request $request, $id) { return redirect()->route('attendances.index'); }

@@ -16,115 +16,112 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class commissions_reportcontroller extends Controller
 {
-    public function index(Request $request)
-    {
-        $action = (string)$request->get('action', '');
+public function index(Request $request)
+{
+    $action = (string)$request->get('action', '');
 
-        if (!$request->ajax() && $action === 'print') {
-            return $this->print($request);
-        }
-
-        if (!$request->ajax() && $action === 'export_excel') {
-            return $this->exportExcel($request);
-        }
-
-        if ($request->ajax()) {
-            if ($action === 'metrics') {
-                return response()->json($this->computeKpis($request));
-            }
-
-            if ($action === 'group') {
-                return response()->json($this->groupSummary($request));
-            }
-
-            return $this->datatable($request);
-        }
-
-        $branches = Branch::query()
-            ->select('id', 'name')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
-
-        $salesEmployees = DB::table('employees as e')
-            ->whereNull('e.deleted_at')
-            ->select([
-                'e.id',
-                DB::raw("TRIM(CONCAT(COALESCE(e.first_name,''),' ',COALESCE(e.last_name,''))) as full_name"),
-                'e.code',
-            ])
-            ->orderBy('full_name')
-            ->get();
-
-        $settlementStatuses = DB::table('commission_settlements as cs')
-            ->whereNull('cs.deleted_at')
-            ->whereNotNull('cs.status')
-            ->where('cs.status', '!=', '')
-            ->distinct()
-            ->orderBy('cs.status')
-            ->pluck('cs.status')
-            ->toArray();
-
-        $sources = DB::table('member_subscriptions as ms')
-            ->whereNull('ms.deleted_at')
-            ->whereNotNull('ms.source')
-            ->where('ms.source', '!=', '')
-            ->distinct()
-            ->orderBy('ms.source')
-            ->pluck('ms.source')
-            ->toArray();
-
-        $kpis = [
-            'items_count' => 0,
-            'total_commission_all' => 0,
-            'total_commission_included' => 0,
-            'total_commission_excluded' => 0,
-            'paid_commission' => 0,
-            'unpaid_commission' => 0,
-            'settled_items_count' => 0,
-            'unsettled_items_count' => 0,
-        ];
-
-        $filters = [
-            'date_from' => $request->get('date_from'),
-            'date_to' => $request->get('date_to'),
-            'branch_ids' => (array)$request->get('branch_ids', []),
-
-            'member_q' => $request->get('member_q'),
-
-            'sales_employee_id' => $request->get('sales_employee_id'),
-            'commission_is_paid' => $request->get('commission_is_paid'),
-            'has_settlement' => $request->get('has_settlement'),
-            'settlement_status' => $request->get('settlement_status'),
-            'is_excluded' => $request->get('is_excluded'),
-
-            'source' => $request->get('source'),
-
-            'amount_from' => $request->get('amount_from'),
-            'amount_to' => $request->get('amount_to'),
-
-            'commission_from' => $request->get('commission_from'),
-            'commission_to' => $request->get('commission_to'),
-
-            'only_with_commission' => $request->get('only_with_commission', '1'),
-            'group_by' => $request->get('group_by', 'sales_employee'),
-        ];
-
-        $filterOptions = [
-            'yes_no' => $this->yesNoOptions(),
-            'group_by' => $this->groupByOptions(),
-            'settlement_statuses' => $settlementStatuses,
-            'sources' => $sources,
-        ];
-
-        return view('reports.commissions_report.index', [
-            'branches' => $branches,
-            'salesEmployees' => $salesEmployees,
-            'kpis' => $kpis,
-            'filters' => $filters,
-            'filterOptions' => $filterOptions,
-        ]);
+    if (!$request->ajax() && $action === 'print') {
+        return $this->print($request);
     }
+
+    if (!$request->ajax() && $action === 'export_excel') {
+        return $this->exportExcel($request);
+    }
+
+    if ($request->ajax()) {
+        if ($action === 'metrics') {
+            return response()->json($this->computeKpis($request));
+        }
+
+        if ($action === 'group') {
+            return response()->json($this->groupSummary($request));
+        }
+
+        return $this->datatable($request);
+    }
+
+    // ✅ كل الفروع بغض النظر عن GlobalScope
+    $branches = Branch::withoutGlobalScopes()
+        ->select('id', 'name')
+        ->whereNull('deleted_at')
+        ->where('status', 1)
+        ->orderBy('id')
+        ->get();
+
+    $salesEmployees = DB::table('employees as e')
+        ->whereNull('e.deleted_at')
+        ->select([
+            'e.id',
+            DB::raw("TRIM(CONCAT(COALESCE(e.first_name,''),' ',COALESCE(e.last_name,''))) as full_name"),
+            'e.code',
+        ])
+        ->orderBy('full_name')
+        ->get();
+
+    $settlementStatuses = DB::table('commission_settlements as cs')
+        ->whereNull('cs.deleted_at')
+        ->whereNotNull('cs.status')
+        ->where('cs.status', '!=', '')
+        ->distinct()
+        ->orderBy('cs.status')
+        ->pluck('cs.status')
+        ->toArray();
+
+    $sources = DB::table('member_subscriptions as ms')
+        ->whereNull('ms.deleted_at')
+        ->whereNotNull('ms.source')
+        ->where('ms.source', '!=', '')
+        ->distinct()
+        ->orderBy('ms.source')
+        ->pluck('ms.source')
+        ->toArray();
+
+    $kpis = [
+        'items_count'               => 0,
+        'total_commission_all'      => 0,
+        'total_commission_included' => 0,
+        'total_commission_excluded' => 0,
+        'paid_commission'           => 0,
+        'unpaid_commission'         => 0,
+        'settled_items_count'       => 0,
+        'unsettled_items_count'     => 0,
+    ];
+
+    $filters = [
+        'date_from'          => $request->get('date_from'),
+        'date_to'            => $request->get('date_to'),
+        'branch_ids'         => (array)$request->get('branch_ids', []),
+        'member_q'           => $request->get('member_q'),
+        'sales_employee_id'  => $request->get('sales_employee_id'),
+        'commission_is_paid' => $request->get('commission_is_paid'),
+        'has_settlement'     => $request->get('has_settlement'),
+        'settlement_status'  => $request->get('settlement_status'),
+        'is_excluded'        => $request->get('is_excluded'),
+        'source'             => $request->get('source'),
+        'amount_from'        => $request->get('amount_from'),
+        'amount_to'          => $request->get('amount_to'),
+        'commission_from'    => $request->get('commission_from'),
+        'commission_to'      => $request->get('commission_to'),
+        'only_with_commission' => $request->get('only_with_commission', '1'),
+        'group_by'           => $request->get('group_by', 'sales_employee'),
+    ];
+
+    $filterOptions = [
+        'yes_no'              => $this->yesNoOptions(),
+        'group_by'            => $this->groupByOptions(),
+        'settlement_statuses' => $settlementStatuses,
+        'sources'             => $sources,
+    ];
+
+    return view('reports.commissions_report.index', [
+        'branches'       => $branches,
+        'salesEmployees' => $salesEmployees,
+        'kpis'           => $kpis,
+        'filters'        => $filters,
+        'filterOptions'  => $filterOptions,
+    ]);
+}
+
 
     // ===================== Datatable =====================
 
@@ -855,62 +852,81 @@ class commissions_reportcontroller extends Controller
 
     // ===================== Chips =====================
 
-    private function buildFilterChips(Request $request): array
-    {
-        $chips = [];
-        if ($request->filled('date_from') || $request->filled('date_to')) {
-            $chips[] = __('reports.com_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
-        }
-        $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
-        if (!empty($branchIds)) {
-            $branchNames = Branch::query()
-                ->whereIn('id', $branchIds)
-                ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
-                ->filter()
-                ->values()
-                ->implode('، ');
-            $chips[] = __('reports.com_filter_branches') . ': ' . ($branchNames ?: '---');
-        }
+private function buildFilterChips(Request $request): array
+{
+    $chips = [];
 
-        if ($request->filled('member_q')) {
-            $chips[] = __('reports.pay_filter_member_q') . ': ' . $request->get('member_q');
-        }
-
-        foreach ([
-            'sales_employee_id' => 'com_filter_sales_employee',
-            'source' => 'com_filter_source',
-            'settlement_status' => 'com_filter_settlement_status',
-        ] as $key => $labelKey) {
-            if ($request->filled($key)) {
-                $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
-            }
-        }
-        if ($request->filled('commission_is_paid')) {
-            $chips[] = __('reports.com_filter_paid') . ': ' . ((string)$request->get('commission_is_paid') === '1' ? __('reports.com_paid') : __('reports.com_unpaid'));
-        }
-        if ($request->filled('has_settlement')) {
-            $chips[] = __('reports.com_filter_has_settlement') . ': ' . ((string)$request->get('has_settlement') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
-        }
-        if ($request->filled('is_excluded')) {
-            $chips[] = __('reports.com_filter_excluded') . ': ' . ((string)$request->get('is_excluded') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
-        }
-        if ($request->filled('amount_from') || $request->filled('amount_to')) {
-            $chips[] = __('reports.com_filter_sale_amount') . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
-        }
-        if ($request->filled('commission_from') || $request->filled('commission_to')) {
-            $chips[] = __('reports.com_filter_commission_amount') . ': ' . ($request->get('commission_from') ?: '---') . ' ⟶ ' . ($request->get('commission_to') ?: '---');
-        }
-        if ($request->filled('only_with_commission')) {
-            $chips[] = __('reports.com_filter_only_with_commission') . ': ' . ((string)$request->get('only_with_commission') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
-        }
-        if ($request->filled('group_by')) {
-            $chips[] = __('reports.com_filter_group_by') . ': ' . $request->get('group_by');
-        }
-        return $chips;
+    if ($request->filled('date_from') || $request->filled('date_to')) {
+        $chips[] = __('reports.com_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
     }
+
+    $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
+    if (!empty($branchIds)) {
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branchNames = Branch::withoutGlobalScopes()
+            ->whereIn('id', $branchIds)
+            ->get()
+            ->map(fn($b) => method_exists($b, 'getTranslation')
+                ? $b->getTranslation('name', app()->getLocale())
+                : ($b->name ?? ''))
+            ->filter()
+            ->values()
+            ->implode('، ');
+
+        $chips[] = __('reports.com_filter_branches') . ': ' . ($branchNames ?: '---');
+    }
+
+    if ($request->filled('member_q')) {
+        $chips[] = __('reports.pay_filter_member_q') . ': ' . $request->get('member_q');
+    }
+
+    foreach ([
+        'sales_employee_id' => 'com_filter_sales_employee',
+        'source'            => 'com_filter_source',
+        'settlement_status' => 'com_filter_settlement_status',
+    ] as $key => $labelKey) {
+        if ($request->filled($key)) {
+            $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
+        }
+    }
+
+    if ($request->filled('commission_is_paid')) {
+        $chips[] = __('reports.com_filter_paid') . ': ' .
+            ((string)$request->get('commission_is_paid') === '1' ? __('reports.com_paid') : __('reports.com_unpaid'));
+    }
+
+    if ($request->filled('has_settlement')) {
+        $chips[] = __('reports.com_filter_has_settlement') . ': ' .
+            ((string)$request->get('has_settlement') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
+    }
+
+    if ($request->filled('is_excluded')) {
+        $chips[] = __('reports.com_filter_excluded') . ': ' .
+            ((string)$request->get('is_excluded') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
+    }
+
+    if ($request->filled('amount_from') || $request->filled('amount_to')) {
+        $chips[] = __('reports.com_filter_sale_amount') . ': ' .
+            ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
+    }
+
+    if ($request->filled('commission_from') || $request->filled('commission_to')) {
+        $chips[] = __('reports.com_filter_commission_amount') . ': ' .
+            ($request->get('commission_from') ?: '---') . ' ⟶ ' . ($request->get('commission_to') ?: '---');
+    }
+
+    if ($request->filled('only_with_commission')) {
+        $chips[] = __('reports.com_filter_only_with_commission') . ': ' .
+            ((string)$request->get('only_with_commission') === '1' ? __('reports.sub_yes') : __('reports.sub_no'));
+    }
+
+    if ($request->filled('group_by')) {
+        $chips[] = __('reports.com_filter_group_by') . ': ' . $request->get('group_by');
+    }
+
+    return $chips;
+}
+
 
     // ===================== Options =====================
 

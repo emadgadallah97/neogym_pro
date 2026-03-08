@@ -173,153 +173,172 @@ class salescontroller extends Controller
         return view('sales.index', compact('Branches', 'Members', 'Plans', 'Types', 'Coaches', 'Employees'));
     }
 
-    public function ajaxCurrentSubscriptionsTable(Request $request)
-    {
-        $draw   = (int)$request->get('draw', 1);
-        $start  = max(0, (int)$request->get('start', 0));
-        $length = (int)$request->get('length', 10);
-        $length = $length <= 0 ? 10 : min($length, 200);
+public function ajaxCurrentSubscriptionsTable(Request $request)
+{
+    $draw   = (int)$request->get('draw', 1);
+    $start  = max(0, (int)$request->get('start', 0));
+    $length = (int)$request->get('length', 10);
+    $length = $length <= 0 ? 10 : min($length, 200);
 
-        // Filters
-        $q = trim((string)$request->get('q', ''));
-        $branchId = $request->filled('branch_id') ? (int)$request->branch_id : null;
-        $status   = $request->filled('status') ? (string)$request->status : null;
-        $planId   = $request->filled('subscriptions_plan_id') ? (int)$request->subscriptions_plan_id : null;
-        $typeId   = $request->filled('subscriptions_type_id') ? (int)$request->subscriptions_type_id : null;
-        $source   = $request->filled('source') ? (string)$request->source : null;
-        $salesEmployeeId = $request->filled('sales_employee_id') ? (int)$request->sales_employee_id : null;
-        $hasPt = $request->filled('has_pt_addons') ? (int)$request->has_pt_addons : null; // 1/0
+    // ✅ جلب فروع المستخدم الحالي
+    $user = \Illuminate\Support\Facades\Auth::user();
+    $accessibleBranchIds = [];
 
-        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from)->startOfDay() : null;
-        $dateTo   = $request->filled('date_to') ? Carbon::parse($request->date_to)->endOfDay() : null;
+    if ($user->employee_id) {
+        $accessibleBranchIds = \Illuminate\Support\Facades\DB::table('employee_branch')
+            ->where('employee_id', $user->employee_id)
+            ->pluck('branch_id')
+            ->map(fn($id) => (int)$id)
+            ->toArray();
+    }
+    // لو فارغة (admin بدون employee_id) => لا قيد
 
-        $baseQuery = MemberSubscription::query()
-            ->with(['member', 'branch', 'plan', 'type'])
-            ->withCount('ptAddons')
-            ->withSum('ptAddons as pt_sessions_count_sum', 'sessions_count')
-            ->withSum('ptAddons as pt_sessions_remaining_sum', 'sessions_remaining');
+    // Filters
+    $q               = trim((string)$request->get('q', ''));
+    $branchId        = $request->filled('branch_id') ? (int)$request->branch_id : null;
+    $status          = $request->filled('status') ? (string)$request->status : null;
+    $planId          = $request->filled('subscriptions_plan_id') ? (int)$request->subscriptions_plan_id : null;
+    $typeId          = $request->filled('subscriptions_type_id') ? (int)$request->subscriptions_type_id : null;
+    $source          = $request->filled('source') ? (string)$request->source : null;
+    $salesEmployeeId = $request->filled('sales_employee_id') ? (int)$request->sales_employee_id : null;
+    $hasPt           = $request->filled('has_pt_addons') ? (int)$request->has_pt_addons : null;
 
-        $recordsTotal = (clone $baseQuery)->count();
+    $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from)->startOfDay() : null;
+    $dateTo   = $request->filled('date_to')   ? Carbon::parse($request->date_to)->endOfDay()   : null;
 
-        $filteredQuery = (clone $baseQuery)
-            ->when($q !== '', function ($query) use ($q) {
-                $query->whereHas('member', function ($m) use ($q) {
-                    $m->where('member_code', 'like', "%{$q}%")
-                        ->orWhere('first_name', 'like', "%{$q}%")
-                        ->orWhere('last_name', 'like', "%{$q}%");
-                });
-            })
-            ->when($branchId, fn($query) => $query->where('branch_id', $branchId))
-            ->when($status, fn($query) => $query->where('status', $status))
-            ->when($planId, fn($query) => $query->where('subscriptions_plan_id', $planId))
-            ->when($typeId, fn($query) => $query->where('subscriptions_type_id', $typeId))
-            ->when($source, fn($query) => $query->where('source', $source))
-            ->when($salesEmployeeId, fn($query) => $query->where('sales_employee_id', $salesEmployeeId))
-            ->when($dateFrom, fn($query) => $query->where('start_date', '>=', $dateFrom->format('Y-m-d')))
-            ->when($dateTo, fn($query) => $query->where('start_date', '<=', $dateTo->format('Y-m-d')))
-            ->when($hasPt !== null, function ($query) use ($hasPt) {
-                if ($hasPt === 1) $query->whereHas('ptAddons');
-                if ($hasPt === 0) $query->whereDoesntHave('ptAddons');
+    $baseQuery = MemberSubscription::query()
+        ->with([
+            'member',
+            // ✅ withoutGlobalScope لضمان ظهور اسم الفرع دائماً
+            'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+            'plan',
+            'type',
+        ])
+        ->withCount('ptAddons')
+        ->withSum('ptAddons as pt_sessions_count_sum',     'sessions_count')
+        ->withSum('ptAddons as pt_sessions_remaining_sum', 'sessions_remaining')
+        // ✅ فلتر فروع المستخدم على مستوى الاشتراكات
+        ->when(!empty($accessibleBranchIds), fn($q) => $q->whereIn('branch_id', $accessibleBranchIds));
+
+    $recordsTotal = (clone $baseQuery)->count();
+
+    $filteredQuery = (clone $baseQuery)
+        ->when($q !== '', function ($query) use ($q) {
+            $query->whereHas('member', function ($m) use ($q) {
+                $m->where('member_code', 'like', "%{$q}%")
+                  ->orWhere('first_name',   'like', "%{$q}%")
+                  ->orWhere('last_name',    'like', "%{$q}%");
             });
-
-        $recordsFiltered = (clone $filteredQuery)->count();
-
-        // Ordering (اختياري)
-        $orderDir = strtolower((string)$request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-        $orderCol = (int)$request->input('order.0.column', 9);
-
-        // خريطة أعمدة الداتاتيبل -> أعمدة DB (اللي نقدر نعمل عليها orderBy)
-        $orderMap = [
-            0 => 'id',
-            6 => 'total_amount',
-            7 => 'status',
-            8 => 'created_at',
-            9 => 'created_at',
-        ];
-        $orderBy = $orderMap[$orderCol] ?? 'created_at';
-
-        $rows = $filteredQuery
-            ->orderBy($orderBy, $orderDir)
-            ->skip($start)
-            ->take($length)
-            ->get();
-
-        $data = [];
-        $rowNum = $start + 1;
-
-        foreach ($rows as $row) {
-            $baseIncluded  = (int)($row->sessions_included ?? $row->sessions_count ?? 0);
-            $baseRemaining = (int)($row->sessions_remaining ?? 0);
-
-            $ptCount = (int)($row->pt_addons_count ?? 0);
-            $ptTotal = (int)($row->pt_sessions_count_sum ?? 0);
-
-            // withSum قد يرجع null أو string، لذلك نطبّعها لرقم
-            $ptRemainingRaw = $row->pt_sessions_remaining_sum;
-            $ptRemaining = (int)($ptRemainingRaw ?? 0);
-
-            $statusKey = 'sales.status_' . ($row->status ?? '');
-            $statusText = trans($statusKey);
-            if ($statusText === $statusKey) $statusText = (string)($row->status ?? '-');
-
-            $sourceMap = [
-                'reception'  => 'sales.source_reception',
-                'website'    => 'sales.source_website',
-                'mobile'     => 'sales.source_mobile',
-                'callcenter' => 'sales.source_callcenter',
-                'partner'    => 'sales.source_partner',
-                'other'      => 'sales.source_other',
-            ];
-            $src = (string)($row->source ?? '');
-            $sourceKey = $sourceMap[$src] ?? null;
-            $sourceText = $sourceKey ? trans($sourceKey) : ($src ?: '-');
-            if ($sourceKey && $sourceText === $sourceKey) $sourceText = ($src ?: '-');
-
-            $memberCode = $row->member?->member_code ?? $row->member_id;
-            $memberName = $row->member?->full_name ?? trim(($row->member?->first_name ?? '') . ' ' . ($row->member?->last_name ?? ''));
-
-            // ====== زر إضافة PT بالشرط المطلوب ======
-            // الشرط:
-            // 1) الاشتراك Active
-            // 2) لا يوجد PT Add-ons OR يوجد PT Add-ons لكن المتبقي = 0 في PT Add-ons (وليس الاشتراك الأساسي)
-            $canAddPt = ((string)($row->status ?? '') === 'active')
-                && (
-                    $ptCount === 0
-                    || $ptRemaining === 0
-                );
-
-            $showBtn = '<button type="button" class="btn btn-sm btn-outline-primary js-subscription-show" data-id="' . $row->id . '">' . (trans('sales.view') ?? 'عرض') . '</button>';
-
-            $addPtBtn = '';
-            if ($canAddPt) {
-                $url = route('sales.subscriptions.pt_addons.create', $row->id);
-                $addPtBtn = ' <a href="' . $url . '" target="_blank" class="btn btn-sm btn-outline-success">' . (trans('sales.add_pt') ?? 'إضافة PT') . '</a>';
+        })
+        // ✅ الفلتر اليدوي للفرع مقيّد بفروع المستخدم فقط
+        ->when($branchId, function ($query) use ($branchId, $accessibleBranchIds) {
+            if (empty($accessibleBranchIds) || in_array($branchId, $accessibleBranchIds)) {
+                $query->where('branch_id', $branchId);
             }
+        })
+        ->when($status,          fn($query) => $query->where('status',          $status))
+        ->when($planId,          fn($query) => $query->where('subscriptions_plan_id', $planId))
+        ->when($typeId,          fn($query) => $query->where('subscriptions_type_id', $typeId))
+        ->when($source,          fn($query) => $query->where('source',          $source))
+        ->when($salesEmployeeId, fn($query) => $query->where('sales_employee_id', $salesEmployeeId))
+        ->when($dateFrom,        fn($query) => $query->where('start_date', '>=', $dateFrom->format('Y-m-d')))
+        ->when($dateTo,          fn($query) => $query->where('start_date', '<=', $dateTo->format('Y-m-d')))
+        ->when($hasPt !== null, function ($query) use ($hasPt) {
+            if ($hasPt === 1) $query->whereHas('ptAddons');
+            if ($hasPt === 0) $query->whereDoesntHave('ptAddons');
+        });
 
-            $data[] = [
-                'rownum' => $rowNum++,
-                'member' => view('sales.partials._dt_member_cell', compact('memberCode', 'memberName'))->render(),
-                'plan'   => $row->plan?->getTranslation('name', 'ar') ?? '-',
-                'branch' => $row->branch?->getTranslation('name', 'ar') ?? '-',
-                'base_sessions' => view('sales.partials._dt_sessions_cell', compact('baseRemaining', 'baseIncluded'))->render(),
-                'pt' => ($ptCount > 0)
-                    ? '<span class="badge bg-success">' . (trans('sales.yes') ?? 'نعم') . ' (' . $ptRemaining . '/' . $ptTotal . ')</span>'
-                    : '<span class="badge bg-light text-dark">' . (trans('sales.no') ?? 'لا') . '</span>',
-                'source' => e($sourceText),
-                'total'  => number_format((float)$row->total_amount, 2),
-                'status' => '<span class="badge bg-secondary">' . e($statusText) . '</span>',
-                'created_at' => (string)$row->created_at,
-                'actions' => $showBtn . $addPtBtn,
-            ];
+    $recordsFiltered = (clone $filteredQuery)->count();
+
+    $orderDir = strtolower((string)$request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+    $orderCol = (int)$request->input('order.0.column', 9);
+
+    $orderMap = [
+        0 => 'id',
+        6 => 'total_amount',
+        7 => 'status',
+        8 => 'created_at',
+        9 => 'created_at',
+    ];
+    $orderBy = $orderMap[$orderCol] ?? 'created_at';
+
+    $rows = $filteredQuery
+        ->orderBy($orderBy, $orderDir)
+        ->skip($start)
+        ->take($length)
+        ->get();
+
+    $data  = [];
+    $rowNum = $start + 1;
+
+    foreach ($rows as $row) {
+        $baseIncluded  = (int)($row->sessions_included ?? $row->sessions_count ?? 0);
+        $baseRemaining = (int)($row->sessions_remaining ?? 0);
+
+        $ptCount         = (int)($row->pt_addons_count ?? 0);
+        $ptTotal         = (int)($row->pt_sessions_count_sum ?? 0);
+        $ptRemainingRaw  = $row->pt_sessions_remaining_sum;
+        $ptRemaining     = (int)($ptRemainingRaw ?? 0);
+
+        $statusKey  = 'sales.status_' . ($row->status ?? '');
+        $statusText = trans($statusKey);
+        if ($statusText === $statusKey) $statusText = (string)($row->status ?? '-');
+
+        $sourceMap = [
+            'reception'  => 'sales.source_reception',
+            'website'    => 'sales.source_website',
+            'mobile'     => 'sales.source_mobile',
+            'callcenter' => 'sales.source_callcenter',
+            'partner'    => 'sales.source_partner',
+            'other'      => 'sales.source_other',
+        ];
+        $src        = (string)($row->source ?? '');
+        $sourceKey  = $sourceMap[$src] ?? null;
+        $sourceText = $sourceKey ? trans($sourceKey) : ($src ?: '-');
+        if ($sourceKey && $sourceText === $sourceKey) $sourceText = ($src ?: '-');
+
+        $memberCode = $row->member?->member_code ?? $row->member_id;
+        $memberName = $row->member?->full_name
+            ?? trim(($row->member?->first_name ?? '') . ' ' . ($row->member?->last_name ?? ''));
+
+        $canAddPt = ((string)($row->status ?? '') === 'active')
+            && ($ptCount === 0 || $ptRemaining === 0);
+
+        $showBtn  = '<button type="button" class="btn btn-sm btn-outline-primary js-subscription-show" data-id="' . $row->id . '">'
+                    . (trans('sales.view') ?? 'عرض') . '</button>';
+
+        $addPtBtn = '';
+        if ($canAddPt) {
+            $url      = route('sales.subscriptions.pt_addons.create', $row->id);
+            $addPtBtn = ' <a href="' . $url . '" target="_blank" class="btn btn-sm btn-outline-success">'
+                        . (trans('sales.add_pt') ?? 'إضافة PT') . '</a>';
         }
 
-        return response()->json([
-            'draw' => $draw,
-            'recordsTotal' => $recordsTotal,
-            'recordsFiltered' => $recordsFiltered,
-            'data' => $data,
-        ]);
+        $data[] = [
+            'rownum'        => $rowNum++,
+            'member'        => view('sales.partials._dt_member_cell', compact('memberCode', 'memberName'))->render(),
+            'plan'          => $row->plan?->getTranslation('name', 'ar') ?? '-',
+            'branch'        => $row->branch?->getTranslation('name', 'ar') ?? '-',  // ✅ يظهر دائماً
+            'base_sessions' => view('sales.partials._dt_sessions_cell', compact('baseRemaining', 'baseIncluded'))->render(),
+            'pt'            => ($ptCount > 0)
+                ? '<span class="badge bg-success">' . (trans('sales.yes') ?? 'نعم') . ' (' . $ptRemaining . '/' . $ptTotal . ')</span>'
+                : '<span class="badge bg-light text-dark">' . (trans('sales.no') ?? 'لا') . '</span>',
+            'source'        => e($sourceText),
+            'total'         => number_format((float)$row->total_amount, 2),
+            'status'        => '<span class="badge bg-secondary">' . e($statusText) . '</span>',
+            'created_at'    => (string)$row->created_at,
+            'actions'       => $showBtn . $addPtBtn,
+        ];
     }
+
+    return response()->json([
+        'draw'            => $draw,
+        'recordsTotal'    => $recordsTotal,
+        'recordsFiltered' => $recordsFiltered,
+        'data'            => $data,
+    ]);
+}
+
 
 
 
@@ -1025,63 +1044,69 @@ class salescontroller extends Controller
         }
     }
 
-    public function ajaxSubscriptionShowModal($id)
-    {
-        $subscription = MemberSubscription::with([
-            'member',
-            'branch',
-            'plan',
-            'type',
-            'ptAddons.trainer',
-            'payments',
-            'invoice',
-            'offer',
-            'coupon',
-            'salesEmployee',
-        ])->findOrFail($id);
+public function ajaxSubscriptionShowModal($id)
+{
+    $subscription = MemberSubscription::with([
+        'member',
+        // ✅ withoutGlobalScope لضمان ظهور اسم الفرع
+        'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        'plan',
+        'type',
+        'ptAddons.trainer',
+        'payments',
+        'invoice',
+        'offer',
+        'coupon',
+        'salesEmployee',
+    ])->findOrFail($id);
 
-        $html = view('sales.partials.subscription_details', [
-            'subscription' => $subscription,
-            'inModal' => true,
-        ])->render();
+    $html = view('sales.partials.subscription_details', [
+        'subscription' => $subscription,
+        'inModal'      => true,
+    ])->render();
 
-        return response()->json([
-            'ok' => true,
-            'html' => $html,
-        ]);
-    }
+    return response()->json([
+        'ok'   => true,
+        'html' => $html,
+    ]);
+}
 
+public function show($id)
+{
+    $subscription = MemberSubscription::with([
+        'member',
+        // ✅ withoutGlobalScope لضمان ظهور اسم الفرع
+        'branch' => fn($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class),
+        'plan',
+        'type',
+        'ptAddons.trainer',
+        'payments',
+        'invoice',
+        'offer',
+        'coupon',
+        'salesEmployee',
+    ])->findOrFail($id);
 
-    public function show($id)
-    {
-        $subscription = MemberSubscription::with([
-            'member',
-            'branch',
-            'plan',
-            'type',
-            'ptAddons.trainer',
-            'payments',
-            'invoice',
-            'offer',
-            'coupon',
-            'salesEmployee',
-        ])->findOrFail($id);
+    return view('sales.show', compact('subscription'));
+}
 
-        return view('sales.show', compact('subscription'));
-    }
 
     /**
      * ✅ صفحة الاشتراكات الحالية (منفصلة)
      */
-    public function subscriptionsList(Request $request)
-    {
-        $Branches  = Branch::orderByDesc('id')->get();
-        $Plans     = subscriptions_plan::with('type')->orderByDesc('id')->get();
-        $Types     = subscriptions_type::orderByDesc('id')->get();
-        $Employees = Employee::orderByDesc('id')->get();
+public function subscriptionsList(Request $request)
+{
+    // ✅ Scope يعمل تلقائياً — يرى المستخدم فروعه فقط
+    $Branches = Branch::where('status', 1)->orderByDesc('id')->get();
 
-        return view('sales.subscriptions_list', compact('Branches', 'Plans', 'Types', 'Employees'));
-    }
+    // هذه لا تتأثر بالـ Scope
+    $Plans     = subscriptions_plan::with('type')->orderByDesc('id')->get();
+    $Types     = subscriptions_type::orderByDesc('id')->get();
+    $Employees = Employee::orderByDesc('id')->get();
+
+    return view('sales.subscriptions_list', compact('Branches', 'Plans', 'Types', 'Employees'));
+}
+
 
     /**
      * ✅ طباعة الفاتورة

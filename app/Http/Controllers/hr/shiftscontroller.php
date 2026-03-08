@@ -18,25 +18,22 @@ class shiftscontroller extends Controller
         return view('hr.shifts.index', compact('shifts'));
     }
 
-    public function create()
-    {
-        return redirect()->route('shifts.index');
-    }
+    public function create() { return redirect()->route('shifts.index'); }
+    public function edit($id) { return redirect()->route('shifts.index'); }
 
-    public function edit($id)
-    {
-        return redirect()->route('shifts.index');
-    }
+    // ─────────────────────────────────────────
+    // Show
+    // ─────────────────────────────────────────
 
     public function show($id)
     {
         $shift = HrShift::findOrFail($id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $this->shiftDto($shift),
-        ]);
+        return response()->json(['success' => true, 'data' => $this->shiftDto($shift)]);
     }
+
+    // ─────────────────────────────────────────
+    // Store
+    // ─────────────────────────────────────────
 
     public function store(Request $request)
     {
@@ -44,24 +41,8 @@ class shiftscontroller extends Controller
 
         try {
             $shift = new HrShift();
-            $shift->name           = $data['name'];
-            $shift->start_time     = $data['start_time'];
-            $shift->end_time       = $data['end_time'];
-            $shift->grace_minutes  = $data['grace_minutes'];
-            $shift->min_half_hours = $data['min_half_hours'];
-            $shift->min_full_hours = $data['min_full_hours'];
-
-            $shift->sun = $data['sun'];
-            $shift->mon = $data['mon'];
-            $shift->tue = $data['tue'];
-            $shift->wed = $data['wed'];
-            $shift->thu = $data['thu'];
-            $shift->fri = $data['fri'];
-            $shift->sat = $data['sat'];
-
-            $shift->status   = $data['status'];
+            $this->fillShift($shift, $data);
             $shift->user_add = Auth::id();
-
             $shift->save();
 
             return response()->json([
@@ -71,35 +52,21 @@ class shiftscontroller extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('shifts.store error', ['msg' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
-            $msg = trans('hr.error_occurred') ?? 'حدث خطأ، يرجى المحاولة مجدداً';
-            if (config('app.debug')) $msg = $e->getMessage();
-            return response()->json(['success' => false, 'message' => $msg], 500);
+            return response()->json(['success' => false, 'message' => config('app.debug') ? $e->getMessage() : (trans('hr.error_occurred') ?? 'حدث خطأ')], 500);
         }
     }
+
+    // ─────────────────────────────────────────
+    // Update
+    // ─────────────────────────────────────────
 
     public function update(Request $request, $id)
     {
         $shift = HrShift::findOrFail($id);
-        $data = $this->validateShift($request, $id);
+        $data  = $this->validateShift($request, $id);
 
         try {
-            $shift->name           = $data['name'];
-            $shift->start_time     = $data['start_time'];
-            $shift->end_time       = $data['end_time'];
-            $shift->grace_minutes  = $data['grace_minutes'];
-            $shift->min_half_hours = $data['min_half_hours'];
-            $shift->min_full_hours = $data['min_full_hours'];
-
-            $shift->sun = $data['sun'];
-            $shift->mon = $data['mon'];
-            $shift->tue = $data['tue'];
-            $shift->wed = $data['wed'];
-            $shift->thu = $data['thu'];
-            $shift->fri = $data['fri'];
-            $shift->sat = $data['sat'];
-
-            $shift->status = $data['status'];
-
+            $this->fillShift($shift, $data);
             $shift->save();
 
             return response()->json([
@@ -109,11 +76,13 @@ class shiftscontroller extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('shifts.update error', ['msg' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
-            $msg = trans('hr.error_occurred') ?? 'حدث خطأ، يرجى المحاولة مجدداً';
-            if (config('app.debug')) $msg = $e->getMessage();
-            return response()->json(['success' => false, 'message' => $msg], 500);
+            return response()->json(['success' => false, 'message' => config('app.debug') ? $e->getMessage() : (trans('hr.error_occurred') ?? 'حدث خطأ')], 500);
         }
     }
+
+    // ─────────────────────────────────────────
+    // Destroy
+    // ─────────────────────────────────────────
 
     public function destroy($id)
     {
@@ -129,17 +98,39 @@ class shiftscontroller extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('shifts.destroy error', ['msg' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
-            $msg = trans('hr.error_occurred') ?? 'حدث خطأ، يرجى المحاولة مجدداً';
-            if (config('app.debug')) $msg = $e->getMessage();
-            return response()->json(['success' => false, 'message' => $msg], 500);
+            return response()->json(['success' => false, 'message' => config('app.debug') ? $e->getMessage() : (trans('hr.error_occurred') ?? 'حدث خطأ')], 500);
         }
     }
 
-    // ───────────────────────────────
+    // ─────────────────────────────────────────
+    // Fill Helper (لتجنب تكرار الحقول في store/update)
+    // ─────────────────────────────────────────
+
+    private function fillShift(HrShift $shift, array $data): void
+    {
+        $shift->name           = $data['name'];
+        $shift->start_time     = $data['start_time'];
+        $shift->end_time       = $data['end_time'];
+        $shift->grace_minutes  = $data['grace_minutes'];
+        $shift->min_half_hours = $data['min_half_hours'];
+        $shift->min_full_hours = $data['min_full_hours'];
+        $shift->sun            = $data['sun'];
+        $shift->mon            = $data['mon'];
+        $shift->tue            = $data['tue'];
+        $shift->wed            = $data['wed'];
+        $shift->thu            = $data['thu'];
+        $shift->fri            = $data['fri'];
+        $shift->sat            = $data['sat'];
+        $shift->status         = $data['status'];
+    }
+
+    // ─────────────────────────────────────────
+    // Validation
+    // ─────────────────────────────────────────
 
     private function validateShift(Request $request, $id = null): array
     {
-        // ✅ لاحظ: أزلنا after:start_time لدعم الورديات الليلية، واستبدلناه بتحقق مخصص [web:154][web:162]
+        // ✅ أزلنا after:start_time لدعم الورديات الليلية — تحقق مخصص بدلاً منه
         $validator = Validator::make($request->all(), [
             'name'           => 'required|string|max:190',
             'start_time'     => 'required|date_format:H:i',
@@ -147,16 +138,14 @@ class shiftscontroller extends Controller
             'grace_minutes'  => 'nullable|integer|min:0|max:1440',
             'min_half_hours' => 'nullable|numeric|min:0|max:24',
             'min_full_hours' => 'nullable|numeric|min:0|max:24|gte:min_half_hours',
-
-            'sun' => 'nullable|boolean',
-            'mon' => 'nullable|boolean',
-            'tue' => 'nullable|boolean',
-            'wed' => 'nullable|boolean',
-            'thu' => 'nullable|boolean',
-            'fri' => 'nullable|boolean',
-            'sat' => 'nullable|boolean',
-
-            'status' => 'required|boolean',
+            'sun'            => 'nullable|boolean',
+            'mon'            => 'nullable|boolean',
+            'tue'            => 'nullable|boolean',
+            'wed'            => 'nullable|boolean',
+            'thu'            => 'nullable|boolean',
+            'fri'            => 'nullable|boolean',
+            'sat'            => 'nullable|boolean',
+            'status'         => 'required|boolean',
         ]);
 
         $validator->after(function ($v) use ($request) {
@@ -167,22 +156,19 @@ class shiftscontroller extends Controller
 
             $durationMinutes = $this->shiftDurationMinutes($start, $end);
 
-            // منع تساوي الوقتين (مدة 0)
             if ($durationMinutes <= 0) {
                 $v->errors()->add('end_time', trans('hr.shift_time_invalid') ?? 'وقت النهاية غير صحيح');
                 return;
             }
 
-            // منع 24 ساعة كاملة (اختياري): نخليها أقل من 24 ساعة
             if ($durationMinutes >= 24 * 60) {
                 $v->errors()->add('end_time', trans('hr.shift_duration_too_long') ?? 'مدة الوردية لا يجب أن تكون 24 ساعة أو أكثر');
                 return;
             }
 
             $durationHours = round($durationMinutes / 60, 2);
-
-            $minHalf = (float)($request->input('min_half_hours', 4));
-            $minFull = (float)($request->input('min_full_hours', 8));
+            $minHalf       = (float)($request->input('min_half_hours', 4));
+            $minFull       = (float)($request->input('min_full_hours', 8));
 
             if ($minHalf > $durationHours) {
                 $v->errors()->add('min_half_hours', (trans('hr.min_half_exceeds_shift') ?? 'حد نصف يوم أكبر من مدة الوردية') . ' (' . $durationHours . 'h)');
@@ -195,12 +181,11 @@ class shiftscontroller extends Controller
 
         $validated = $validator->validate();
 
-        // defaults
-        $validated['grace_minutes']  = (int)($validated['grace_minutes'] ?? 0);
+        $validated['grace_minutes']  = (int)($validated['grace_minutes']  ?? 0);
         $validated['min_half_hours'] = (float)($validated['min_half_hours'] ?? 4);
         $validated['min_full_hours'] = (float)($validated['min_full_hours'] ?? 8);
 
-        foreach (['sun','mon','tue','wed','thu','fri','sat'] as $d) {
+        foreach (['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as $d) {
             $validated[$d] = (bool)($request->input($d, 0));
         }
 
@@ -209,30 +194,33 @@ class shiftscontroller extends Controller
         return $validated;
     }
 
+    // ─────────────────────────────────────────
+    // DTO + Private Helpers
+    // ─────────────────────────────────────────
+
     private function shiftDto(HrShift $s): array
     {
-        $start = $this->formatTime($s->start_time);
-        $end   = $this->formatTime($s->end_time);
-
+        $start           = $this->formatTime($s->start_time);
+        $end             = $this->formatTime($s->end_time);
         $durationMinutes = $this->shiftDurationMinutes($start, $end);
-        $durationHours   = $durationMinutes > 0 ? round($durationMinutes / 60, 2) : 0;
-        $isOvernight     = $this->isOvernight($start, $end) ? 1 : 0;
 
         return [
             'id'             => $s->id,
             'name'           => $s->name,
             'start_time'     => $start,
             'end_time'       => $end,
-            'is_overnight'   => $isOvernight,
-            'duration_hours' => $durationHours,
-
+            'is_overnight'   => $this->isOvernight($start, $end) ? 1 : 0,
+            'duration_hours' => $durationMinutes > 0 ? round($durationMinutes / 60, 2) : 0,
             'grace_minutes'  => (int)$s->grace_minutes,
             'min_half_hours' => (float)$s->min_half_hours,
             'min_full_hours' => (float)$s->min_full_hours,
-
-            'sun' => (int)$s->sun, 'mon' => (int)$s->mon, 'tue' => (int)$s->tue, 'wed' => (int)$s->wed,
-            'thu' => (int)$s->thu, 'fri' => (int)$s->fri, 'sat' => (int)$s->sat,
-
+            'sun'            => (int)$s->sun,
+            'mon'            => (int)$s->mon,
+            'tue'            => (int)$s->tue,
+            'wed'            => (int)$s->wed,
+            'thu'            => (int)$s->thu,
+            'fri'            => (int)$s->fri,
+            'sat'            => (int)$s->sat,
             'status'         => (int)$s->status,
             'created_at'     => $s->created_at ? $s->created_at->toDateTimeString() : null,
         ];
@@ -251,24 +239,17 @@ class shiftscontroller extends Controller
     private function isOvernight(string $start, string $end): bool
     {
         if (!$start || !$end) return false;
-
         $s = Carbon::createFromFormat('H:i', $start);
         $e = Carbon::createFromFormat('H:i', $end);
-
         return $e->lessThanOrEqualTo($s);
     }
 
     private function shiftDurationMinutes(string $start, string $end): int
     {
         if (!$start || !$end) return 0;
-
         $s = Carbon::createFromFormat('H:i', $start);
         $e = Carbon::createFromFormat('H:i', $end);
-
-        if ($e->lessThanOrEqualTo($s)) {
-            $e->addDay(); // ✅ وردية ليلية: النهاية في اليوم التالي
-        }
-
+        if ($e->lessThanOrEqualTo($s)) $e->addDay(); // ✅ وردية ليلية
         return $e->diffInMinutes($s);
     }
 }

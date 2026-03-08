@@ -34,12 +34,27 @@ class employeescontroller extends Controller
 
     public function index()
     {
-        $Employees = Employee::with(['job', 'branches'])->orderBy('id', 'desc')->get();
+        // ✅ تعطيل BranchAccessScope في eager load الفروع
+        // لأننا نريد عرض كل فروع كل موظف بغض النظر عن المستخدم الحالي
+        $Employees = Employee::with([
+            'job',
+            'branches' => function ($q) {
+                $q->withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class);
+            },
+        ])->orderBy('id', 'desc')->get();
+
         $Jobs = Job::orderBy('id', 'desc')->get();
-        $Branches = Branch::orderBy('id', 'desc')->get();
+
+        // ✅ كل الفروع للقوائم المنسدلة في الفلتر وفورمي الإضافة/التعديل
+        $Branches = Branch::withoutGlobalScope(\App\Models\Scopes\BranchAccessScope::class)
+            ->where('status', 1)
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view('employees.index', compact('Employees', 'Jobs', 'Branches'));
     }
+
+
 
     public function create()
     {
@@ -207,7 +222,6 @@ class employeescontroller extends Controller
 
             DB::commit();
             return redirect()->back()->with('success', trans('employees.saved_success'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', trans('employees.saved_error'));
@@ -381,7 +395,6 @@ class employeescontroller extends Controller
 
             DB::commit();
             return redirect()->back()->with('success', trans('employees.updated_success'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', trans('employees.updated_error'));
@@ -404,7 +417,6 @@ class employeescontroller extends Controller
 
             DB::commit();
             return redirect()->back()->with('success', trans('employees.deleted_success'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', trans('employees.deleted_error'));

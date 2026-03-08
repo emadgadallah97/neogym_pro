@@ -16,119 +16,109 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class payments_reportcontroller extends Controller
 {
-    public function index(Request $request)
-    {
-        $action = (string)$request->get('action', '');
+public function index(Request $request)
+{
+    $action = (string)$request->get('action', '');
 
-        if (!$request->ajax() && $action === 'print') {
-            return $this->print($request);
-        }
-
-        if (!$request->ajax() && $action === 'export_excel') {
-            return $this->exportExcel($request);
-        }
-
-        if ($request->ajax()) {
-            if ($action === 'metrics') {
-                return response()->json($this->computeKpis($request));
-            }
-
-            if ($action === 'group') {
-                return response()->json($this->groupSummary($request));
-            }
-
-            if ($action === 'subs_matching') {
-                return $this->subscriptionsMatchingDatatable($request);
-            }
-
-            return $this->datatable($request);
-        }
-
-        $branches = Branch::query()
-            ->select('id', 'name')
-            ->whereNull('deleted_at')
-            ->orderByDesc('id')
-            ->get();
-
-        $types = DB::table('subscriptions_types as st')
-            ->whereNull('st.deleted_at')
-            ->select('st.id', 'st.name', 'st.status')
-            ->orderByDesc('st.id')
-            ->get();
-
-        $plans = DB::table('subscriptions_plans as sp')
-            ->whereNull('sp.deleted_at')
-            ->select('sp.id', 'sp.code', 'sp.name', 'sp.status')
-            ->orderByDesc('sp.id')
-            ->get();
-
-        $paymentMethods = DB::table('payments as p')
-            ->whereNull('p.deleted_at')
-            ->whereNotNull('p.payment_method')
-            ->where('p.payment_method', '!=', '')
-            ->distinct()
-            ->orderBy('p.payment_method')
-            ->pluck('p.payment_method')
-            ->toArray();
-
-        // sources are fixed kinds (payments/invoices.source)
-        $sources = array_keys($this->paymentSourceKinds());
-
-        $kpis = [
-            'payments_count' => 0,
-            'paid_sum' => 0,
-            'pending_sum' => 0,
-            'failed_sum' => 0,
-            'refunded_sum' => 0,
-            'net_collected' => 0,
-            'unique_members' => 0,
-            'unique_subscriptions' => 0,
-            'outstanding_sum' => 0,
-        ];
-
-        $filters = [
-            'date_from' => $request->get('date_from'),
-            'date_to' => $request->get('date_to'),
-            'branch_ids' => (array)$request->get('branch_ids', []),
-
-            'status' => $request->get('status'),
-            'payment_method' => $request->get('payment_method'),
-
-            'member_q' => $request->get('member_q'),
-
-            'member_id' => $request->get('member_id'),
-            'member_subscription_id' => $request->get('member_subscription_id'),
-
-            'type_id' => $request->get('type_id'),
-            'plan_id' => $request->get('plan_id'),
-            'source' => $request->get('source'),
-
-            'amount_from' => $request->get('amount_from'),
-            'amount_to' => $request->get('amount_to'),
-
-            'group_by' => $request->get('group_by', 'payment_method'),
-
-            'show_only_outstanding' => $request->get('show_only_outstanding', '1'),
-        ];
-
-        $filterOptions = [
-            'statuses' => $this->paymentStatusOptions(),
-            'group_by' => $this->groupByOptions(),
-            'payment_methods' => $paymentMethods,
-            'sources' => $sources,
-            'yes_no' => $this->yesNoOptions(),
-        ];
-
-        return view('reports.payments_report.index', [
-            'branches' => $branches,
-            'types' => $types,
-            'plans' => $plans,
-
-            'kpis' => $kpis,
-            'filters' => $filters,
-            'filterOptions' => $filterOptions,
-        ]);
+    if (!$request->ajax() && $action === 'print') {
+        return $this->print($request);
     }
+    if (!$request->ajax() && $action === 'export_excel') {
+        return $this->exportExcel($request);
+    }
+
+    if ($request->ajax()) {
+        if ($action === 'metrics') {
+            return response()->json($this->computeKpis($request));
+        }
+        if ($action === 'group') {
+            return response()->json($this->groupSummary($request));
+        }
+        if ($action === 'subs_matching') {
+            return $this->subscriptionsMatchingDatatable($request);
+        }
+        return $this->datatable($request);
+    }
+
+    // ✅ كل الفروع بغض النظر عن GlobalScope
+    $branches = Branch::withoutGlobalScopes()
+        ->select('id', 'name')
+        ->whereNull('deleted_at')
+        ->where('status', 1)
+        ->orderBy('id')
+        ->get();
+
+    $types = DB::table('subscriptions_types as st')
+        ->whereNull('st.deleted_at')
+        ->select('st.id', 'st.name', 'st.status')
+        ->orderByDesc('st.id')
+        ->get();
+
+    $plans = DB::table('subscriptions_plans as sp')
+        ->whereNull('sp.deleted_at')
+        ->select('sp.id', 'sp.code', 'sp.name', 'sp.status')
+        ->orderByDesc('sp.id')
+        ->get();
+
+    $paymentMethods = DB::table('payments as p')
+        ->whereNull('p.deleted_at')
+        ->whereNotNull('p.payment_method')
+        ->where('p.payment_method', '!=', '')
+        ->distinct()
+        ->orderBy('p.payment_method')
+        ->pluck('p.payment_method')
+        ->toArray();
+
+    $sources = array_keys($this->paymentSourceKinds());
+
+    $kpis = [
+        'payments_count'       => 0,
+        'paid_sum'             => 0,
+        'pending_sum'          => 0,
+        'failed_sum'           => 0,
+        'refunded_sum'         => 0,
+        'net_collected'        => 0,
+        'unique_members'       => 0,
+        'unique_subscriptions' => 0,
+        'outstanding_sum'      => 0,
+    ];
+
+    $filters = [
+        'date_from'              => $request->get('date_from'),
+        'date_to'                => $request->get('date_to'),
+        'branch_ids'             => (array)$request->get('branch_ids', []),
+        'status'                 => $request->get('status'),
+        'payment_method'         => $request->get('payment_method'),
+        'member_q'               => $request->get('member_q'),
+        'member_id'              => $request->get('member_id'),
+        'member_subscription_id' => $request->get('member_subscription_id'),
+        'type_id'                => $request->get('type_id'),
+        'plan_id'                => $request->get('plan_id'),
+        'source'                 => $request->get('source'),
+        'amount_from'            => $request->get('amount_from'),
+        'amount_to'              => $request->get('amount_to'),
+        'group_by'               => $request->get('group_by', 'payment_method'),
+        'show_only_outstanding'  => $request->get('show_only_outstanding', '1'),
+    ];
+
+    $filterOptions = [
+        'statuses'        => $this->paymentStatusOptions(),
+        'group_by'        => $this->groupByOptions(),
+        'payment_methods' => $paymentMethods,
+        'sources'         => $sources,
+        'yes_no'          => $this->yesNoOptions(),
+    ];
+
+    return view('reports.payments_report.index', [
+        'branches'      => $branches,
+        'types'         => $types,
+        'plans'         => $plans,
+        'kpis'          => $kpis,
+        'filters'       => $filters,
+        'filterOptions' => $filterOptions,
+    ]);
+}
+
 
     // ===================== Main transactions datatable =====================
 
@@ -1046,59 +1036,58 @@ private function buildSubscriptionBlock($subId, $planCode, $planName, $typeName)
 
     // ===================== Chips =====================
 
-    private function buildFilterChips(Request $request): array
-    {
-        $chips = [];
+private function buildFilterChips(Request $request): array
+{
+    $chips = [];
 
-        if ($request->filled('date_from') || $request->filled('date_to')) {
-            $chips[] = __('reports.pay_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
-        }
-
-        $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
-        if (!empty($branchIds)) {
-            $branchNames = Branch::query()
-                ->whereIn('id', $branchIds)
-                ->get()
-                ->map(function ($b) {
-                    return method_exists($b, 'getTranslation') ? $b->getTranslation('name', app()->getLocale()) : ($b->name ?? '');
-                })
-                ->filter()
-                ->values()
-                ->implode('، ');
-            $chips[] = __('reports.pay_filter_branches') . ': ' . ($branchNames ?: '---');
-        }
-
-        foreach ([
-            'status' => 'pay_filter_status',
-            'payment_method' => 'pay_filter_method',
-            'source' => 'pay_filter_source',
-            'member_q' => 'pay_filter_member_q',
-            'member_id' => 'pay_filter_member',
-            'member_subscription_id' => 'pay_filter_subscription',
-        ] as $key => $labelKey) {
-            if ($request->filled($key)) {
-                $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
-            }
-        }
-
-        if ($request->filled('type_id')) {
-            $chips[] = __('reports.pay_filter_type') . ': ' . $request->get('type_id');
-        }
-
-        if ($request->filled('plan_id')) {
-            $chips[] = __('reports.pay_filter_plan') . ': ' . $request->get('plan_id');
-        }
-
-        if ($request->filled('amount_from') || $request->filled('amount_to')) {
-            $chips[] = __('reports.pay_filter_amount') . ': ' . ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
-        }
-
-        if ($request->filled('group_by')) {
-            $chips[] = __('reports.pay_filter_group_by') . ': ' . $request->get('group_by');
-        }
-
-        return $chips;
+    if ($request->filled('date_from') || $request->filled('date_to')) {
+        $chips[] = __('reports.pay_filter_date') . ': ' . ($request->get('date_from') ?: '---') . ' ⟶ ' . ($request->get('date_to') ?: '---');
     }
+
+    $branchIds = array_values(array_filter(array_map('intval', (array)$request->get('branch_ids', []))));
+    if (!empty($branchIds)) {
+        // ✅ كل الفروع بغض النظر عن GlobalScope
+        $branchNames = Branch::withoutGlobalScopes()
+            ->whereIn('id', $branchIds)
+            ->get()
+            ->map(fn($b) => method_exists($b, 'getTranslation')
+                ? $b->getTranslation('name', app()->getLocale())
+                : ($b->name ?? ''))
+            ->filter()
+            ->values()
+            ->implode('، ');
+
+        $chips[] = __('reports.pay_filter_branches') . ': ' . ($branchNames ?: '---');
+    }
+
+    foreach ([
+        'status'                 => 'pay_filter_status',
+        'payment_method'         => 'pay_filter_method',
+        'source'                 => 'pay_filter_source',
+        'member_q'               => 'pay_filter_member_q',
+        'member_id'              => 'pay_filter_member',
+        'member_subscription_id' => 'pay_filter_subscription',
+    ] as $key => $labelKey) {
+        if ($request->filled($key)) {
+            $chips[] = __('reports.' . $labelKey) . ': ' . $request->get($key);
+        }
+    }
+
+    if ($request->filled('type_id'))  $chips[] = __('reports.pay_filter_type')  . ': ' . $request->get('type_id');
+    if ($request->filled('plan_id'))  $chips[] = __('reports.pay_filter_plan')  . ': ' . $request->get('plan_id');
+
+    if ($request->filled('amount_from') || $request->filled('amount_to')) {
+        $chips[] = __('reports.pay_filter_amount') . ': ' .
+            ($request->get('amount_from') ?: '---') . ' ⟶ ' . ($request->get('amount_to') ?: '---');
+    }
+
+    if ($request->filled('group_by')) {
+        $chips[] = __('reports.pay_filter_group_by') . ': ' . $request->get('group_by');
+    }
+
+    return $chips;
+}
+
 
     // ===================== Options / translations =====================
 
