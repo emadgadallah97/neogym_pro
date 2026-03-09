@@ -1,3 +1,11 @@
+@php
+    if (Auth::check() && !Auth::user()->relationLoaded('branch')) {
+        Auth::user()->load([
+            'branch'   => fn($q) => $q->withoutGlobalScopes(),
+            'employee',
+        ]);
+    }
+@endphp
 <header id="page-topbar">
     <div class="layout-width">
         <div class="navbar-header">
@@ -146,17 +154,17 @@
                             <a    @if($properties['native']=='English') hreflang="{{ $localeCode='en' }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode='en', null, [], true) }}" @else hreflang="{{ $localeCode='ar' }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode='ar', null, [], true) }}"   @endif  class="dropdown-item notify-item language py-2" rel="alternate" hreflang="{{ $localeCode }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode, null, [], true) }}">
                                 <img   @if($properties['native']=='English') src="{{URL::asset('assets/images/flags/us.svg')}}" @else src="{{URL::asset('assets/images/flags/eg.svg')}}"   @endif   alt="user-image" class="me-2 rounded" height="18">
                                 <span class="align-middle"> {{ $properties['native'] }}</span>
-                               
+
                             </a>
                         </li>
                           @endforeach
                         <!-- item-->
-                        
-                    
+
+
                     </div>
                 </div>
 
-                <div class="dropdown topbar-head-dropdown ms-1 header-item">
+                {{-- <div class="dropdown topbar-head-dropdown ms-1 header-item">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class='bx bx-category-alt fs-22'></i>
                     </button>
@@ -217,7 +225,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="ms-1 header-item d-none d-sm-flex">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none" data-toggle="fullscreen">
@@ -231,7 +239,7 @@
                     </button>
                 </div>
 
-                <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
+                {{-- <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
                         <i class='bx bx-bell fs-22'></i>
                         <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">3<span class="visually-hidden">unread messages</span></span>
@@ -493,32 +501,75 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
+
 
                 <div class="dropdown ms-sm-3 header-item topbar-user">
-                    <button type="button" class="btn shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="d-flex align-items-center">
-                            <img class="rounded-circle header-profile-user" src="{{URL::asset('assets/images/users/avatar-1.jpg')}}" alt="Header Avatar">
-                            <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Anna Adame</span>
-                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Founder</span>
-                            </span>
-                        </span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <!-- item-->
-                        <h6 class="dropdown-header">Welcome Anna!</h6>
-                        <a class="dropdown-item" href="pages-profile.html"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
-                        <a class="dropdown-item" href="apps-chat.html"><i class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Messages</span></a>
-                        <a class="dropdown-item" href="apps-tasks-kanban.html"><i class="mdi mdi-calendar-check-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Taskboard</span></a>
-                        <a class="dropdown-item" href="pages-faqs.html"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Help</span></a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="pages-profile.html"><i class="mdi mdi-wallet text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Balance : <b>$5971.67</b></span></a>
-                        <a class="dropdown-item" href="pages-profile-settings.html"><span class="badge bg-soft-success text-success mt-1 float-end">New</span><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Settings</span></a>
-                        <a class="dropdown-item" href="auth-lockscreen-basic.html"><i class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Lock screen</span></a>
-                        <a class="dropdown-item" href="auth-logout-basic.html"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
-                    </div>
-                </div>
+    <button type="button" class="btn shadow-none" id="page-header-user-dropdown"
+        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="d-flex align-items-center">
+
+            {{-- ✅ صورة الموظف أو الصورة الافتراضية --}}
+            @if(Auth::user()->employee && Auth::user()->employee->photo)
+                <img class="rounded-circle header-profile-user"
+                     src="{{ url('/' . Auth::user()->employee->photo) }}"
+                     alt="Profile">
+            @else
+                <img class="rounded-circle header-profile-user"
+                     src="{{ URL::asset('assets/images/users/avatar-1.jpg') }}"
+                     alt="Profile">
+            @endif
+
+            <span class="text-start ms-xl-2">
+                {{-- ✅ اسم المستخدم --}}
+                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
+                    {{ Auth::user()->name }}
+                </span>
+                {{-- ✅ اسم الفرع الأساسي --}}
+                @php
+                    $headerBranch = Auth::user()->branch;
+                    $headerBranchName = '';
+                    if ($headerBranch) {
+                        $n = $headerBranch->name;
+                        $headerBranchName = is_array($n)
+                            ? ($n[app()->getLocale()] ?? $n['ar'] ?? $n['en'] ?? '')
+                            : ($n ?? '');
+                    }
+                @endphp
+                @if($headerBranchName)
+                <small class="d-none d-xl-block ms-1 text-muted" style="font-size:11px; line-height:1.2;">
+                    {{ $headerBranchName }}
+                </small>
+                @endif
+            </span>
+        </span>
+    </button>
+
+    <div class="dropdown-menu dropdown-menu-end">
+
+        {{-- ✅ اسم الموظف الكامل --}}
+        @if(Auth::user()->employee)
+        <div class="dropdown-item text-center py-2 border-bottom">
+            <p class="mb-0 fw-semibold text-dark">
+            {{ trans('users.welcome' ) }}  {{ Auth::user()->employee->first_name }} {{ Auth::user()->employee->last_name }}
+            </p>
+            <small class="text-muted">{{ Auth::user()->email }}</small>
+        </div>
+        @endif
+
+        {{-- ✅ Logout --}}
+        <form action="{{ url('/logout') }}" method="POST" id="logout-form">
+            @csrf
+        </form>
+        <a class="dropdown-item" href="#"
+           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
+            <span class="align-middle" data-key="t-logout">Logout</span>
+        </a>
+
+    </div>
+</div>
+
             </div>
         </div>
     </div>

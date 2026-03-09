@@ -51,5 +51,6 @@ return [
     'confirm_new_password' => 'تأكيد كلمة المرور الجديدة',
     'search_hint' => 'ابحث بالاسم / البريد',
     'choose' => 'اختر',
+    'welcome' => 'مرحبا ',
 
 ];
