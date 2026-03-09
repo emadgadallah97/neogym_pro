@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 class dashbordController extends Controller
 {
+    function __construct()
+    {
+        // $this->middleware('permission:dashboard');
+        // $this->middleware('permission:role-create', ['only' => ['create', 'store']]);
+        // $this->middleware('permission:role-edit',   ['only' => ['edit', 'update']]);
+        // $this->middleware('permission:role-delete', ['only' => ['destroy']]);
+    }
 
   /**
    * Display a listing of the resource.
@@ -19,7 +26,7 @@ class dashbordController extends Controller
    */
   public function index()
   {
-   
+
     return view('dashbord.index');
 
   }
@@ -42,7 +49,7 @@ class dashbordController extends Controller
    */
   public function store(Storedashbord $request)
   {
-    
+
   }
 
   /**
@@ -76,7 +83,7 @@ class dashbordController extends Controller
    */
   public function update(Storedashbord $request)
   {
-    
+
 
   }
 
@@ -88,7 +95,7 @@ class dashbordController extends Controller
    */
   public function destroy(Request $request)
   {
-    
+
   }
 
 

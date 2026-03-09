@@ -50,7 +50,7 @@ return [
         'users' => 'Users',
     //reports
     'reports' => 'Reports',
-
+    'back' => 'Back',
 
      //Settings
     'settings' => 'Settings',

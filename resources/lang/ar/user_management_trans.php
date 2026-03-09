@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'role_management' => 'إدارة الصلاحيات',
+    'role' => 'الصلاحية',
+    'role_create' => 'إضافة صلاحية جديدة',
+    'role_edit' => 'تعديل الصلاحية',
+    'role_show' => 'عرض الصلاحية',
+    'role_name' => 'اسم الصلاحية',
+    'role_management_desc' => 'إدارة وتخصيص صلاحيات المستخدمين والأدوار',
+    'confirm' => 'تأكيد',
+    'permission_search' => 'ابحث عن صلاحية...',
+    'toggle_all' => 'تحديد / إلغاء الكل',
+    'name' => 'الاسم',
+    'processes' => 'العمليات',
+    'show' => 'عرض',
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'delete_confirm' => 'هل أنت متأكد من حذف هذا الدور؟',
+    'added_successfully' => 'تم اضافة الصلاحية بنجاح',
+    'updated_successfully' => 'تم تحديث بيانات الصلاحية بنجاح',
+    'deleted_successfully' => 'تم حذف الصلاحية بنجاح',
+    'permissions_total' => 'إجمالي الصلاحيات',
+    'no_permissions_assigned' => 'لا توجد صلاحيات مرتبطة بهذا الدور.',
+];

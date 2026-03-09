@@ -35,13 +35,17 @@
             </div>
             <ul class="navbar-nav" id="navbar-nav">
                 <li class="menu-title"><span data-key="t-menu">Menu</span></li>
-                <li class="nav-item">
+                {{-- dashboard --}}
+                @can('dashboard')
+                  <li class="nav-item">
                     <a class="nav-link menu-link font  @if (Route::currentRouteName() == 'dashbord.create' || Route::currentRouteName() == 'dashbord.index') active @endif"
                         href="{{ url('/' . ($page = 'dashbord')) }}">
                         <i class="mdi mdi-speedometer"></i> <span data-key="t-widgets">
                             {{ trans('main_trans.dashboards') }}</span>
                     </a>
                 </li>
+                @endcan
+
                 {{-- الحضور --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link font

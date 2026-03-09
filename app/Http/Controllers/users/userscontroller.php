@@ -5,32 +5,30 @@ namespace App\Http\Controllers\users;
 use App\Http\Controllers\Controller;
 use App\Models\employee\employee;
 use App\Models\general\Branch;
+use App\Models\Role;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class userscontroller extends Controller
 {
-public function index(Request $request)
-{
-    $users = User::with([
-        'branch'   => fn($q) => $q->withoutGlobalScopes(),
-        'employee',
-        'roles',
-    ])->latest()->get();
+    public function index(Request $request)
+    {
+        $users = User::with([
+            'branch'   => fn($q) => $q->withoutGlobalScopes(),
+            'employee',
+            'roles',
+        ])->latest()->get();
 
-    return view('users.index', compact('users'));
-}
-
+        return view('users.index', compact('users'));
+    }
 
     public function create()
     {
-        // ✅ كل الفروع بغض النظر عن GlobalScope
         $branches  = Branch::withoutGlobalScopes()->where('status', 1)->orderBy('id')->get();
         $employees = employee::where('status', 1)->get();
-        $roles     = Role::pluck('name', 'name')->all();
+        $roles     = \App\Models\Role::pluck('name', 'name')->all();
 
         return view('users.create', compact('branches', 'employees', 'roles'));
     }
@@ -38,12 +36,12 @@ public function index(Request $request)
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name'         => 'required',
-            'email'        => 'required|email|unique:users,email',
-            'password'     => 'required|same:confirm-password',
-            'roles_name'   => 'required|array',
-            'Status'       => 'required',
-            'branch_id'    => 'required',
+            'name'       => 'required',
+            'email'      => 'required|email|unique:users,email',
+            'password'   => 'required|same:confirm-password',
+            'roles_name' => 'required|array',
+            'Status'     => 'required',
+            'branch_id'  => 'required',
         ]);
 
         $input             = $request->all();
@@ -59,29 +57,27 @@ public function index(Request $request)
             ->with('success', trans('users.created_successfully'));
     }
 
-public function show($id)
-{
-    $user = User::with([
-        'branch'          => fn($q) => $q->withoutGlobalScopes(), // ✅
-        'employee.branches',
-        'roles',
-    ])->find($id);
+    public function show($id)
+    {
+        $user = User::with([
+            'branch'          => fn($q) => $q->withoutGlobalScopes(),
+            'employee.branches',
+            'roles',
+        ])->find($id);
 
-    if (!$user) abort(404);
+        if (!$user) abort(404);
 
-    return view('users.show', compact('user'));
-}
-
+        return view('users.show', compact('user'));
+    }
 
     public function edit($id)
     {
         $user = User::find($id);
         if (!$user) abort(404);
 
-        // ✅ كل الفروع بغض النظر عن GlobalScope
         $branches  = Branch::withoutGlobalScopes()->where('status', 1)->orderBy('id')->get();
         $employees = employee::where('status', 1)->get();
-        $roles     = Role::pluck('name', 'name')->all();
+        $roles     = \App\Models\Role::pluck('name', 'name')->all();
         $userRole  = $user->roles->pluck('name', 'name')->all();
 
         return view('users.edit', compact('user', 'branches', 'employees', 'roles', 'userRole'));

@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'role_management' => 'Role Management',
+    'role' => 'Role',
+    'role_create' => 'Add New Role',
+    'role_edit' => 'Edit Role',
+    'role_show' => 'Show Role',
+    'role_name' => 'Role Name',
+    'role_management_desc' => 'Manage and customize user permissions and roles',
+    'confirm' => 'Confirm',
+    'permission_search' => 'Search for a permission...',
+    'toggle_all' => 'Select / Deselect All',
+    'name' => 'Name',
+    'processes' => 'Operations',
+    'show' => 'Show',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'delete_confirm' => 'Are you sure you want to delete this role?',
+    'added_successfully' => 'Role added successfully',
+    'updated_successfully' => 'Role updated successfully',
+    'deleted_successfully' => 'Role deleted successfully',
+    'permissions_total' => 'Total Permissions',
+    'no_permissions_assigned' => 'No permissions linked to this role.',
+];

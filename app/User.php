@@ -13,6 +13,8 @@ class User extends Authenticatable
     use Notifiable;
     use HasRoles;
 
+    protected $guard_name = 'web';
+
     protected $fillable = [
         'name',
         'email',
@@ -39,26 +41,8 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\general\Branch::class, 'branch_id');
     }
 
-    /**
-     * ✅ العلاقة مع الموظف
-     */
     public function employee()
     {
         return $this->belongsTo(employee::class, 'employee_id');
-    }
-
-    /**
-     * ✅ جلب الفروع المتاحة للمستخدم (للاستخدام البرمجي إذا احتجت)
-     */
-    public function accessibleBranchIds(): array
-    {
-        if (!$this->employee_id) {
-            return []; // سيُفسَّر على أنه "كل الفروع" في الـ Scope
-        }
-
-        return DB::table('employee_branch')
-            ->where('employee_id', $this->employee_id)
-            ->pluck('branch_id')
-            ->toArray();
     }
 }

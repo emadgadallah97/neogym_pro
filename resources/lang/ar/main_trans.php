@@ -52,6 +52,7 @@ return [
         'users' => 'مستخدمين',
     //reports
     'reports' => 'التقارير',
+    'back' => 'عوده',
 
 
      //Settings
