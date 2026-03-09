@@ -9,7 +9,8 @@ class reportscontroller extends Controller
 {
     public function __construct()
     {
-        // permissions...
+                $this->middleware('permission:reports');
+
     }
 
     public function index()

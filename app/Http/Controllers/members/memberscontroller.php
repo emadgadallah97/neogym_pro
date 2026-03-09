@@ -20,7 +20,10 @@ use chillerlan\QRCode\QROptions;
 class memberscontroller extends Controller
 {
     use file_storage;
-
+    public function __construct()
+    {
+        $this->middleware('permission:members');
+    }
     public function index()
     {
         $this->autoUnfreezeExpiredMembers();

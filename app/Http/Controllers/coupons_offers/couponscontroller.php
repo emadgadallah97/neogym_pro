@@ -16,7 +16,7 @@ class couponscontroller extends Controller
 {
     public function __construct()
     {
-        // permissions...
+                $this->middleware('permission:coupons');
     }
 
     public function index()

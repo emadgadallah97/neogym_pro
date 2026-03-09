@@ -21,8 +21,9 @@ class attendancescontroller extends Controller
     public function __construct(AttendanceService $service)
     {
         $this->service = $service;
-    }
+        $this->middleware('permission:attendance');
 
+    }
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

@@ -11,6 +11,10 @@ use Illuminate\Validation\Rule;
 
 class accountingcontroller extends Controller
 {
+        public function __construct()
+    {
+                $this->middleware('permission:accounting');
+    }
     public function index()
     {
         return view('accounting.programs.index');

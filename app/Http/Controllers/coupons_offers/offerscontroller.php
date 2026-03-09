@@ -16,7 +16,7 @@ class offerscontroller extends Controller
 {
     public function __construct()
     {
-        // permissions...
+                $this->middleware('permission:offers');
     }
 
     public function index()

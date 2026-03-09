@@ -16,6 +16,10 @@ use Illuminate\Validation\Rule;
 
 class subscriptions_planscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:subscriptions');
+    }
     private function periodTypes()
     {
         return [

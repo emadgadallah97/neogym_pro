@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Hash;
 
 class userscontroller extends Controller
 {
+            public function __construct()
+    {
+                $this->middleware('permission:user_management');
+    }
     public function index(Request $request)
     {
         $users = User::with([

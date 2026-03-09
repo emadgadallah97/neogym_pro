@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class CrmDashboardController extends Controller
 {
+            public function __construct()
+    {
+                $this->middleware('permission:crm');
+    }
     public function index(Request $request)
     {
         $today    = Carbon::today();

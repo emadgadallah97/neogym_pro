@@ -9,7 +9,7 @@ class hrprogramscontroller extends Controller
 {
     public function __construct()
     {
-        // permissions...
+        $this->middleware('permission:human_resources');
     }
 
     public function index()

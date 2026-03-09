@@ -13,7 +13,10 @@ use App\Http\Controllers\log\LogController;
 
 class application_settingsController extends Controller
 {
+    function __construct() {
+                $this->middleware('permission:settings');
 
+    }
   /**
    * Display a listing of the resource.
    *
@@ -21,7 +24,7 @@ class application_settingsController extends Controller
    */
   public function index()
   {
-   
+
     return view('settings.settings');
 
   }

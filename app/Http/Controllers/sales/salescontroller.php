@@ -54,6 +54,8 @@ class salescontroller extends Controller
         $this->couponEngine = $couponEngine;
         $this->commissionService = $commissionService;
         $this->availableOffersService = $availableOffersService;
+                $this->middleware('permission:sales');
+
     }
 
     private function getBasePriceWithoutTrainer(int $branchId, int $planId): ?float
