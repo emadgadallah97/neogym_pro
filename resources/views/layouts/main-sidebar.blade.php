@@ -40,8 +40,8 @@
                 {{-- dashboard --}}
                 @can('dashboard')
                 <li class="nav-item">
-                    <a class="nav-link menu-link font @if (Route::currentRouteName() == 'dashbord.create' || Route::currentRouteName() == 'dashbord.index') active @endif"
-                        href="{{ url('/' . ($page = 'dashbord')) }}">
+                    <a class="nav-link menu-link font @if (Route::currentRouteName() == 'dashboard.create' || Route::currentRouteName() == 'dashboard.index') active @endif"
+                        href="{{ url('/' . ($page = 'dashboard')) }}">
                         <i class="mdi mdi-speedometer"></i>
                         <span data-key="t-widgets">{{ trans('main_trans.dashboards') }}</span>
                     </a>
