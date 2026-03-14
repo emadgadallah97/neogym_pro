@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends('layouts.master_table')
 @section('title')
 {{ trans('user_management_trans.role_management') }}
 @stop

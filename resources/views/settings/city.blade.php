@@ -1,5 +1,5 @@
 
-@extends('layouts.master')
+@extends('layouts.master_table')
 @section('title')
 {{ trans('main_trans.title') }}
 

@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends('layouts.master_table')
 @section('title')
 {{ trans('main_trans.title') }}
 @stop
@@ -28,21 +28,21 @@
 
                 {{-- Message --}}
                 @if (Session::has('success'))
-                    <div class="alert alert-success alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert">
-                            <i class="fa fa-times"></i>
-                        </button>
-                        <strong>Success !</strong> {{ session('success') }}
-                    </div>
+                <div class="alert alert-success alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <strong>Success !</strong> {{ session('success') }}
+                </div>
                 @endif
 
                 @if (Session::has('error'))
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert">
-                            <i class="fa fa-times"></i>
-                        </button>
-                        <strong>Error !</strong> {{ session('error') }}
-                    </div>
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <strong>Error !</strong> {{ session('error') }}
+                </div>
                 @endif
 
             </div>
@@ -71,148 +71,148 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $i=0; ?>
+                        <?php $i = 0; ?>
                         @foreach($Branches as $Branch)
-                            <tr>
-                                <?php $i++; ?>
-                                <td>{{$i}}</td>
-                                <td>{{$Branch->id}}</td>
-                                <td>{{$Branch->getTranslation('name','ar')}}</td>
-                                <td>{{$Branch->getTranslation('name','en')}}</td>
-                                <td>{{$Branch->address}}</td>
-                                <td>{{$Branch->phone_1}}</td>
-                                <td>{{$Branch->phone_2}}</td>
-                                <td>
-                                    @if($Branch->status)
-                                        <span class="badge bg-success">{{ trans('settings_trans.active') }}</span>
-                                    @else
-                                        <span class="badge bg-danger">{{ trans('settings_trans.inactive') }}</span>
-                                    @endif
-                                </td>
-                                <td>{{$Branch->created_at}}</td>
-                                <td>
-                                    <div class="dropdown d-inline-block">
-                                        <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="ri-more-fill align-middle"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button data-bs-toggle="modal" data-bs-target="#signupModals{{$Branch->id}}" class="dropdown-item edit-item-btn">
-                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button data-bs-toggle="modal" data-bs-target="#signupModal{{$Branch->id}}" class="dropdown-item edit-item-btn">
-                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
-                                                </button>
-                                            </li>
-                                        </ul>
+                        <tr>
+                            <?php $i++; ?>
+                            <td>{{$i}}</td>
+                            <td>{{$Branch->id}}</td>
+                            <td>{{$Branch->getTranslation('name','ar')}}</td>
+                            <td>{{$Branch->getTranslation('name','en')}}</td>
+                            <td>{{$Branch->address}}</td>
+                            <td>{{$Branch->phone_1}}</td>
+                            <td>{{$Branch->phone_2}}</td>
+                            <td>
+                                @if($Branch->status)
+                                <span class="badge bg-success">{{ trans('settings_trans.active') }}</span>
+                                @else
+                                <span class="badge bg-danger">{{ trans('settings_trans.inactive') }}</span>
+                                @endif
+                            </td>
+                            <td>{{$Branch->created_at}}</td>
+                            <td>
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-fill align-middle"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button data-bs-toggle="modal" data-bs-target="#signupModals{{$Branch->id}}" class="dropdown-item edit-item-btn">
+                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button data-bs-toggle="modal" data-bs-target="#signupModal{{$Branch->id}}" class="dropdown-item edit-item-btn">
+                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- edit -->
+                        <div id="signupModals{{$Branch->id}}" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 overflow-hidden">
+                                    <div class="modal-header p-3">
+                                        <h4 class="card-title mb-0">{{ trans('settings_trans.update_branch') }}</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                </td>
-                            </tr>
 
-                            <!-- edit -->
-                            <div id="signupModals{{$Branch->id}}" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content border-0 overflow-hidden">
-                                        <div class="modal-header p-3">
-                                            <h4 class="card-title mb-0">{{ trans('settings_trans.update_branch') }}</h4>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
+                                    <div class="modal-body">
+                                        <form action="{{ route('branches.update','test') }}" method="post">
+                                            {{ method_field('patch') }}
+                                            @csrf
 
-                                        <div class="modal-body">
-                                            <form action="{{ route('branches.update','test') }}" method="post">
-                                                {{ method_field('patch') }}
-                                                @csrf
+                                            <input class="form-control" id="id" name="id" value="{{$Branch->id}}" type="hidden">
 
-                                                <input class="form-control" id="id" name="id" value="{{$Branch->id}}" type="hidden">
+                                            <div class="form-group mb-3">
+                                                <label for="name_ar" class="form-label">{{ trans('settings_trans.name_ar') }}</label>
+                                                <input type="text" class="form-control" id="name_ar" name="name_ar" value="{{$Branch->getTranslation('name','ar')}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label for="name_ar" class="form-label">{{ trans('settings_trans.name_ar') }}</label>
-                                                    <input type="text" class="form-control" id="name_ar" name="name_ar" value="{{$Branch->getTranslation('name','ar')}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label for="name_en" class="form-label">{{ trans('settings_trans.name_en') }}</label>
+                                                <input type="text" class="form-control" id="name_en" name="name_en" value="{{$Branch->getTranslation('name','en')}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label for="name_en" class="form-label">{{ trans('settings_trans.name_en') }}</label>
-                                                    <input type="text" class="form-control" id="name_en" name="name_en" value="{{$Branch->getTranslation('name','en')}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.address') }}</label>
+                                                <textarea class="form-control" name="address" rows="2">{{$Branch->address}}</textarea>
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.address') }}</label>
-                                                    <textarea class="form-control" name="address" rows="2">{{$Branch->address}}</textarea>
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.phone_1') }}</label>
+                                                <input type="text" class="form-control" name="phone_1" value="{{$Branch->phone_1}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.phone_1') }}</label>
-                                                    <input type="text" class="form-control" name="phone_1" value="{{$Branch->phone_1}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.phone_2') }}</label>
+                                                <input type="text" class="form-control" name="phone_2" value="{{$Branch->phone_2}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.phone_2') }}</label>
-                                                    <input type="text" class="form-control" name="phone_2" value="{{$Branch->phone_2}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.whatsapp') }}</label>
+                                                <input type="text" class="form-control" name="whatsapp" value="{{$Branch->whatsapp}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.whatsapp') }}</label>
-                                                    <input type="text" class="form-control" name="whatsapp" value="{{$Branch->whatsapp}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.email') }}</label>
+                                                <input type="text" class="form-control" name="email" value="{{$Branch->email}}">
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.email') }}</label>
-                                                    <input type="text" class="form-control" name="email" value="{{$Branch->email}}">
-                                                </div>
+                                            <div class="form-group mb-3">
+                                                <label class="form-label">{{ trans('settings_trans.notes') }}</label>
+                                                <textarea class="form-control" name="notes" rows="2">{{$Branch->notes}}</textarea>
+                                            </div>
 
-                                                <div class="form-group mb-3">
-                                                    <label class="form-label">{{ trans('settings_trans.notes') }}</label>
-                                                    <textarea class="form-control" name="notes" rows="2">{{$Branch->notes}}</textarea>
-                                                </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" name="status" value="1" id="status{{$Branch->id}}" {{ $Branch->status ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="status{{$Branch->id}}">
+                                                    {{ trans('settings_trans.status_active') }}
+                                                </label>
+                                            </div>
 
-                                                <div class="form-check mb-3">
-                                                    <input class="form-check-input" type="checkbox" name="status" value="1" id="status{{$Branch->id}}" {{ $Branch->status ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="status{{$Branch->id}}">
-                                                        {{ trans('settings_trans.status_active') }}
-                                                    </label>
-                                                </div>
-
-                                                <div class="modal-footer px-0 pb-0">
-                                                    <button type="submit" class="btn btn-primary">{{ trans('settings_trans.submit') }}</button>
-                                                </div>
-                                            </form>
-                                        </div>
-
+                                            <div class="modal-footer px-0 pb-0">
+                                                <button type="submit" class="btn btn-primary">{{ trans('settings_trans.submit') }}</button>
+                                            </div>
+                                        </form>
                                     </div>
+
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- delete -->
-                            <div id="signupModal{{$Branch->id}}" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-body text-center p-5">
-                                            <lord-icon src="{{URL::asset('assets/images/icon/tdrtiskw.json')}}" trigger="loop"
-                                                colors="primary:#f7b84b,secondary:#405189" style="width:130px;height:130px">
-                                            </lord-icon>
+                        <!-- delete -->
+                        <div id="signupModal{{$Branch->id}}" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-body text-center p-5">
+                                        <lord-icon src="{{URL::asset('assets/images/icon/tdrtiskw.json')}}" trigger="loop"
+                                            colors="primary:#f7b84b,secondary:#405189" style="width:130px;height:130px">
+                                        </lord-icon>
 
-                                            <div class="mt-4 pt-4">
-                                                <h4>{{ trans('settings_trans.massagedelete_d') }}!</h4>
-                                                <p class="text-muted">{{ trans('settings_trans.massagedelete_p') }} {{$Branch->getTranslation('name','ar')}}</p>
+                                        <div class="mt-4 pt-4">
+                                            <h4>{{ trans('settings_trans.massagedelete_d') }}!</h4>
+                                            <p class="text-muted">{{ trans('settings_trans.massagedelete_p') }} {{$Branch->getTranslation('name','ar')}}</p>
 
-                                                <form action="{{ route('branches.destroy','test') }}" method="post">
-                                                    {{ method_field('delete') }}
-                                                    {{ csrf_field() }}
-                                                    <input class="form-control" id="id" name="id" value="{{$Branch->id}}" type="hidden">
+                                            <form action="{{ route('branches.destroy','test') }}" method="post">
+                                                {{ method_field('delete') }}
+                                                {{ csrf_field() }}
+                                                <input class="form-control" id="id" name="id" value="{{$Branch->id}}" type="hidden">
 
-                                                    <button class="btn btn-warning" data-bs-target="#secondmodal" data-bs-toggle="modal" data-bs-dismiss="modal">
-                                                        {{ trans('settings_trans.massagedelete') }}
-                                                    </button>
-                                                </form>
+                                                <button class="btn btn-warning" data-bs-target="#secondmodal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                                    {{ trans('settings_trans.massagedelete') }}
+                                                </button>
+                                            </form>
 
-                                            </div>
                                         </div>
                                     </div>
-                                    <!-- /.modal-content -->
-                                </div><!-- /.modal-dialog -->
-                            </div>
+                                </div>
+                                <!-- /.modal-content -->
+                            </div><!-- /.modal-dialog -->
+                        </div>
 
                         @endforeach
                     </tbody>

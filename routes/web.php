@@ -76,10 +76,11 @@ Route::group(
 
 
         Route::group(['namespace' => 'dashboard'], function () {
+            Route::get('/dashboard/ajax-charts', 'dashboardController@ajaxCharts')->name('dashboard.ajaxCharts');
             Route::resource('dashboard', 'dashboardController');
-            Route::post('/upload-national-id', [NationalIdController::class, 'upload'])->name('upload.national_id');
         });
         Route::get('/{page}', 'AdminController@index');
+        Route::get('/login', 'AdminController@index');
     }
 );
 
