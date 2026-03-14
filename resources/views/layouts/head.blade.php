@@ -1,7 +1,7 @@
 <!-- Title -->
 <title> @yield('title') </title>
 <!-- Favicon -->
-<link rel="icon" href="{{ asset('assets/images/logo-sm.png') }}" type="image/x-icon" />
+<link rel="icon" href="{{ asset('assets/images/logo2.png') }}" type="image/x-icon" />
 <link href="{{ asset('assets/css/select2.min.css') }}" rel="stylesheet" />
 <link href="{{ asset('assets/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
 <link href="{{ asset('assets/css/responsive.bootstrap.min.css') }}" rel="stylesheet" />

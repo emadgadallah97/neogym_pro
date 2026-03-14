@@ -3,7 +3,7 @@
 
 <head>
 	<title>NeoGym PRO</title>
-	<link rel="icon" href="{{URL::asset('assets/images/logo.png')}}" type="image/x-icon" />
+	<link rel="icon" href="{{URL::asset('assets/images/logo2.png')}}" type="image/x-icon" />
 	<!-- Layout config Js -->
 	<script src="{{URL::asset('ssets/js/layout.js')}}"></script>
 	<!-- Bootstrap Css -->
