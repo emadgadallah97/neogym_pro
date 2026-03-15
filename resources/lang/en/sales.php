@@ -69,6 +69,31 @@ return [
     'something_went_wrong' => 'Something went wrong while saving the sale. Please try again.',
     'not_implemented_yet' => 'Saving sale is not implemented yet.',
     'coming_soon_form_hint' => 'A detailed subscription sale form will be built here, linked to plans, offers, coupons, and payments.',
+    'plan_requires_trainer' => 'This plan requires a Private Coach.',
+    'main_trainer_required' => 'A main trainer must be selected for this plan.',
+    'totals_preview_hint' => 'These values are for preview only. Final calculation is applied on save.',
+    'auto_best_offer' => 'Auto (Best Offer)',
+    'choose_branch_first' => 'Choose branch first',
+    'members_hint' => 'Active members will be loaded after selecting the branch',
+    'plans_hint' => 'Active plans will be loaded after selecting the branch',
+    'with_trainer_optional_label' => 'Optional: Activate subscription with trainer',
+    'plan_price_without_trainer' => 'Subscription price without trainer',
+    'price_updates_by_branch_plan' => 'Price changes based on branch and plan.',
+    'plan_price_with_trainer' => 'Subscription price with trainer',
+    'plan_price_with_trainer_hint' => 'Appears after selecting the main trainer.',
+    'no_trainers_for_branch_plan' => 'No trainers available for this plan in this branch.',
+    'coach_price_not_found' => 'No price found for this plan with this trainer in this branch.',
+    'branch_coaches_note' => 'Trainers',
+    'choose_branch_to_load_coaches' => 'Choose a branch to view available trainers.',
+    'no_coaches_in_branch' => 'No trainers linked to this branch.',
+    'coaches_loaded' => 'Trainers loaded based on the selected branch.',
+    'preview_only' => 'Preview Only',
+    'commission_employee' => 'Sales Employee',
+    'commissionbase_amount' => 'Commission Base',
+    'commission_net_amount' => 'Net Amount',
+    'reference' => 'Reference',
+    'paid_at_hint' => 'Date and time are auto-filled with current time and can be modified if needed',
+
     // Current subscriptions list
     'current_subscriptions' => 'Current subscriptions',
     'search' => 'Search',
@@ -104,6 +129,15 @@ return [
     'start_date' => 'Start date',
     'end_date' => 'End date',
     'source_callcenter' => 'Call center',
+
+    // PT after sale
+    'pt_addons_after_sale_title' => 'Add PT sessions to subscription',
+    'pt_addons_only_active' => 'Only available for active subscriptions',
+    'pt_addons_already_exists' => 'Cannot add PT because the subscription already has PT',
+    'pt_addons_total_zero' => 'Total cannot be zero',
+    'pt_addons_saved' => 'PT added successfully',
+    'trainer_filtered_by_branch' => 'Trainers by branch',
+    'trainer_not_in_branch' => 'Trainer is not linked to this branch',
 
     // ✅ New restructuring keys
     'save_and_print' => 'Save & Print Invoice',
@@ -149,7 +183,6 @@ return [
     // Pricing
     'price_plan' => 'Plan Price',
     'price_pt_addons' => 'Trainer Sessions Price',
-    'gross_amount' => 'Gross Amount',
     'offer_discount' => 'Offer Discount',
     'amount_after_offer' => 'After Offer',
     'no_offers_available' => 'No offers available',
@@ -164,7 +197,6 @@ return [
     'instapay' => 'InstaPay',
     'ewallet' => 'E-Wallet',
     'cheque' => 'Cheque',
-    'payment_other' => 'Other',
 
     // Messages
     'savedsuccessfully' => 'Subscription saved successfully.',
@@ -198,5 +230,12 @@ return [
     'renewal_notes' => 'Subscription Renewal',
     'renewal_payment' => 'Subscription Renewal Payment',
     'renewedsuccessfully' => 'Subscription renewed successfully.',
+    'plan_name' => 'Plan Name',
+    'apply' => 'Apply',
+    'notes' => 'Notes',
+    'offer' => 'Offers',
+    'coupon_code' => 'Coupon Code',
+    'subscription_renewal' => 'Subscription Renewal',
+    'new_subscription' => 'New Subscription',
 
 ];
