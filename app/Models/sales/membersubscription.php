@@ -49,6 +49,8 @@ class MemberSubscription extends Model
         'commission_paid_at',
         'commission_paid_by',
         'commission_settlement_id',
+        'renewal_of',
+        'renewed_to',
 
     ];
 

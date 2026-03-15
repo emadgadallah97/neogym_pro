@@ -99,6 +99,8 @@
     </div>
 </div>
 
+{{-- Renewal Modal removed (moved to current_subscriptions) --}}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 

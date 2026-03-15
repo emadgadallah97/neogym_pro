@@ -18,6 +18,7 @@ use App\Models\sales\MemberSubscription;
 use App\Models\sales\MemberSubscriptionPtAddon;
 use App\Models\sales\Payment;
 use App\Models\sales\Invoice;
+use App\Models\accounting\Income;
 
 use App\Models\coupons_offers\CouponUsage;
 use App\Models\coupons_offers\Offer;
@@ -316,6 +317,12 @@ public function ajaxCurrentSubscriptionsTable(Request $request)
                         . (trans('sales.add_pt') ?? 'إضافة PT') . '</a>';
         }
 
+        $renewBtn = '';
+        if ((string)($row->status ?? '') === 'expired' && is_null($row->renewed_to)) {
+            $renewBtn = ' <button type="button" class="btn btn-sm btn-outline-warning js-subscription-renew" data-id="' . $row->id . '">'
+                        . (trans('sales.renew') ?? 'تجديد') . '</button>';
+        }
+
         $data[] = [
             'rownum'        => $rowNum++,
             'member'        => view('sales.partials._dt_member_cell', compact('memberCode', 'memberName'))->render(),
@@ -329,7 +336,7 @@ public function ajaxCurrentSubscriptionsTable(Request $request)
             'total'         => number_format((float)$row->total_amount, 2),
             'status'        => '<span class="badge bg-secondary">' . e($statusText) . '</span>',
             'created_at'    => (string)$row->created_at,
-            'actions'       => $showBtn . $addPtBtn,
+            'actions'       => $showBtn . $addPtBtn . $renewBtn,
         ];
     }
 
@@ -1006,6 +1013,34 @@ public function ajaxCurrentSubscriptionsTable(Request $request)
             $invoice->source = $invoicePaymentSource;
             $invoice->save();
 
+            // Income
+            $member = Member::find($memberId);
+            $payerName = $member ? trim(($member->first_name ?? '') . ' ' . ($member->last_name ?? '')) : null;
+            if (!$payerName && $member && $member->full_name) {
+                $payerName = $member->full_name;
+            }
+            $payerPhone = $member ? $member->phone : null;
+            $planNameDesc = is_array($plan->name) ? ($plan->name['ar'] ?? $plan->name['en'] ?? '') : $plan->name;
+
+            $incomeType = \App\Models\accounting\incometype::firstOrCreate(
+                ['name->en' => 'Subscriptions'],
+                ['name' => ['en' => 'Subscriptions', 'ar' => 'الاشتراكات'], 'status' => 1]
+            );
+
+            Income::create([
+                'branchid'             => $branchId,
+                'income_type_id'       => $incomeType->id,
+                'incomedate'           => Carbon::now()->format('Y-m-d'),
+                'amount'               => $totalAmount,
+                'paymentmethod'        => $data['payment_method'],
+                'receivedbyemployeeid' => Auth::user()->employee_id ?? null,
+                'payername'            => $payerName,
+                'payerphone'           => $payerPhone,
+                'description'          => trans('sales.new_subscription') . ' - ' . $planNameDesc,
+                'notes'                => null,
+                'useradd'              => Auth::id(),
+            ]);
+
             if ($couponId) {
                 CouponUsage::create([
                     'coupon_id'        => $couponId,
@@ -1091,6 +1126,358 @@ public function show($id)
 
     return view('sales.show', compact('subscription'));
 }
+
+    public function renew(Request $request, $expiredSubscriptionId)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'payment_method' => 'required|string',
+            'offer_id' => 'nullable|integer|exists:offers,id',
+            'coupon_code' => 'nullable|string|max:60',
+            'sales_employee_id' => 'nullable|integer|exists:employees,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 1. Load expired subscription
+            $old = MemberSubscription::with('ptAddons')->where('status', 'expired')->findOrFail($expiredSubscriptionId);
+
+            // 2. Load plan
+            $plan = subscriptions_plan::with('type')->findOrFail($old->subscriptions_plan_id);
+
+            $branchId = $old->branch_id;
+            $memberId = $old->member_id;
+            $planId = $old->subscriptions_plan_id;
+            $typeId = $old->subscriptions_type_id;
+
+            // 3. Re-calculate prices
+            $pricePlan = $this->getBasePriceWithoutTrainer($branchId, $planId);
+            if ($pricePlan === null) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with('error', trans('sales.base_price_not_found'));
+            }
+
+            $durationDays = (int)($plan->duration_days ?? 0);
+            $sessionsCount = (int)($plan->sessions_count ?? 0);
+
+            if ($sessionsCount <= 0) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with('error', trans('sales.sessions_count_required') ?? 'عدد الحصص بالخطة غير صحيح');
+            }
+
+            // Transfer PT addons with 0 price (already paid)
+            $ptAddons = [];
+            foreach ($old->ptAddons as $oldAddon) {
+                if ($oldAddon->sessions_remaining > 0) {
+                    $ptAddons[] = [
+                        'trainer_id' => $oldAddon->trainer_id,
+                        'sessions_count' => $oldAddon->sessions_remaining,
+                        'session_price' => 0,
+                        'total_amount' => 0,
+                    ];
+                }
+            }
+            $ptTotal  = 0.0;
+
+            $grossAmount = (float)$pricePlan + (float)$ptTotal;
+
+            $invoicePaymentSource = ($ptTotal > 0 || !empty($ptAddons))
+                ? 'main_subscription&PT'
+                : 'main_subscription_only';
+
+            // Offers
+            $offerContext = [
+                'applies_to'            => 'subscription',
+                'subscriptions_plan_id' => $planId,
+                'subscriptions_type_id' => $typeId,
+                'branch_id'             => $branchId,
+                'duration_value'        => $durationDays,
+                'duration_unit'         => 'day',
+                'amount'                => $grossAmount,
+            ];
+
+            $offerDiscount = 0.0;
+            $chosenOfferId = null;
+
+            if (!empty($request->offer_id)) {
+                $offer = Offer::find((int)$request->offer_id);
+                if ($offer) {
+                    $single = $this->availableOffersService->computeSingleOfferDiscount($offer, $offerContext);
+                    if ($single) {
+                        $chosenOfferId = (int)$single['offer_id'];
+                        $offerDiscount = (float)$single['discount_amount'];
+                    }
+                }
+            }
+
+            $amountAfterOffer = max(0, $grossAmount - $offerDiscount);
+
+            // Coupon
+            $couponDiscount = 0.0;
+            $couponId = null;
+
+            if (!empty($request->coupon_code)) {
+                $couponContext = [
+                    'code'                  => $request->coupon_code,
+                    'applies_to'            => 'subscription',
+                    'subscriptions_plan_id' => $planId,
+                    'subscriptions_type_id' => $typeId,
+                    'branch_id'             => $branchId,
+                    'duration_value'        => $durationDays,
+                    'duration_unit'         => 'day',
+                    'amount'                => $amountAfterOffer,
+                    'member_id'             => $memberId,
+                ];
+
+                $couponResult = $this->couponEngine->validateAndCompute($couponContext);
+                if (empty($couponResult['ok'])) {
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('error', $couponResult['message'] ?? trans('sales.somethingwentwrong'));
+                }
+
+                $couponDiscount = (float)($couponResult['discount_amount'] ?? 0);
+                $couponId       = (int)($couponResult['coupon_id'] ?? 0);
+                if ($couponId <= 0) $couponId = null;
+            }
+
+            $totalDiscount = (float)$offerDiscount + (float)$couponDiscount;
+            $totalAmount   = max(0, (float)$grossAmount - (float)$totalDiscount);
+
+            $salesEmployee = null;
+            if (!empty($request->sales_employee_id)) {
+                $salesEmployee = Employee::find((int)$request->sales_employee_id);
+            }
+            $commission = $this->computeCommissionSnapshot($salesEmployee, $grossAmount, $totalAmount);
+
+            $startDate = Carbon::parse($request->start_date);
+            $endDate   = $durationDays > 0 ? $startDate->copy()->addDays($durationDays) : null;
+
+            // 4. Create new subscription
+            $newSub = new MemberSubscription();
+            $newSub->member_id = $memberId;
+            $newSub->branch_id = $branchId;
+            $newSub->subscriptions_plan_id = $planId;
+            $newSub->subscriptions_type_id = $typeId;
+
+            $newSub->plan_code = $plan->code;
+            $newSub->plan_name = $plan->name;
+            $newSub->duration_days = $durationDays;
+            $newSub->sessions_count = $sessionsCount;
+            $newSub->with_trainer = 0;
+            $newSub->main_trainer_id = null;
+            $newSub->sessions_included = $sessionsCount;
+            $newSub->sessions_remaining = $sessionsCount;
+
+            $newSub->start_date = $startDate->format('Y-m-d');
+            $newSub->end_date = $endDate ? $endDate->format('Y-m-d') : null;
+            $newSub->status = 'active';
+            $newSub->allow_all_branches = $old->allow_all_branches;
+            $newSub->source = $old->source;
+
+            $newSub->price_plan = (float)$pricePlan;
+            $newSub->price_pt_addons = (float)$ptTotal;
+            $newSub->discount_offer_amount = (float)$offerDiscount;
+            $newSub->discount_coupon_amount = (float)$couponDiscount;
+            $newSub->total_discount = (float)$totalDiscount;
+            $newSub->total_amount = (float)$totalAmount;
+
+            $newSub->offer_id = $chosenOfferId;
+            $newSub->coupon_id = $couponId;
+            $newSub->sales_employee_id = $salesEmployee?->id;
+
+            $newSub->commission_base_amount = $commission['base_amount'];
+            $newSub->commission_value_type  = $commission['value_type'];
+            $newSub->commission_value       = $commission['value'];
+            $newSub->commission_amount      = $commission['amount'];
+
+            $newSub->user_add = Auth::id();
+            $newSub->notes = $request->notes ?? trans('sales.renewal_notes');
+
+            // Link to old
+            $newSub->renewal_of = $old->id;
+            $newSub->save();
+
+            // Save new PT addons
+            foreach ($ptAddons as $addon) {
+                MemberSubscriptionPtAddon::create([
+                    'member_subscription_id' => $newSub->id,
+                    'trainer_id'              => $addon['trainer_id'],
+                    'session_price'           => $addon['session_price'],
+                    'sessions_count'          => $addon['sessions_count'],
+                    'sessions_remaining'      => $addon['sessions_count'], // Starting fresh based on remaining
+                    'total_amount'            => $addon['total_amount'],
+                ]);
+            }
+
+            // Update old subscription link
+            $old->renewed_to = $newSub->id;
+            $old->save();
+
+            // Invoice
+            $invoiceNumber = $this->generateInvoiceNumber($branchId);
+            $now = Carbon::now();
+
+            $invoice = new Invoice();
+            $invoice->invoice_number = $invoiceNumber;
+            $invoice->member_id = $memberId;
+            $invoice->branch_id = $branchId;
+            $invoice->member_subscription_id = $newSub->id;
+            $invoice->currency_id = null;
+            $invoice->subtotal = $grossAmount;
+            $invoice->discount_total = $totalDiscount;
+            $invoice->total = $totalAmount;
+            $invoice->status = 'paid';
+            $invoice->issued_at = $now;
+            $invoice->paid_at = $now;
+            $invoice->user_add = Auth::id();
+            $invoice->source = $invoicePaymentSource;
+            $invoice->save();
+
+            // Payment
+            Payment::create([
+                'member_id'              => $memberId,
+                'member_subscription_id' => $newSub->id,
+                'amount'                 => $totalAmount,
+                'payment_method'         => $request->payment_method,
+                'status'                 => 'paid',
+                'paid_at'                => $now,
+                'reference'              => $invoiceNumber,
+                'notes'                  => trans('sales.renewal_payment'),
+                'user_add'               => Auth::id(),
+                'source'                 => $invoicePaymentSource,
+            ]);
+
+            // Income
+            $member = Member::find($memberId);
+            $payerName = $member ? trim(($member->first_name ?? '') . ' ' . ($member->last_name ?? '')) : null;
+            if (!$payerName && $member && $member->full_name) {
+                $payerName = $member->full_name;
+            }
+            $payerPhone = $member ? $member->phone : null;
+            $planNameDesc = is_array($plan->name) ? ($plan->name['ar'] ?? $plan->name['en'] ?? '') : $plan->name;
+
+            $incomeType = \App\Models\accounting\incometype::firstOrCreate(
+                ['name->en' => 'Subscriptions'],
+                ['name' => ['en' => 'Subscriptions', 'ar' => 'الاشتراكات'], 'status' => 1]
+            );
+
+            Income::create([
+                'branchid'             => $branchId,
+                'income_type_id'       => $incomeType->id,
+                'incomedate'           => Carbon::now()->format('Y-m-d'),
+                'amount'               => $totalAmount,
+                'paymentmethod'        => $request->payment_method,
+                'receivedbyemployeeid' => Auth::user()->employee_id ?? null,
+                'payername'            => $payerName,
+                'payerphone'           => $payerPhone,
+                'description'          => trans('sales.subscription_renewal') . ' - ' . $planNameDesc,
+                'notes'                => trans('sales.renewal_notes'),
+                'useradd'              => Auth::id(),
+            ]);
+
+
+            if ($couponId) {
+                CouponUsage::create([
+                    'coupon_id'        => $couponId,
+                    'member_id'        => $memberId,
+                    'applied_to_type'  => MemberSubscription::class,
+                    'applied_to_id'    => $newSub->id,
+                    'amount_before'    => $grossAmount,
+                    'discount_amount'  => $couponDiscount,
+                    'amount_after'     => $totalAmount,
+                    'used_at'          => Carbon::now(),
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('sales.subscriptions_list')
+                             ->with('success', trans('sales.renewedsuccessfully'))
+                             ->with('print_invoice_id', $invoice->member_subscription_id);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Sales renew failed', [
+                'msg'  => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            if (config('app.debug')) {
+                return redirect()->back()->withInput()->with('error', $e->getMessage());
+            }
+
+            return redirect()->back()->withInput()->with('error', trans('sales.somethingwentwrong'));
+        }
+    }
+
+    public function getRenewalDetails($id)
+    {
+        try {
+            $old = MemberSubscription::with(['ptAddons.trainer', 'plan', 'member'])->where('status', 'expired')->findOrFail($id);
+            if ($old->renewed_to) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => trans('sales.already_renewed') ?? 'تم تجديد هذا الاشتراك مسبقاً'
+                ]);
+            }
+
+            $branchId = $old->branch_id;
+            $planId = $old->subscriptions_plan_id;
+
+            $pricePlan = $this->getBasePriceWithoutTrainer($branchId, $planId);
+
+            // Fetch PT trainers that have remaining sessions
+            $ptDetails = [];
+            foreach ($old->ptAddons as $addon) {
+                if ($addon->sessions_remaining > 0) {
+                    $ptDetails[] = [
+                        'trainer_id' => $addon->trainer_id,
+                        'trainer_name' => $addon->trainer->full_name ?? trim(($addon->trainer->first_name ?? '') . ' ' . ($addon->trainer->last_name ?? '')),
+                        'sessions_remaining' => $addon->sessions_remaining,
+                    ];
+                }
+            }
+
+            // Offers
+            $durationDays = (int)($old->plan->duration_days ?? 0);
+            $context = [
+                'applies_to'            => 'subscription',
+                'subscriptions_plan_id' => $planId,
+                'subscriptions_type_id' => $old->subscriptions_type_id,
+                'branch_id'             => $branchId,
+                'duration_value'        => $durationDays,
+                'duration_unit'         => 'day',
+                'amount'                => $pricePlan, // PT is 0 for renewals
+            ];
+            $offers = $this->availableOffersService->listOffersWithDiscount($context);
+
+            $memberCode = $old->member->member_code ?? $old->member->id;
+            $memberName = $old->member->full_name ?? trim(($old->member->first_name ?? '') . ' ' . ($old->member->last_name ?? ''));
+
+            return response()->json([
+                'ok' => true,
+                'data' => [
+                    'member' => $memberCode . ' - ' . $memberName,
+                    'plan_name' => is_array($old->plan_name) ? ($old->plan_name['ar'] ?? ($old->plan_name['en'] ?? '')) : $old->plan_name,
+                    'old_end_date' => $old->end_date ? $old->end_date->format('Y-m-d') : null,
+                    'base_price' => $pricePlan,
+                    'pt_details' => $ptDetails,
+                    'branch_id' => $branchId,
+                    'subscriptions_plan_id' => $planId,
+                    'subscriptions_type_id' => $old->subscriptions_type_id,
+                    'offers' => $offers,
+                ]
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => trans('sales.ajax_error_try_again'),
+            ], 500);
+        }
+    }
 
 
     /**

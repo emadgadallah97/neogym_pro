@@ -135,6 +135,7 @@ return [
     'expenses_types' => 'اعدادت انواع المصروفات',
     'income_types' => 'اعدادات انواع الايرادات',
     'reports' => 'التقارير',
+  'close' => 'اغلاق',
 
     'open'                                => 'فتح',
     'nationalities_settings_desc'         => 'إدارة الجنسيات المتاحة في النظام',

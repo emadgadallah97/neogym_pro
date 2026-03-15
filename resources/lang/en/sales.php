@@ -189,4 +189,14 @@ return [
     'status_cancelled' => 'Cancelled',
     'status_pendingpayment' => 'Pending Payment',
 
+    // Renewal
+    'renew' => 'Renew',
+    'renew_subscription' => 'Renew Subscription',
+    'confirm_renewal' => 'Confirm Renewal',
+    'old_end_date' => 'Old End Date',
+    'base_price' => 'Base Price',
+    'renewal_notes' => 'Subscription Renewal',
+    'renewal_payment' => 'Subscription Renewal Payment',
+    'renewedsuccessfully' => 'Subscription renewed successfully.',
+
 ];

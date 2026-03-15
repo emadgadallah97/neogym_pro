@@ -233,4 +233,23 @@ return [
   // رسالة الحفظ
   'savedsuccessfully' => 'تم حفظ عملية الاشتراك بنجاح.',
 
+  // Renewal
+  'renew' => 'تجديد',
+  'renew_subscription' => 'تجديد الاشتراك',
+  'confirm_renewal' => 'تأكيد التجديد',
+  'old_end_date' => 'تاريخ الانتهاء القديم',
+  'base_price' => 'السعر الأساسي',
+  'renewal_notes' => 'تجديد الاشتراك',
+  'renewal_payment' => 'دفعة تجديد الاشتراك',
+  'renewedsuccessfully' => 'تم تجديد الاشتراك بنجاح.',
+  'plan_name' => 'اسم الخطة',
+  'apply' => 'تطبيق',
+  'notes' => 'ملاحظات',
+  'offer' => 'العروض',
+  'coupon_code' => 'الكوبون',
+  'subscription_renewal' => 'تجديد الاشتراك',
+  'new_subscription' => 'اشتراك جديد',
+
+
+
 ];

@@ -64,6 +64,12 @@ Route::group(
             Route::post('subscriptions/{id}/pt-addons', [\App\Http\Controllers\sales\subscriptionptaddonsalecontroller::class, 'store'])
                 ->name('sales.subscriptions.pt_addons.store');
 
+            Route::post('subscriptions/{id}/renew', 'salescontroller@renew')
+                ->name('sales.subscriptions.renew');
+
+            Route::get('subscriptions/{id}/renew-details', 'salescontroller@getRenewalDetails')
+                ->name('sales.subscriptions.renew_details');
+
 
 
             Route::post('sales/ajaxtrainer-session-price', [\App\Http\Controllers\sales\SubscriptionPtAddonSaleController::class, 'ajaxTrainerSessionPrice'])
