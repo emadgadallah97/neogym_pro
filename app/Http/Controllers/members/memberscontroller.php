@@ -265,7 +265,13 @@ class memberscontroller extends Controller
             'whatsapp' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:190'],
 
-            'address' => ['required', 'string'],
+            'national_id' => [
+                'nullable',
+                'digits:14',
+                Rule::unique('members', 'national_id')->ignore($memberId)->whereNull('deleted_at'),
+            ],
+
+            'address' => ['nullable', 'string'],
             'id_government' => ['nullable', 'integer', 'exists:government,id'],
             'id_city' => ['nullable', 'integer', 'exists:city,id'],
             'id_area' => ['nullable', 'integer', 'exists:area,id'],
@@ -284,9 +290,26 @@ class memberscontroller extends Controller
             'notes' => ['nullable', 'string'],
 
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+
+            // جهات الطوارئ — تُرسَل كـ emergency_contacts[0][name] إلخ
+            'emergency_contacts'              => ['nullable', 'array', 'max:3'],
+            'emergency_contacts.*.name'       => ['nullable', 'string', 'max:100'],
+            'emergency_contacts.*.phone'      => ['nullable', 'string', 'max:50'],
         ];
 
         $data = $request->validate($rules);
+
+        // تنظيف جهات الطوارئ: احذف الصفوف الفارغة تماماً
+        if (isset($data['emergency_contacts'])) {
+            $data['emergency_contacts'] = array_values(
+                array_filter($data['emergency_contacts'], function ($ec) {
+                    return !empty($ec['name']) || !empty($ec['phone']);
+                })
+            );
+            if (empty($data['emergency_contacts'])) {
+                $data['emergency_contacts'] = null;
+            }
+        }
 
         // Frozen requires valid window
         if (($data['status'] ?? '') === 'frozen') {
@@ -375,6 +398,8 @@ class memberscontroller extends Controller
             'photo_url' => $member->public_photo_url,
             'card_url' => route('members.card', $member->id),
             'qr_png_url' => route('members.qr_png', $member->id),
+            'national_id' => $member->national_id,
+            'emergency_contacts' => $member->emergency_contacts ?? [],
         ];
 
         if ($withLocation) {

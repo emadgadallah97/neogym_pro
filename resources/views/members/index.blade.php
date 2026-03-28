@@ -910,6 +910,8 @@ $branchCounts = $Members->whereNotNull('branch_id')
                     document.getElementById('viewMemberHeight').textContent = (m.height ?? '-');
                     document.getElementById('viewMemberWeight').textContent = (m.weight ?? '-');
 
+                    document.getElementById('viewMemberNationalId').textContent = m.national_id || '-';
+
                     document.getElementById('viewMemberMedical').textContent = m.medical_conditions || '-';
                     document.getElementById('viewMemberAllergies').textContent = m.allergies || '-';
                     document.getElementById('viewMemberNotes').textContent = m.notes || '-';
@@ -981,6 +983,39 @@ $branchCounts = $Members->whereNotNull('branch_id')
                             subsWrap.innerHTML = html;
                         }
                     }
+
+                    // ── Emergency Contacts tab ──
+                    const emgWrap = document.getElementById('viewMemberEmergency');
+                    if (emgWrap) {
+                        const contacts = m.emergency_contacts || [];
+                        const validContacts = contacts.filter(c => c.name || c.phone);
+                        if (validContacts.length === 0) {
+                            emgWrap.innerHTML = `<div class="text-center text-muted py-3"><i class="mdi mdi-account-alert-outline fs-3 d-block mb-1"></i>{{ trans('members.no_emergency_contacts') }}</div>`;
+                        } else {
+                            let eHtml = '<div class="row g-2">';
+                            validContacts.forEach(function(c, idx) {
+                                eHtml += `<div class="col-md-12">
+                                    <div class="card border shadow-none mb-0">
+                                        <div class="card-body py-2 px-3">
+                                            <div class="fw-semibold text-muted small mb-1"><i class="mdi mdi-account-alert-outline"></i> {{ trans('members.emergency_contact') }} ${idx + 1}</div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <small class="text-muted">{{ trans('members.emergency_name') }}</small>
+                                                    <div class="fw-semibold">${c.name || '-'}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">{{ trans('members.emergency_phone') }}</small>
+                                                    <div class="fw-semibold">${c.phone || '-'}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            });
+                            eHtml += '</div>';
+                            emgWrap.innerHTML = eHtml;
+                        }
+                    }
                 });
             });
         }
@@ -1029,6 +1064,17 @@ $branchCounts = $Members->whereNotNull('branch_id')
                     $('#editMedical').val(m.medical_conditions || '');
                     $('#editAllergies').val(m.allergies || '');
                     $('#editNotes').val(m.notes || '');
+
+                    // Raqm Qawmi
+                    $('#editNationalId').val(m.national_id || '');
+
+                    // Emergency contacts
+                    const emgData = m.emergency_contacts || [];
+                    for (let i = 0; i < 3; i++) {
+                        const ec = emgData[i] || {};
+                        $('#editEmgName' + i).val(ec.name || '');
+                        $('#editEmgPhone' + i).val(ec.phone || '');
+                    }
 
                     // Geo selects
                     $('#editGov').val(m.id_government || '');

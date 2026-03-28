@@ -68,6 +68,12 @@
                                 {{ trans('members.tab_medical') }}
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ $modalId }}_tab_emergency" type="button" role="tab">
+                                <i class="mdi mdi-ambulance"></i>
+                                {{ trans('members.tab_emergency') }}
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -140,6 +146,16 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ trans('members.national_id') }}</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           name="national_id"
+                                           id="{{ $mode === 'edit' ? 'editNationalId' : 'addNationalId' }}"
+                                           maxlength="30"
+                                           placeholder="01234567890123">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ trans('members.join_date') }} <span class="text-danger">*</span></label>
                                     <input type="date"
                                            class="form-control"
@@ -196,7 +212,7 @@
                             <div class="row">
 
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">{{ trans('members.address') }} <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ trans('members.address') }}</label>
                                     <textarea class="form-control"
                                               name="address"
                                               rows="2"
@@ -322,6 +338,42 @@
                                 </div>
 
                             </div>
+                        </div>
+
+                        {{-- EMERGENCY --}}
+                        <div class="tab-pane fade" id="{{ $modalId }}_tab_emergency" role="tabpanel">
+                            <p class="text-muted small mb-3">
+                                <i class="mdi mdi-information-outline"></i>
+                                {{ trans('members.emergency_hint') }}
+                            </p>
+                            @for($ec = 0; $ec < 3; $ec++)
+                            <div class="card border shadow-none mb-2">
+                                <div class="card-body py-2 px-3">
+                                    <div class="fw-semibold text-muted small mb-2">
+                                        <i class="mdi mdi-account-alert-outline"></i>
+                                        {{ trans('members.emergency_contact') }} {{ $ec + 1 }}
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label form-label-sm">{{ trans('members.emergency_name') }}</label>
+                                            <input type="text"
+                                                   class="form-control form-control-sm"
+                                                   name="emergency_contacts[{{ $ec }}][name]"
+                                                   id="{{ $mode === 'edit' ? 'edit' : 'add' }}EmgName{{ $ec }}"
+                                                   placeholder="{{ trans('members.emergency_name_placeholder') }}">
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label form-label-sm">{{ trans('members.emergency_phone') }}</label>
+                                            <input type="text"
+                                                   class="form-control form-control-sm"
+                                                   name="emergency_contacts[{{ $ec }}][phone]"
+                                                   id="{{ $mode === 'edit' ? 'edit' : 'add' }}EmgPhone{{ $ec }}"
+                                                   placeholder="01XXXXXXXXX">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endfor
                         </div>
 
                     </div>

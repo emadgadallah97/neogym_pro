@@ -51,16 +51,18 @@ return [
     'medical_conditions' => 'حالات مرضية/طبية',
     'allergies' => 'حساسية',
     'notes' => 'ملاحظات',
+    'national_id' => 'الرقم القومي',
 
     'photo' => 'الصورة',
     'view_photo' => 'عرض الصورة',
 
-    'tab_basic' => 'الأساسية',
-    'tab_contact' => 'التواصل',
-    'tab_address' => 'العنوان',
-    'tab_membership' => 'العضوية',
-    'tab_medical' => 'طبي',
-    'tab_subscriptions' => 'الاشتراكات',
+    'tab_basic'          => 'الأساسية',
+    'tab_contact'        => 'التواصل',
+    'tab_address'        => 'العنوان',
+    'tab_membership'     => 'العضوية',
+    'tab_medical'        => 'طبي',
+    'tab_emergency'      => 'الطوارئ',
+    'tab_subscriptions'  => 'الاشتراكات',
 
     'subscriptions_placeholder' => 'سيتم إضافة موديول الاشتراكات لاحقًا.',
 
@@ -99,4 +101,12 @@ return [
     'sub_amount' => 'المبلغ',
     'expired' => 'منتهي',
     'cancelled' => 'ملغي',
+
+    // Emergency Contacts
+    'emergency_contact'         => 'جهة طوارئ',
+    'emergency_name'            => 'الاسم',
+    'emergency_phone'           => 'رقم الهاتف',
+    'emergency_hint'            => 'يمكن إدخال حتى 3 جهات اتصال للطوارئ (الحقول اختيارية).',
+    'emergency_name_placeholder'=> 'أدخل الاسم',
+    'no_emergency_contacts'     => 'لا توجد جهات طوارئ مسجّلة.',
 ];

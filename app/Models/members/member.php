@@ -27,6 +27,7 @@ class Member extends Model
         'phone2',
         'whatsapp',
         'email',
+        'national_id',
         'address',
         'id_government',
         'id_city',
@@ -42,17 +43,19 @@ class Member extends Model
         'allergies',
         'notes',
         'photo',
+        'emergency_contacts',
         'user_add',
         'user_update',
     ];
 
     protected $casts = [
-        'birth_date'  => 'date',
-        'join_date'   => 'date',
-        'freeze_from' => 'date',
-        'freeze_to'   => 'date',
-        'height'      => 'decimal:2',
-        'weight'      => 'decimal:2',
+        'birth_date'         => 'date',
+        'join_date'          => 'date',
+        'freeze_from'        => 'date',
+        'freeze_to'          => 'date',
+        'height'             => 'decimal:2',
+        'weight'             => 'decimal:2',
+        'emergency_contacts' => 'array',
     ];
 
     // ══════════════════════════════════════════════════════

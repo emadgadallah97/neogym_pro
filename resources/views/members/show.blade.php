@@ -84,6 +84,12 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#view_tab_emergency" type="button" role="tab">
+                                    <i class="mdi mdi-ambulance"></i>
+                                    {{ trans('members.tab_emergency') }}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#view_tab_subscriptions" type="button" role="tab">
                                     <i class="mdi mdi-cash-multiple"></i>
                                     {{ trans('members.tab_subscriptions') }}
@@ -121,6 +127,12 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-light">
+                                            <small class="text-muted">{{ trans('members.national_id') }}</small>
+                                            <div class="fw-semibold" id="viewMemberNationalId">-</div>
+                                        </div>
+                                    </div>
                                     <div class="col-md-6">
                                         <div class="p-2 border rounded">
                                             <small class="text-muted">{{ trans('members.gender') }}</small>
@@ -241,6 +253,16 @@
                                 <div id="viewMemberSubscriptions">
                                     <div class="text-center text-muted py-3">
                                         <i class="mdi mdi-loading mdi-spin fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- EMERGENCY --}}
+                            <div class="tab-pane fade" id="view_tab_emergency" role="tabpanel">
+                                <div id="viewMemberEmergency">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="mdi mdi-account-alert-outline fs-3 d-block mb-1"></i>
+                                        <span>-</span>
                                     </div>
                                 </div>
                             </div>
