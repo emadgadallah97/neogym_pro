@@ -941,7 +941,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function parseDate(v){
             if (!v) return null;
-            var d = new Date(v);
+            // strip hidden token like __DATE__2025-01-01__
+            var clean = v.toString().trim().replace(/__DATE__([^_]+)__/, '').trim();
+            if (!clean) return null;
+            var d = new Date(clean);
             if (isNaN(d.getTime())) return null;
             d.setHours(0,0,0,0);
             return d;
@@ -956,7 +959,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var to = parseDate($('#filterDateTo').val());
 
 
-            var cellDateStr = (data[dateColIndex] || '').toString().trim();
+            // Extract date from raw cell text (may contain hidden token span)
+            var rawCell = (data[dateColIndex] || '').toString().trim();
+            var dateMatch = rawCell.match(/__DATE__([^_]+)__/);
+            var cellDateStr = dateMatch ? dateMatch[1] : rawCell.replace(/__[A-Z]+__[^_]*__/g, '').trim();
             var cellDate = parseDate(cellDateStr);
 
 

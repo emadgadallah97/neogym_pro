@@ -775,9 +775,105 @@ document.addEventListener('DOMContentLoaded', function () {
         loadEmployeesForForm(form, { keepSelected: false });
     });
 
-    // DataTable init (اختياري)
+    // DataTable + Filters
     if ($.fn && $.fn.DataTable) {
-        $('#example').DataTable();
+        var table = $('#example').DataTable();
+
+        var typeColIndex   = 2;
+        var branchColIndex = 3;
+        var dateColIndex   = 4;
+        var cancelColIndex = 9;
+
+        // ── Search ──────────────────────────────────────────────────────────
+        $('#expenseSearch').on('keyup change', function () {
+            table.search(this.value).draw();
+        });
+
+        // ── Cancelled filter ─────────────────────────────────────────────────
+        $('#filterCancelled').on('change', function () {
+            var v = $(this).val();
+            if (v === '' || v === null) {
+                table.column(cancelColIndex).search('').draw();
+                return;
+            }
+            table.column(cancelColIndex).search('__CANCEL__' + v + '__', false, false).draw();
+        });
+
+        // ── Type filter ──────────────────────────────────────────────────────
+        $('#filterType').on('change', function () {
+            var v = $(this).val();
+            if (v === '' || v === null) {
+                table.column(typeColIndex).search('').draw();
+                return;
+            }
+            table.column(typeColIndex).search('__TYPE__' + v + '__', false, false).draw();
+        });
+
+        // ── Branches filter (multi-select) ───────────────────────────────────
+        $('#filterBranches').on('change', function () {
+            var selected = $(this).val() || [];
+            if (selected.length === 0) {
+                table.column(branchColIndex).search('').draw();
+                return;
+            }
+            var tokens = selected.map(function(id){ return '__BRANCH__' + id + '__'; });
+            var regex  = '(?:' + tokens.join('|') + ')';
+            table.column(branchColIndex).search(regex, true, false).draw();
+        });
+
+        // ── Date range filter ────────────────────────────────────────────────
+        function parseDate(v) {
+            if (!v) return null;
+            var clean = v.toString().trim().replace(/__DATE__([^_]+)__/, '').trim();
+            if (!clean) return null;
+            var d = new Date(clean);
+            if (isNaN(d.getTime())) return null;
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        $.fn.dataTable.ext.search.push(function (settings, data) {
+            if (settings.nTable.id !== 'example') return true;
+
+            var from = parseDate($('#filterDateFrom').val());
+            var to   = parseDate($('#filterDateTo').val());
+
+            if (!from && !to) return true;
+
+            // Extract clean date from cell text (which may include the hidden __DATE__…__ token)
+            var rawCell = (data[dateColIndex] || '').toString().trim();
+            var dateMatch = rawCell.match(/__DATE__([^_]+)__/);
+            var cellDateStr = dateMatch
+                ? dateMatch[1]
+                : rawCell.replace(/__[A-Z]+__[^_]*__/g, '').trim();
+
+            var cellDate = parseDate(cellDateStr);
+            if (!cellDate) return false;
+
+            if (from && cellDate < from) return false;
+            if (to   && cellDate > to)   return false;
+            return true;
+        });
+
+        $('#filterDateFrom, #filterDateTo').on('change', function () {
+            table.draw();
+        });
+
+        // ── Clear Filters ────────────────────────────────────────────────────
+        $('#clearFilters').on('click', function () {
+            $('#expenseSearch').val('');
+            $('#filterCancelled').val('').trigger('change');
+            $('#filterType').val('').trigger('change');
+            $('#filterBranches').val(null).trigger('change');
+            $('#filterDateFrom').val('');
+            $('#filterDateTo').val('');
+
+            table.search('');
+            table.column(cancelColIndex).search('');
+            table.column(typeColIndex).search('');
+            table.column(branchColIndex).search('');
+            table.draw();
+        });
     }
 });
 </script>
