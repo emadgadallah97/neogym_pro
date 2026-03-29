@@ -102,7 +102,12 @@ class AttendanceService
                     return ['ok' => false, 'message' => trans('attendances.subscription_out_of_date')];
                 }
 
-                $withSessionsQ = (clone $inDateQ)->where('sessions_remaining', '>', 0);
+                $withSessionsQ = (clone $inDateQ)->where(function ($query) {
+                    $query->where('sessions_remaining', '>', 0)
+                          ->orWhereHas('plan', function ($qPlan) {
+                              $qPlan->where('check_duration_only', 1);
+                          });
+                });
 
                 if (!(clone $withSessionsQ)->exists()) {
                     return ['ok' => false, 'message' => trans('attendances.subscription_sessions_finished')];
@@ -146,14 +151,20 @@ class AttendanceService
                     ];
                 }
 
-                // Deduct base (always required)
-                $baseBefore = (int)($sub->sessions_remaining ?? 0);
-                if ($baseBefore <= 0) {
-                    return ['ok' => false, 'message' => trans('attendances.subscription_sessions_finished')];
-                }
+                // Deduct base (always required unless plan is duration only and sessions are 0)
+                $baseBefore  = (int)($sub->sessions_remaining ?? 0);
+                $isUnlimited = (bool)($plan->check_duration_only ?? false);
+                $isBaseDeducted = false;
 
-                $sub->sessions_remaining = $baseBefore - 1;
-                $sub->save();
+                if ($baseBefore > 0) {
+                    $sub->sessions_remaining = $baseBefore - 1;
+                    $sub->save();
+                    $isBaseDeducted = true;
+                } else {
+                    if (!$isUnlimited) {
+                        return ['ok' => false, 'message' => trans('attendances.subscription_sessions_finished')];
+                    }
+                }
 
                 $baseAfter = (int)($sub->sessions_remaining ?? 0);
 
@@ -192,7 +203,7 @@ class AttendanceService
                     'member_subscription_id' => $sub->id,
                     'pt_addon_id' => $ptAddonId,
 
-                    'is_base_deducted' => 1,
+                    'is_base_deducted' => $isBaseDeducted ? 1 : 0,
                     'is_pt_deducted' => $isPtDeducted ? 1 : 0,
 
                     'base_sessions_before' => $baseBefore,
@@ -206,9 +217,9 @@ class AttendanceService
                     'user_add' => $userId,
                 ]);
 
-                $msg = trans('attendances.scan_success');
+                $msg = (!$isBaseDeducted && $isUnlimited) ? trans('attendances.scan_success_unlimited') : trans('attendances.scan_success');
                 if ($deductPt && !$isPtDeducted) {
-                    $msg = trans('attendances.scan_success_without_pt');
+                    $msg = (!$isBaseDeducted && $isUnlimited) ? trans('attendances.scan_success_unlimited_no_pt') : trans('attendances.scan_success_without_pt');
                 }
 
                 return [

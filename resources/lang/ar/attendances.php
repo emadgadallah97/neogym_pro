@@ -59,6 +59,8 @@ return [
 
     'scan_success' => 'تم تسجيل الحضور بنجاح.',
     'scan_success_without_pt' => 'تم تسجيل الحضور بنجاح (بدون خصم PT لعدم توفر رصيد PT).',
+    'scan_success_unlimited' => 'تم تسجيل الحضور بنجاح (حضور غير محدود الجلسات).',
+    'scan_success_unlimited_no_pt' => 'تم تسجيل الحضور بنجاح (غير محدود الجلسات) (بدون خصم PT لعدم التوفر).',
     'something_went_wrong' => 'حدث خطأ غير متوقع.',
 
     'attendance_not_found' => 'سجل الحضور غير موجود.',

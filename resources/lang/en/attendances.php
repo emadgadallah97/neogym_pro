@@ -58,6 +58,8 @@ return [
 
     'scan_success' => 'Attendance saved successfully.',
     'scan_success_without_pt' => 'Attendance saved (PT not deducted due to no PT remaining).',
+    'scan_success_unlimited' => 'Attendance saved successfully (Unlimited sessions).',
+    'scan_success_unlimited_no_pt' => 'Attendance saved (Unlimited sessions) (No PT remaining).',
     'something_went_wrong' => 'Something went wrong.',
 
     'attendance_not_found' => 'Attendance not found.',
