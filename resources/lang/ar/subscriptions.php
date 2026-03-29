@@ -47,6 +47,7 @@ return [
 'sessions_period_other_label' => 'نوع الحصص (أخرى)',
 'sessions_count' => 'عدد الحصص',
 'duration_days' => 'مدة الخطة (بالأيام)',
+'check_duration_only' => 'التحقق عن طريق مدة الخطة أو تاريخ الانتهاء فقط',
 
 'allowed_training_days' => 'أيام الحضور المتاحة',
 

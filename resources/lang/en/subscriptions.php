@@ -47,6 +47,7 @@ return [
 'sessions_period_other_label' => 'Other Period Type',
 'sessions_count' => 'Sessions Count',
 'duration_days' => 'Plan Duration (Days)',
+'check_duration_only' => 'Check validity by plan duration or expiry date only',
 
 'allowed_training_days' => 'Allowed Training Days',
 

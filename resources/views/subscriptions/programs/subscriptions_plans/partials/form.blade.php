@@ -141,6 +141,15 @@
                 </div>
             </div>
 
+            <div class="col-md-12 mb-3">
+                <div class="form-check mt-2">
+                    @php $cdo = $is_edit ? ($Plan->check_duration_only ?? 0) : old('check_duration_only', 0); @endphp
+                    <input class="form-check-input" type="checkbox" name="check_duration_only" value="1"
+                        id="check_duration_only" {{ $cdo ? 'checked' : '' }}>
+                    <label class="form-check-label" for="check_duration_only">{{ trans('subscriptions.check_duration_only') }}</label>
+                </div>
+            </div>
+
             <div class="col-md-12">
                 <div class="mb-0">
                     <label class="form-label">{{ trans('subscriptions.allowed_training_days') }}</label>

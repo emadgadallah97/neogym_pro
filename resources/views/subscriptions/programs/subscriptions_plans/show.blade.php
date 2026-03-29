@@ -180,6 +180,14 @@
                             </div>
 
                             <div class="col-md-12">
+                                <div class="form-check mt-1 mb-3">
+                                    <input class="form-check-input" type="checkbox" disabled
+                                        id="check_duration_only_show" {{ $Plan->check_duration_only ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="check_duration_only_show">{{ trans('subscriptions.check_duration_only') }}</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
                                 <div class="mb-0">
                                     <label class="form-label">{{ trans('subscriptions.allowed_training_days') }}</label>
                                     <div class="d-flex flex-wrap gap-1">
