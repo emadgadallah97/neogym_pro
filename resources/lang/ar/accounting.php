@@ -221,6 +221,113 @@ return [
   'commissions_select_branch' => 'اختر الفرع',
   'commissions_select_disbursed_by' => 'القائم بالصرف (اختياري)',
   'expenses_desc'      => 'تسجيل ومتابعة مصروفات المنشأة وتصنيفها',
-'income_desc'        => 'متابعة إيرادات المنشأة من مختلف المصادر',
-'commissions_desc'   => 'إدارة العمولات وتوزيعها على الموظفين ',
+  'income_desc'        => 'متابعة إيرادات المنشأة من مختلف المصادر',
+  'commissions_desc'   => 'إدارة العمولات وتوزيعها على الموظفين ',
+
+  // ─── Treasury ────────────────────────────────────────────
+  'treasury'                           => 'الخزينة',
+  'treasury_desc'                      => 'إدارة الخزينة والفترات المالية ومتابعة الرصيد',
+
+  // Period
+  'treasury_period'                    => 'فترة',
+  'treasury_period_name'               => 'اسم الفترة',
+  'treasury_period_name_hint'          => 'مثال: يناير 2026',
+  'treasury_default_period_name'       => 'فترة',
+  'treasury_period_status'             => 'حالة الفترة',
+  'treasury_period_open'               => 'مفتوحة',
+  'treasury_period_closed'             => 'مغلقة',
+  'treasury_period_opened'             => 'تم فتح الفترة بنجاح',
+  'treasury_period_closed_msg'         => 'تم إغلاق الفترة بنجاح',
+  'treasury_period_already_open'       => 'يوجد فترة مفتوحة بالفعل لهذا الفرع. أغلقها أولاً.',
+  'treasury_period_not_open'           => 'الفترة ليست مفتوحة.',
+
+  // Balance
+  'treasury_opening_balance'           => 'الرصيد الافتتاحي',
+  'treasury_closing_balance'           => 'الرصيد الختامي',
+  'treasury_handed_over'               => 'المبلغ المُسلَّم',
+  'treasury_carried_forward'           => 'المرحَّل للفترة التالية',
+  'treasury_current_balance'           => 'الرصيد الحالي',
+  'treasury_total_in'                  => 'إجمالي الوارد',
+  'treasury_total_out'                 => 'إجمالي الصادر',
+  'treasury_currency'                  => 'ج.م',
+
+  // Hints
+  'treasury_opening_balance_hint'      => 'اتركه فارغاً ليُحسب تلقائياً من المرحَّل',
+  'treasury_carried_forward_hint'      => 'المرحَّل من الفترة السابقة',
+  'treasury_from_last_period'          => 'من الفترة',
+  'treasury_auto_calculated'           => 'يُحسب تلقائياً',
+
+  // Dates
+  'treasury_start_date'                => 'تاريخ البداية',
+  'treasury_end_date'                  => 'تاريخ الإغلاق',
+
+  // Notes
+  'treasury_close_notes'               => 'ملاحظات الإغلاق',
+  'treasury_close_notes_hint'          => 'ملاحظات اختيارية...',
+
+  // Actions
+  'treasury_open_period'               => 'فتح فترة جديدة',
+  'treasury_close_period'              => 'إغلاق الفترة واستلام',
+  'treasury_manual_transaction'        => 'إضافة حركة يدوية',
+  'treasury_review_periods'            => 'مراجعة الفترات',
+  'treasury_export_excel'              => 'تصدير Excel',
+  'treasury_cancel'                    => 'إلغاء',
+  'treasury_confirm_open'              => 'تأكيد الفتح',
+  'treasury_confirm_and_close'         => 'تأكيد الإغلاق',
+  'treasury_preview_close'             => 'معاينة وتأكيد',
+
+  // Close modal
+  'treasury_close_hint'                => 'سيتم إغلاق الفترة وتسوية الرصيد.',
+  'treasury_confirm_close_title'       => 'تأكيد إغلاق الفترة',
+  'treasury_confirm_close_message'     => 'يرجى مراجعة البيانات قبل التأكيد.',
+  'treasury_handed_over_exceeds_balance'=> 'المبلغ المُسلَّم أكبر من الرصيد الختامي.',
+
+  // Transaction types
+  'treasury_in'                        => 'وارد',
+  'treasury_out'                       => 'صادر',
+
+  // Source types
+  'treasury_source_income'             => 'إيراد',
+  'treasury_source_expense'            => 'مصروف',
+  'treasury_source_salary'             => 'مرتب',
+  'treasury_source_manual'             => 'يدوي',
+  'treasury_source_adjustment'         => 'تسوية',
+
+  // Categories
+  'treasury_cat_adjustment'            => 'تسوية',
+  'treasury_cat_transfer'              => 'تحويل',
+  'treasury_cat_other'                 => 'أخرى',
+
+  // Transactions table
+  'treasury_transactions_list'         => 'حركات الخزينة',
+  'treasury_tx_date'                   => 'التاريخ',
+  'treasury_tx_type'                   => 'النوع',
+  'treasury_tx_source'                 => 'المصدر',
+  'treasury_tx_user'                   => 'المستخدم',
+  'treasury_tx_period'                 => 'الفترة',
+  'treasury_tx_category'               => 'الفئة',
+  'treasury_no_transactions'           => 'لا توجد حركات في هذه الفترة',
+  'treasury_description_hint'          => 'وصف الحركة...',
+
+  // Filters
+  'treasury_filter_type'               => 'نوع الحركة',
+  'treasury_filter_source'             => 'المصدر',
+  'treasury_filter_user'               => 'المستخدم',
+  'treasury_read_only'                 => 'قراءة فقط',
+
+  // Status / messages
+  'treasury_no_open_period'            => 'لا توجد فترة مفتوحة في هذا الفرع. افتح فترة جديدة أولاً.',
+  'treasury_no_open_period_badge'      => 'لا توجد فترة مفتوحة',
+  'treasury_manual_recorded'           => 'تم تسجيل الحركة اليدوية بنجاح',
+  'treasury_closed_period_error'       => 'لا يمكن إلغاء حركة في فترة مغلقة، قم بإضافة قيد تسوية يدوي',
+  'accounting_save'                    => 'حفظ',
+
+  // Periods list
+  'treasury_periods_title'             => 'مراجعة فترات الخزينة',
+  'treasury_periods_list'              => 'قائمة الفترات',
+  'treasury_no_periods'                => 'لا توجد فترات مسجلة',
+  'treasury_opened_by'                 => 'فُتحت بواسطة',
+  'treasury_closed_by'                 => 'أُغلقت بواسطة',
+
+  'branch_not_allowed'                 => 'ليس لديك صلاحية الوصول لهذا الفرع.',
 ];

@@ -40,6 +40,16 @@ Route::group(
             Route::post('commissions/{id}/pay', [\App\Http\Controllers\accounting\commissionscontroller::class, 'pay'])->name('commissions.pay');
             Route::post('commissions/{id}/cancel', [\App\Http\Controllers\accounting\commissionscontroller::class, 'cancel'])->name('commissions.cancel');
             Route::get('commissions/{id}/print', [\App\Http\Controllers\accounting\commissionscontroller::class, 'printSettlement'])->name('commissions.print');
+
+            // ─── Treasury ─────────────────────────────────────────
+            Route::get('treasury',                 'TreasuryController@index')->name('treasury.index');
+            Route::get('treasury/transactions',    'TreasuryController@transactions')->name('treasury.transactions');
+            Route::post('treasury/open',           'TreasuryController@openPeriod')->name('treasury.open');
+            Route::post('treasury/close',          'TreasuryController@closePeriod')->name('treasury.close');
+            Route::post('treasury/manual',         'TreasuryController@manualTransaction')->name('treasury.manual');
+            Route::get('treasury/export',          'TreasuryController@export')->name('treasury.export');
+            Route::get('treasury/periods',         'TreasuryController@periods')->name('treasury.periods');
+            Route::get('treasury/periods/{period}','TreasuryController@periodTransactions')->name('treasury.period.show');
         });
     },
 );

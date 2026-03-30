@@ -216,7 +216,114 @@ return [
     'programs_accounting' => 'Accounting Programs',
     'salaries' => 'Salaries',
     'ajax_error_try_again' => 'Something went wrong, try again.',
-'expenses_desc'      => 'Record and track facility expenses and classify them',
-'income_desc'        => 'Track facility revenues from various sources',
-'commissions_desc'   => 'Manage commissions and distribute them to employees ',
+    'expenses_desc'      => 'Record and track facility expenses and classify them',
+    'income_desc'        => 'Track facility revenues from various sources',
+    'commissions_desc'   => 'Manage commissions and distribute them to employees ',
+
+    // ─── Treasury ─────────────────────────────────────────
+    'treasury'                           => 'Treasury',
+    'treasury_desc'                      => 'Manage treasury, financial periods and track balance',
+
+    // Period
+    'treasury_period'                    => 'Period',
+    'treasury_period_name'               => 'Period name',
+    'treasury_period_name_hint'          => 'e.g. January 2026',
+    'treasury_default_period_name'       => 'Period',
+    'treasury_period_status'             => 'Period status',
+    'treasury_period_open'               => 'Open',
+    'treasury_period_closed'             => 'Closed',
+    'treasury_period_opened'             => 'Period opened successfully',
+    'treasury_period_closed_msg'         => 'Period closed successfully',
+    'treasury_period_already_open'       => 'An open period already exists for this branch. Close it first.',
+    'treasury_period_not_open'           => 'The period is not open.',
+
+    // Balance
+    'treasury_opening_balance'           => 'Opening balance',
+    'treasury_closing_balance'           => 'Closing balance',
+    'treasury_handed_over'               => 'Handed over',
+    'treasury_carried_forward'           => 'Carried forward',
+    'treasury_current_balance'           => 'Current balance',
+    'treasury_total_in'                  => 'Total in',
+    'treasury_total_out'                 => 'Total out',
+    'treasury_currency'                  => 'EGP',
+
+    // Hints
+    'treasury_opening_balance_hint'      => 'Leave blank to inherit from last period carried forward',
+    'treasury_carried_forward_hint'      => 'Carried forward from last period',
+    'treasury_from_last_period'          => 'from period',
+    'treasury_auto_calculated'           => 'Auto-calculated',
+
+    // Dates
+    'treasury_start_date'                => 'Start date',
+    'treasury_end_date'                  => 'Close date',
+
+    // Notes
+    'treasury_close_notes'               => 'Close notes',
+    'treasury_close_notes_hint'          => 'Optional notes...',
+
+    // Actions
+    'treasury_open_period'               => 'Open new period',
+    'treasury_close_period'              => 'Close & handover',
+    'treasury_manual_transaction'        => 'Add manual transaction',
+    'treasury_review_periods'            => 'Review periods',
+    'treasury_export_excel'              => 'Export Excel',
+    'treasury_cancel'                    => 'Cancel',
+    'treasury_confirm_open'              => 'Confirm open',
+    'treasury_confirm_and_close'         => 'Confirm close',
+    'treasury_preview_close'             => 'Preview & confirm',
+
+    // Close modal
+    'treasury_close_hint'                => 'The period will be closed and balance settled.',
+    'treasury_confirm_close_title'       => 'Confirm period close',
+    'treasury_confirm_close_message'     => 'Please review the data before confirming.',
+    'treasury_handed_over_exceeds_balance'=> 'Handed over amount exceeds closing balance.',
+
+    // Transaction types
+    'treasury_in'                        => 'In',
+    'treasury_out'                       => 'Out',
+
+    // Source types
+    'treasury_source_income'             => 'Income',
+    'treasury_source_expense'            => 'Expense',
+    'treasury_source_salary'             => 'Salary',
+    'treasury_source_manual'             => 'Manual',
+    'treasury_source_adjustment'         => 'Adjustment',
+
+    // Categories
+    'treasury_cat_adjustment'            => 'Adjustment',
+    'treasury_cat_transfer'              => 'Transfer',
+    'treasury_cat_other'                 => 'Other',
+
+    // Transactions table
+    'treasury_transactions_list'         => 'Treasury transactions',
+    'treasury_tx_date'                   => 'Date',
+    'treasury_tx_type'                   => 'Type',
+    'treasury_tx_source'                 => 'Source',
+    'treasury_tx_user'                   => 'User',
+    'treasury_tx_period'                 => 'Period',
+    'treasury_tx_category'               => 'Category',
+    'treasury_no_transactions'           => 'No transactions in this period',
+    'treasury_description_hint'          => 'Transaction description...',
+
+    // Filters
+    'treasury_filter_type'               => 'Transaction type',
+    'treasury_filter_source'             => 'Source',
+    'treasury_filter_user'               => 'User',
+    'treasury_read_only'                 => 'Read only',
+
+    // Status / messages
+    'treasury_no_open_period'            => 'No open period for this branch. Open one first.',
+    'treasury_no_open_period_badge'      => 'No open period',
+    'treasury_manual_recorded'           => 'Manual transaction recorded successfully',
+    'treasury_closed_period_error'       => 'Cannot reverse a transaction in a closed period. Add a manual adjustment entry.',
+    'accounting_save'                    => 'Save',
+
+    // Periods list
+    'treasury_periods_title'             => 'Treasury periods review',
+    'treasury_periods_list'              => 'Periods list',
+    'treasury_no_periods'                => 'No periods recorded',
+    'treasury_opened_by'                 => 'Opened by',
+    'treasury_closed_by'                 => 'Closed by',
+
+    'branch_not_allowed'                 => 'You do not have access to this branch.',
 ];

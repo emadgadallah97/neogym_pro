@@ -73,6 +73,32 @@ class PermissionTableSeeder extends Seeder
                 'title'    => ['en' => 'Accounting',     'ar' => 'الحسابات'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
+            // Treasury
+            [
+                'name'     => 'treasury.view',
+                'title'    => ['en' => 'Treasury View',  'ar' => 'عرض الخزينة'],
+                'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
+            ],
+            [
+                'name'     => 'treasury.open',
+                'title'    => ['en' => 'Treasury Open',  'ar' => 'فتح فترة خزينة'],
+                'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
+            ],
+            [
+                'name'     => 'treasury.close',
+                'title'    => ['en' => 'Treasury Close', 'ar' => 'إغلاق فترة خزينة'],
+                'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
+            ],
+            [
+                'name'     => 'treasury.manual',
+                'title'    => ['en' => 'Treasury Manual','ar' => 'حركة يدوية خزينة'],
+                'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
+            ],
+            [
+                'name'     => 'treasury.review',
+                'title'    => ['en' => 'Treasury Review','ar' => 'مراجعة فترات الخزينة'],
+                'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
+            ],
             [
                 'name'     => 'crm',
                 'title'    => ['en' => 'CRM',            'ar' => 'إدارة علاقات العملاء'],

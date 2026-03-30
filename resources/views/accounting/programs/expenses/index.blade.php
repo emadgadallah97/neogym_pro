@@ -1,6 +1,6 @@
 @extends('layouts.master_table')
 @section('title')
-{{ trans('main_trans.title') }}
+{{ trans('accounting.expenses') }}
 @stop
 
 @section('content')
