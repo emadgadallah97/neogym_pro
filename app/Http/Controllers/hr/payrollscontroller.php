@@ -191,10 +191,23 @@ class payrollscontroller extends Controller
             ]);
         }
 
+        $ExpensesTypes = \App\Models\accounting\ExpensesType::where('status', 1)->orderByDesc('id')->get();
+        
+        $treasuryService = app(\App\Services\TreasuryService::class);
+        $branchBalances = [];
+        foreach ($branches as $b) {
+            try {
+                $calc = $treasuryService->getBalance($b->id);
+                $branchBalances[$b->id] = (float)($calc['balance'] ?? 0);
+            } catch (\Throwable $e) {
+                $branchBalances[$b->id] = 0;
+            }
+        }
+
         return view('hr.payrolls.index', compact(
             'branches', 'branchId', 'employees', 'employeeId',
             'statusFilter', 'monthFilter', 'rows', 'kpis',
-            'attendanceSummary', 'workDays'
+            'attendanceSummary', 'workDays', 'ExpensesTypes', 'branchBalances'
         ));
     }
 
@@ -543,8 +556,11 @@ class payrollscontroller extends Controller
         $data = $request->validate([
             'branch_id'         => 'required|exists:branches,id',
             'month'             => 'required|date_format:Y-m',
-            'payment_date'      => 'required|date',
-            'payment_reference' => 'nullable|string|max:190',
+            'payment_date'         => 'required|date',
+            'payment_reference'    => 'nullable|string|max:190',
+            'expense_type_id'      => 'required|integer|exists:expenses_types,id',
+            'expense_disbursed_by' => 'nullable|integer|exists:employees,id',
+            'record_in_treasury'   => 'nullable|boolean',
         ]);
 
         $branchId    = (int)$data['branch_id'];
@@ -588,11 +604,14 @@ class payrollscontroller extends Controller
                 ->get()
                 ->keyBy('advance_id');
 
+            $totalPaidNetSalary = 0;
             foreach ($payrolls as $p) {
                 $p->payment_date      = $paymentDate;
                 $p->payment_reference = $paymentRef;
                 $p->status            = 'paid';
                 $p->save();
+                
+                $totalPaidNetSalary += (float)$p->net_salary;
             }
 
             HrAdvanceInstallment::whereIn('payroll_id', $payrollIds)
@@ -615,6 +634,27 @@ class payrollscontroller extends Controller
                     $adv->save();
                 }
             }
+
+            // Create aggregated Expense record
+            $expense = new \App\Models\accounting\Expense([
+                'branchid'              => $branchId,
+                'expensestypeid'        => $request->input('expense_type_id'),
+                'expensedate'           => $paymentDate,
+                'amount'                => abs($totalPaidNetSalary),
+                'recipientname'         => \Illuminate\Support\Facades\Lang::has('hr.payrolls_expense_recipient') ? trans('hr.payrolls_expense_recipient') : 'مجموعة رواتب موظفين',
+                'disbursedbyemployeeid' => $request->input('expense_disbursed_by'),
+                'description'           => \Illuminate\Support\Facades\Lang::has('hr.payrolls_expense_description') ? trans('hr.payrolls_expense_description', ['month' => $data['month']]) : "صرف رواتب شهر {$data['month']}",
+                'notes'                 => "تم صرف رواتب لعدد {$payrolls->count()} موظف بقيمة إجمالية " . number_format($totalPaidNetSalary, 2) . " - المرجع: {$paymentRef}",
+                'iscancelled'           => false,
+                'useradd'               => Auth::id(),
+            ]);
+
+            // User decides whether to skip the treasury sync or not. Checkbox omission means un-checked.
+            if (!$request->has('record_in_treasury')) {
+                $expense->skip_treasury_sync = true;
+            }
+
+            $expense->save();
 
             DB::commit();
 
@@ -818,6 +858,7 @@ class payrollscontroller extends Controller
             'sum_deductions' => round((float)$rows->sum('deductions_amount'),  2),
             'sum_gross'      => round((float)$rows->sum('gross_salary'),       2),
             'sum_net'        => round((float)$rows->sum('net_salary'),         2),
+            'approved_net_sum'=> round((float)$rows->where('status', 'approved')->sum('net_salary'), 2),
         ];
     }
 

@@ -12,6 +12,8 @@ class Expense extends Model
 {
     use SoftDeletes;
 
+    public $skip_treasury_sync = false;
+
     protected $table = 'expenses';
 
     protected $fillable = [

@@ -20,6 +20,10 @@ class ExpenseObserver
      */
     public function created(Expense $expense): void
     {
+        if (isset($expense->skip_treasury_sync) && $expense->skip_treasury_sync) {
+            return;
+        }
+
         if ($expense->iscancelled) {
             return;
         }
@@ -40,6 +44,10 @@ class ExpenseObserver
      */
     public function updated(Expense $expense): void
     {
+        if (isset($expense->skip_treasury_sync) && $expense->skip_treasury_sync) {
+            return;
+        }
+
         $wasJustCancelled = $expense->isDirty('iscancelled') && $expense->iscancelled;
         $wasJustRestored  = $expense->isDirty('iscancelled') && !$expense->iscancelled;
 
@@ -111,6 +119,10 @@ class ExpenseObserver
      */
     public function deleted(Expense $expense): void
     {
+        if (isset($expense->skip_treasury_sync) && $expense->skip_treasury_sync) {
+            return;
+        }
+
         if ($expense->iscancelled) {
             return;
         }

@@ -216,6 +216,22 @@
                     </a>
                 </div>
 
+                <div class="row" id="treasury_warning_box" style="display: none;">
+                    <div class="col-12">
+                        <div class="alert alert-danger border-2 border-danger shadow-sm mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 me-3">
+                                    <i class="ri-error-warning-line fs-24"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="alert-heading fw-bold mb-1">تحذير: رصيد الخزينة غير كافٍ</h5>
+                                    <p class="mb-0">إن تسجيل هذا المبلغ سيؤدي إلى <strong>رصيد سالب</strong> في الخزينة بعد الخصم. يرجى التأكد من توفر سيولة قبل الاعتماد.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-muted small font">
                     {{ trans('hr.note_generate_snapshot_method') ?? 'ملاحظة: يتم حفظ طريقة الصرف Snapshot من الموظف وقت التوليد.' }}
                 </div>
@@ -414,6 +430,8 @@ $(document).ready(function () {
 
         $('#gen_branch_id').select2({ width:'100%', dropdownParent: $('#generateModal') });
         $('#cancel_branch_id').select2({ width:'100%', dropdownParent: $('#cancelDraftsModal') });
+        $('#expense_type_id').select2({ width:'100%', dropdownParent: $('#payModal') });
+        $('#expense_disbursed_by').select2({ width:'100%', dropdownParent: $('#payModal') });
     }
     initSelect2();
 
@@ -617,7 +635,34 @@ $(document).ready(function () {
         $('#pay_month').val(month);
         $('#payment_reference').val('');
 
+        var approvedAmount = {{ (float)($kpis['approved_net_sum'] ?? 0) }};
+        $('#pay_amount_display').text(money(approvedAmount));
+        
+        var branchBalances = @json($branchBalances ?? []);
+        var treasuryBalance = parseFloat(branchBalances[branchId]) || 0;
+        $('#treasury_balance_display').data('balance', treasuryBalance).text(money(treasuryBalance));
+
+        // Restore default state
+        $('#record_in_treasury').prop('checked', true);
+        $('#expense_type_id').val('').trigger('change');
+        $('#expense_disbursed_by').val('').trigger('change');
+        
+        $('#record_in_treasury').trigger('change');
+
         $('#payModal').modal('show');
+    });
+
+    // Handle Checkbox & Treasury Warning logic
+    $('#record_in_treasury').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        var approvedAmount = {{ (float)($kpis['approved_net_sum'] ?? 0) }};
+        var treasuryBalance = parseFloat($('#treasury_balance_display').data('balance')) || 0;
+        
+        if (isChecked && approvedAmount > treasuryBalance) {
+            $('#treasury_warning_box').slideDown();
+        } else {
+            $('#treasury_warning_box').slideUp();
+        }
     });
 
     // Pay submit
