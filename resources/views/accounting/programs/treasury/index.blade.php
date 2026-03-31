@@ -358,6 +358,29 @@
     @endif
 
     {{-- ══════════════════════════════════════
+    Dynamic Filter KPIs
+    ══════════════════════════════════════ --}}
+    <div id="filterKpiSection" class="row g-3 mb-4 d-none">
+        <div class="col-12">
+            <div class="alert alert-secondary border-0 shadow-sm py-2 mb-0 d-flex flex-wrap align-items-center gap-4 font">
+                <strong class="text-dark"><i class="ri-filter-3-line me-1"></i>ملخص البحث المخصص:</strong>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-success fw-semibold"><i class="ri-arrow-down-circle-line fs-16 align-middle me-1"></i>إجمالي الوارد: <span id="fKpiIn">0.00</span></span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-danger fw-semibold"><i class="ri-arrow-up-circle-line fs-16 align-middle me-1"></i>إجمالي الصادر: <span id="fKpiOut">0.00</span></span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold"><i class="ri-scales-3-line fs-16 align-middle me-1"></i>الصافي: <span id="fKpiNet" class="fs-15">0.00</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════
     Transactions Table
     ══════════════════════════════════════ --}}
     <div class="card border-0 shadow-sm">
@@ -799,6 +822,23 @@
 
                     $('#txTableBody').html(html);
                     renderPagination(res.current_page, res.last_page);
+
+                    // Display filter KPIs if filters are active
+                    const hasFilters = currentFilters.type || currentFilters.source_type || currentFilters.user_id || currentFilters.date_from || currentFilters.date_to;
+                    
+                    if (hasFilters && res.totals) {
+                        $('#fKpiIn').text(parseFloat(res.totals.in).toFixed(2));
+                        $('#fKpiOut').text(parseFloat(res.totals.out).toFixed(2));
+                        
+                        let netStr = parseFloat(res.totals.net).toFixed(2);
+                        $('#fKpiNet').text(netStr)
+                            .removeClass('text-success text-danger')
+                            .addClass(res.totals.net >= 0 ? 'text-success' : 'text-danger');
+                        
+                        $('#filterKpiSection').removeClass('d-none');
+                    } else {
+                        $('#filterKpiSection').addClass('d-none');
+                    }
                 },
 
                 error: function (xhr, status, error) {

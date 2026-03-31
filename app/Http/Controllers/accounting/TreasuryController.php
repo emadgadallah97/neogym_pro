@@ -32,10 +32,10 @@ class TreasuryController extends Controller
     // Helpers
     // ─────────────────────────────────────────────────────────────
 
-    private function accessibleBranchIds(): array
+    private function accessibleBranchIds(): ?array
     {
         $user = Auth::user();
-        if (!$user->employee_id) return [];
+        if (!$user->employee_id) return null; // Admin with global access
 
         return DB::table('employee_branch')
             ->where('employee_id', $user->employee_id)
@@ -47,15 +47,21 @@ class TreasuryController extends Controller
     private function userCanAccessBranch(int $branchId): bool
     {
         $ids = $this->accessibleBranchIds();
-        return empty($ids) || in_array($branchId, $ids);
+        if ($ids === null) return true;
+        return in_array($branchId, $ids);
     }
 
     private function resolveBranchId(Request $request): int
     {
-        $branchIds = $this->accessibleBranchIds();
-
         if ($request->filled('branch_id') && $this->userCanAccessBranch((int)$request->branch_id)) {
             return (int)$request->branch_id;
+        }
+
+        $branchIds = $this->accessibleBranchIds();
+
+        if ($branchIds === null) {
+            // Global access
+            return Branch::where('status', 1)->value('id') ?? 0;
         }
 
         // Single-branch user → auto-resolve
@@ -63,10 +69,8 @@ class TreasuryController extends Controller
             return $branchIds[0];
         }
 
-        // Fallback to first accessible branch, or first branch overall
-        return count($branchIds) > 0
-            ? $branchIds[0]
-            : Branch::where('status', 1)->value('id') ?? 0;
+        // Fallback to first accessible branch, or 0 if none
+        return count($branchIds) > 0 ? $branchIds[0] : 0;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -77,11 +81,14 @@ class TreasuryController extends Controller
     {
         $this->authorize('treasury.view');
 
-        $branchIds = $this->accessibleBranchIds();
-        $branches  = Branch::where('status', 1)
-            ->when(!empty($branchIds), fn($q) => $q->whereIn('id', $branchIds))
-            ->orderBy('name')
-            ->get();
+        $selectedBranchId = $this->resolveBranchId($request);
+        
+        if ($selectedBranchId === 0) {
+            abort(403, 'لا تملك صلاحيات على أي فرع لفتح الخزينة.');
+        }
+
+        // BranchAccessScope will automatically filter this based on accessible branches
+        $branches = Branch::where('status', 1)->orderBy('name')->get();
 
         $selectedBranchId = $this->resolveBranchId($request);
         $balance          = $this->treasuryService->getBalance($selectedBranchId);
@@ -154,6 +161,13 @@ class TreasuryController extends Controller
             $query->where('transaction_date', '<=', $request->date_to);
         }
 
+        // Calculate filter totals
+        $filterTotals = [
+            'in'  => (clone $query)->where('type', 'in')->sum('amount'),
+            'out' => (clone $query)->where('type', 'out')->sum('amount'),
+        ];
+        $filterTotals['net'] = $filterTotals['in'] - $filterTotals['out'];
+
         $transactions = $query->orderByDesc('id')->paginate(20);
 
         $rows = $transactions->getCollection()->map(function (TreasuryTransaction $tx) {
@@ -178,6 +192,7 @@ class TreasuryController extends Controller
             'ok'          => true,
             'data'        => $rows,
             'total'       => $transactions->total(),
+            'totals'      => $filterTotals,
             'current_page'=> $transactions->currentPage(),
             'last_page'   => $transactions->lastPage(),
         ]);
@@ -296,11 +311,14 @@ class TreasuryController extends Controller
     {
         $this->authorize('treasury.review');
 
-        $branchIds = $this->accessibleBranchIds();
-        $branches  = Branch::where('status', 1)
-            ->when(!empty($branchIds), fn($q) => $q->whereIn('id', $branchIds))
-            ->orderBy('name')
-            ->get();
+        $selectedBranchId = $this->resolveBranchId($request);
+        
+        if ($selectedBranchId === 0) {
+            abort(403, 'لا تملك صلاحيات على أي فرع.');
+        }
+
+        // BranchAccessScope will automatically filter this based on accessible branches
+        $branches = Branch::where('status', 1)->orderBy('name')->get();
 
         $selectedBranchId = $this->resolveBranchId($request);
 
@@ -342,11 +360,8 @@ class TreasuryController extends Controller
             return $this->transactions($request);
         }
 
-        $branchIds = $this->accessibleBranchIds();
-        $branches  = Branch::where('status', 1)
-            ->when(!empty($branchIds), fn($q) => $q->whereIn('id', $branchIds))
-            ->orderBy('name')
-            ->get();
+        // BranchAccessScope will automatically filter this based on accessible branches
+        $branches = Branch::where('status', 1)->orderBy('name')->get();
 
         $balance = [
             'opening'   => (float) $period->opening_balance,
