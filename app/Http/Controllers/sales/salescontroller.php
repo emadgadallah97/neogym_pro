@@ -304,8 +304,10 @@ public function ajaxCurrentSubscriptionsTable(Request $request)
         $memberName = $row->member?->full_name
             ?? trim(($row->member?->first_name ?? '') . ' ' . ($row->member?->last_name ?? ''));
 
+        $isNotExpired = !$row->end_date || $row->end_date->startOfDay()->gte(now()->startOfDay());
         $canAddPt = ((string)($row->status ?? '') === 'active')
-            && ($ptCount === 0 || $ptRemaining === 0);
+            && $isNotExpired
+            && ($baseIncluded == 0 || $baseRemaining > 0);
 
         $showBtn  = '<button type="button" class="btn btn-sm btn-outline-primary js-subscription-show" data-id="' . $row->id . '">'
                     . (trans('sales.view') ?? 'عرض') . '</button>';

@@ -28,15 +28,17 @@ class SubscriptionPtAddonSaleController extends Controller
             ]);
         }
 
-        // الممنوع فقط: وجود PT Add-on على نفس الاشتراك وله حصص متبقية > 0
-        $hasOpenPtAddon = MemberSubscriptionPtAddon::query()
-            ->where('member_subscription_id', (int)$sub->id)
-            ->whereRaw('COALESCE(sessions_remaining, 0) > 0')
-            ->exists();
-
-        if ($hasOpenPtAddon) {
+        // Check if expired based on date
+        if ($sub->end_date && $sub->end_date->isPast() && !$sub->end_date->isToday()) {
             throw ValidationException::withMessages([
-                'subscription' => [trans('sales.pt_addons_already_exists') ?? 'لا يمكن إضافة PT لأن هناك PT بحصص متبقية على نفس الاشتراك'],
+                'subscription' => [trans('sales.subscription_expired') ?? 'الاشتراك منتهي الصلاحية'],
+            ]);
+        }
+
+        // Check if session-based plan and has sessions remaining
+        if ($sub->sessions_included > 0 && $sub->sessions_remaining <= 0) {
+            throw ValidationException::withMessages([
+                'subscription' => [trans('sales.pt_addons_no_base_sessions') ?? 'لا يمكن إضافة PT لأن جلسات الاشتراك الأساسي انتهت'],
             ]);
         }
     }
@@ -139,18 +141,8 @@ class SubscriptionPtAddonSaleController extends Controller
 
         DB::beginTransaction();
         try {
-            // حماية من سباق الطلبات: إعادة التحقق داخل الترانزاكشن
-            $hasOpenPtAddon = MemberSubscriptionPtAddon::query()
-                ->where('member_subscription_id', (int)$subscription->id)
-                ->whereRaw('COALESCE(sessions_remaining, 0) > 0')
-                ->exists();
+            // (إزالة التحقق المكرر للسماح بإضافات متعددة)
 
-            if ($hasOpenPtAddon) {
-                DB::rollBack();
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', trans('sales.pt_addons_already_exists') ?? 'لا يمكن إضافة PT لأن هناك PT بحصص متبقية على نفس الاشتراك');
-            }
 
             $sessionPrice = (float)$this->getTrainerSessionPriceFromTable($trainerId);
             $totalAmount = max(0, $sessionPrice * $sessionsCount);
