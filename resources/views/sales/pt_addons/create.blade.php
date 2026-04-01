@@ -145,10 +145,16 @@
                                     <span id="total_amount">0.00</span>
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ri-save-3-line align-bottom me-1"></i>
-                                    {{ trans('settings_trans.submit') ?? 'حفظ' }}
-                                </button>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="submit" name="action" value="save" class="btn btn-primary">
+                                        <i class="ri-save-3-line align-bottom me-1"></i>
+                                        {{ trans('settings_trans.submit') ?? 'حفظ' }}
+                                    </button>
+                                    <button type="submit" name="action" value="save_and_print" class="btn btn-success">
+                                        <i class="ri-printer-line align-bottom me-1"></i>
+                                        {{ trans('sales.save_and_print') ?? 'حفظ وطباعة' }}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

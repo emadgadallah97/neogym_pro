@@ -7,6 +7,7 @@ use App\Models\sales\MemberSubscription;
 use App\Models\sales\MemberSubscriptionPtAddon;
 use App\Models\sales\Payment;
 use App\Models\sales\Invoice;
+use App\Models\accounting\Income;
 use App\Models\employee\Employee;
 use App\Models\general\TrainerSessionPricing;
 use Illuminate\Http\Request;
@@ -237,7 +238,41 @@ class SubscriptionPtAddonSaleController extends Controller
             $invoice->notes = $autoNotes;
             $invoice->save();
 
+            // Income
+            $member = $subscription->member;
+            $payerName = $member ? trim(($member->first_name ?? '') . ' ' . ($member->last_name ?? '')) : null;
+            if (!$payerName && $member && $member->full_name) {
+                $payerName = $member->full_name;
+            }
+            $payerPhone = $member ? $member->phone : null;
+
+            $incomeType = \App\Models\accounting\incometype::firstOrCreate(
+                ['name->en' => 'Subscriptions'],
+                ['name' => ['en' => 'Subscriptions', 'ar' => 'الاشتراكات'], 'status' => 1]
+            );
+
+            Income::create([
+                'branchid'             => $branchId,
+                'income_type_id'       => $incomeType->id,
+                'incomedate'           => Carbon::now()->format('Y-m-d'),
+                'amount'               => $totalAmount,
+                'paymentmethod'        => $paymentMethod,
+                'receivedbyemployeeid' => Auth::user()->employee_id ?? null,
+                'payername'            => $payerName,
+                'payerphone'           => $payerPhone,
+                'description'          => (__('sales.pt_addons_sale') === 'sales.pt_addons_sale' ? 'مبيع حصص مدرب شخصي' : __('sales.pt_addons_sale')) . ' - ' . $trainerName,
+                'notes'                => $autoNotes,
+                'useradd'              => Auth::id(),
+            ]);
+
             DB::commit();
+
+            if ($request->input('action') === 'save_and_print') {
+                return redirect()->route('sales.index')
+                    ->with('success', trans('sales.pt_addons_saved') ?? 'تم إضافة PT بنجاح')
+                    ->with('print_pt_invoice_id', $invoice->id);
+            }
+
             return redirect()->route('sales.index')->with('success', trans('sales.pt_addons_saved') ?? 'تم إضافة PT بنجاح');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -249,5 +284,32 @@ class SubscriptionPtAddonSaleController extends Controller
 
             return redirect()->back()->withInput()->with('error', $msg);
         }
+    }
+
+    public function invoicePtPrint($invoiceId)
+    {
+        $invoice = Invoice::with([
+            'member',
+            'branch',
+            'memberSubscription.plan',
+        ])->findOrFail($invoiceId);
+
+        // Extract Addon ID from invoice notes
+        $addonId = null;
+        if (preg_match('/PTAddon#(\d+)/', $invoice->notes, $matches)) {
+            $addonId = $matches[1];
+        }
+
+        $ptAddon = null;
+        if ($addonId) {
+            $ptAddon = \App\Models\sales\MemberSubscriptionPtAddon::with('trainer')->find($addonId);
+        }
+
+        // Find the specific payment for this PT Addon invoice
+        $payment = Payment::where('member_subscription_id', $invoice->member_subscription_id)
+            ->where('notes', 'like', "%Invoice#{$invoice->id}%")
+            ->first();
+
+        return view('sales.pt_addons.invoice_print', compact('invoice', 'ptAddon', 'payment'));
     }
 }

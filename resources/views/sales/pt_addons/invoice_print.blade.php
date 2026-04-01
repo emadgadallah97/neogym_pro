@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('sales.invoice') ?? 'فاتورة' }} #{{ $subscription->invoice->invoice_number ?? $subscription->id }}</title>
+    <title>{{ trans('sales.invoice') ?? 'فاتورة' }} #{{ $invoice->invoice_number ?? $invoice->id }}</title>
 
     <style>
         * {
@@ -318,8 +318,8 @@
 <body>
 
     @php
-        $s       = $subscription;
-        $inv     = $s->invoice;
+        $inv     = $invoice;
+        $s       = $inv->memberSubscription;
         $setting = \App\Models\general\GeneralSetting::first();
     @endphp
 
@@ -354,11 +354,11 @@
                 </p>
                 <p>
                     <strong>{{ trans('sales.invoice_date') ?? 'تاريخ الفاتورة' }}:</strong>
-                    {{ $inv->issued_at ?? $s->created_at->format('Y-m-d H:i') }}
+                    {{ $inv->issued_at ?? $inv->created_at->format('Y-m-d H:i') }}
                 </p>
                 <p>
                     <strong>{{ trans('sales.status') ?? 'الحالة' }}:</strong>
-                    {{ $inv->status ?? $s->status }}
+                    {{ $inv->status }}
                 </p>
             </div>
         </div>
@@ -403,8 +403,9 @@
                 </p>
             </div>
 
+            
             {{-- Sales Employee --}}
-            @if($s->salesEmployee)
+            @if($s && $s->salesEmployee)
             <div class="info-box">
                 <h4>{{ trans('sales.sales_employee') ?? 'موظف المبيعات' }}</h4>
                 <p>{{ $s->salesEmployee->full_name ?? '-' }}</p>
@@ -423,30 +424,16 @@
                 </tr>
             </thead>
             <tbody>
+                @if(isset($ptAddon) && $ptAddon)
                 <tr>
                     <td>1</td>
-                    <td>{{ trans('sales.item_plan') ?? 'الخطة' }}</td>
+                    <td>{{ trans('sales.pt_sessions') ?? 'جلسات مدرب (PT)' }}</td>
                     <td>
-                        {{ $s->plan?->getTranslation('name', app()->getLocale()) ?? '-' }}
-                        ({{ (int)$s->sessions_count }} {{ trans('sales.sessions') ?? 'حصة' }})
+                        {{ $ptAddon->trainer?->full_name ?? '-' }}
+                        ({{ (int)$ptAddon->sessions_count }} {{ trans('sales.sessions') ?? 'جلسة' }})
                     </td>
-                    <td>{{ number_format((float)$s->price_plan, 2) }}</td>
+                    <td>{{ number_format((float)$ptAddon->total_amount, 2) }}</td>
                 </tr>
-                @if($s->ptAddons && $s->ptAddons->count())
-                    @foreach($s->ptAddons as $idx => $pt)
-                        @if ($pt->created_at && $inv->created_at && $pt->created_at->diffInSeconds($inv->created_at) > 120)
-                            @continue
-                        @endif
-                    <tr>
-                        <td>{{ $idx + 2 }}</td>
-                        <td>{{ trans('sales.pt_sessions') ?? 'جلسات مدرب (PT)' }}</td>
-                        <td>
-                            {{ $pt->trainer?->full_name ?? '-' }}
-                            ({{ (int)$pt->sessions_count }} {{ trans('sales.sessions') ?? 'جلسة' }})
-                        </td>
-                        <td>{{ number_format((float)$pt->total_amount, 2) }}</td>
-                    </tr>
-                    @endforeach
                 @endif
             </tbody>
         </table>
@@ -469,31 +456,24 @@
                 <table class="totals-table">
                     <tr>
                         <td>{{ trans('sales.subtotal_gross') ?? 'الإجمالي قبل الخصم' }}</td>
-                        <td>{{ number_format((float)$s->price_plan + (float)$s->price_pt_addons, 2) }}</td>
+                        <td>{{ number_format((float)$inv->subtotal, 2) }}</td>
                     </tr>
-                    @if((float)$s->discount_offer_amount > 0)
-                    <tr class="discount-row">
-                        <td>{{ trans('sales.discount_offer') ?? 'خصم العرض' }}</td>
-                        <td>-{{ number_format((float)$s->discount_offer_amount, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if((float)$s->discount_coupon_amount > 0)
-                    <tr class="discount-row">
-                        <td>{{ trans('sales.discount_coupon') ?? 'خصم الكوبون' }}</td>
-                        <td>-{{ number_format((float)$s->discount_coupon_amount, 2) }}</td>
-                    </tr>
-                    @endif
-                    @if((float)$s->total_discount > 0)
+                    @if((float)$inv->discount_total > 0)
                     <tr class="discount-row">
                         <td>{{ trans('sales.total_discount') ?? 'إجمالي الخصومات' }}</td>
-                        <td>-{{ number_format((float)$s->total_discount, 2) }}</td>
+                        <td>-{{ number_format((float)$inv->discount_total, 2) }}</td>
                     </tr>
                     @endif
                     <tr class="total-row">
                         <td>{{ trans('sales.net_total') ?? 'الإجمالي المستحق' }}</td>
-                        <td>{{ number_format((float)$s->total_amount, 2) }}</td>
+                        <td>{{ number_format((float)$inv->total, 2) }}</td>
                     </tr>
-                    @if($s->payments && $s->payments->count())
+                    @if(isset($payment) && $payment)
+                    <tr>
+                        <td>{{ trans('sales.payment_method') ?? 'طريقة الدفع' }}</td>
+                        <td>{{ trans('sales.' . $payment->payment_method) ?? $payment->payment_method }}</td>
+                    </tr>
+                    @elseif($s && $s->payments && $s->payments->count())
                     <tr>
                         <td>{{ trans('sales.payment_method') ?? 'طريقة الدفع' }}</td>
                         <td>{{ trans('sales.' . $s->payments->first()->payment_method) ?? $s->payments->first()->payment_method }}</td>

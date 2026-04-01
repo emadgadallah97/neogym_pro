@@ -112,6 +112,14 @@
             })();
         @endif
 
+        // ✅ Save & Print PT addon
+        @if(session('print_pt_invoice_id'))
+            (function() {
+                var url = "{{ route('sales.invoice_pt_print', session('print_pt_invoice_id')) }}";
+                window.open(url, '_blank');
+            })();
+        @endif
+
         function debounce(fn, wait = 250) {
             let t = null;
             return function(...args) {

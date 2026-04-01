@@ -22,6 +22,10 @@ Route::group(
             Route::get('sales/{id}/invoice-print', 'salescontroller@invoicePrint')
                 ->name('sales.invoice_print');
 
+            // ✅ طباعة فاتورة PT Addon منفصلة
+            Route::get('sales/invoice-pt-print/{invoiceId}', [\App\Http\Controllers\sales\subscriptionptaddonsalecontroller::class, 'invoicePtPrint'])
+                ->name('sales.invoice_pt_print');
+
             Route::resource('sales', 'salescontroller');
 
             // AJAX endpoints
