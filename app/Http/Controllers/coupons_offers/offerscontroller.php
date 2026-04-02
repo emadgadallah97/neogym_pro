@@ -16,7 +16,11 @@ class offerscontroller extends Controller
 {
     public function __construct()
     {
-                $this->middleware('permission:offers');
+        $this->middleware('permission:offers');
+        $this->middleware('permission:offer_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:offer_view', ['only' => ['show']]);
+        $this->middleware('permission:offer_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:offer_delete', ['only' => ['destroy']]);
     }
 
     public function index()

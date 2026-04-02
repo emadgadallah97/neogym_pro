@@ -54,9 +54,11 @@
                     </div>
 
                     <div class="d-flex gap-2">
+                        @can('offer_create')
                         <a href="{{ route('offers.create') }}" class="btn btn-primary">
                             <i class="ri-add-line align-bottom me-1"></i> {{ trans('coupons_offers.add_new_offer') }}
                         </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -323,15 +325,21 @@
 
                                 <td>
                                     <div class="btn-group" role="group">
+                                        @can('offer_view')
                                         <a href="{{ route('offers.show', $Offer->id) }}" class="btn btn-soft-primary btn-sm" title="{{ trans('coupons_offers.view') }}">
                                             <i class="ri-eye-fill align-bottom"></i>
                                         </a>
+                                        @endcan
+                                        @can('offer_edit')
                                         <a href="{{ route('offers.edit', $Offer->id) }}" class="btn btn-soft-secondary btn-sm" title="{{ trans('coupons_offers.edit') }}">
                                             <i class="ri-pencil-fill align-bottom"></i>
                                         </a>
+                                        @endcan
+                                        @can('offer_delete')
                                         <button type="button" data-bs-toggle="modal" data-bs-target="#deleteModal{{$Offer->id}}" class="btn btn-soft-danger btn-sm" title="{{ trans('coupons_offers.delete') }}">
                                             <i class="ri-delete-bin-fill align-bottom"></i>
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
