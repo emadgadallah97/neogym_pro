@@ -20,57 +20,95 @@ class HRPermissionSeeder extends Seeder
         $permissions = [
             [
                 'name'     => 'hr_attendance_view',
-                'title'    => ['en' => 'View Attendances', 'ar' => 'عرض الحضور والانصراف'],
+                'title'    => ['en' => 'Attendances', 'ar' => 'الحضور والانصراف'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_advances_view',
-                'title'    => ['en' => 'View Advances', 'ar' => 'عرض السلف'],
+                'title'    => ['en' => 'Advances', 'ar' => 'السلف'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_deductions_view',
-                'title'    => ['en' => 'View Deductions', 'ar' => 'عرض الخصومات والجزاءات'],
+                'title'    => ['en' => 'Deductions', 'ar' => 'الخصومات والجزاءات'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_overtime_view',
-                'title'    => ['en' => 'View Overtime', 'ar' => 'عرض ساعات العمل الإضافي'],
+                'title'    => ['en' => 'Overtime', 'ar' => 'ساعات العمل الإضافي'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_allowances_view',
-                'title'    => ['en' => 'View Allowances', 'ar' => 'عرض المكافآت والبدلات'],
+                'title'    => ['en' => 'Allowances', 'ar' => 'المكافآت والبدلات'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_payrolls_view',
-                'title'    => ['en' => 'View Payrolls', 'ar' => 'عرض كشف وصرف الرواتب'],
+                'title'    => ['en' => 'Payrolls', 'ar' => 'كشف وصرف الرواتب'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_devices_view',
-                'title'    => ['en' => 'View Fingerprint Devices', 'ar' => 'عرض أجهزة الحضور'],
+                'title'    => ['en' => 'Fingerprint Devices', 'ar' => 'أجهزة الحضور'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_shifts_view',
-                'title'    => ['en' => 'View Shifts', 'ar' => 'عرض الورديات'],
+                'title'    => ['en' => 'Shifts', 'ar' => 'الورديات'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
             [
                 'name'     => 'hr_employee_shifts_view',
-                'title'    => ['en' => 'View Employee Shifts', 'ar' => 'عرض ورديات الموظفين'],
+                'title'    => ['en' => 'Employee Shifts', 'ar' => 'ورديات الموظفين'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_advances_create',
+                'title'    => ['en' => 'Advances - Create', 'ar' => 'إنشاء سلفة'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_advances_edit',
+                'title'    => ['en' => 'Advances - Edit', 'ar' => 'تعديل سلفة'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_advances_approve',
+                'title'    => ['en' => 'Advances - Approve', 'ar' => 'اعتماد سلفة'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_advances_reject',
+                'title'    => ['en' => 'Advances - Reject', 'ar' => 'رفض سلفة'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_advances_delete',
+                'title'    => ['en' => 'Advances - Delete', 'ar' => 'حذف سلفة'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
         ];
 
 
 
+        $permissionsNames = array_column($permissions, 'name');
+
         foreach ($permissions as $permissionData) {
-            if (!Permission::where('name', $permissionData['name'])->exists()) {
-                Permission::create($permissionData);
-            }
+            Permission::updateOrCreate(
+                ['name' => $permissionData['name']],
+                [
+                    'title'    => $permissionData['title'],
+                    'category' => $permissionData['category'],
+                    'guard_name' => 'web', 
+                ]
+            );
+        }
+
+        // assign all permissions to owner role
+        $role = \App\Models\Role::where('name', 'owner')->first();
+        if ($role) {
+            $role->givePermissionTo($permissionsNames);
         }
     }
 }

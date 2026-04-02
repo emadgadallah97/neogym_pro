@@ -61,9 +61,11 @@
                 <button type="submit" class="btn btn-primary font w-100">
                     <i class="ri-filter-3-line me-1"></i> {{ trans('hr.filter') ?? 'تصفية' }}
                 </button>
+                @can('hr_advances_create')
                 <button type="button" class="btn btn-success font w-100" id="btnOpenAdd">
                     <i class="ri-add-line me-1"></i> {{ trans('hr.add_advance') ?? 'إضافة سلفة' }}
                 </button>
+                @endcan
             </div>
 
         </div>
@@ -132,14 +134,17 @@
                                         {{ trans('hr.view_installments') ?? 'عرض الأقساط' }}
                                     </button>
                                 </li>
+                                @can('hr_advances_edit')
                                 <li>
                                     <button type="button" class="dropdown-item btn-edit" data-id="{{ $r->id }}">
                                         <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                         {{ trans('hr.edit') ?? 'تعديل' }}
                                     </button>
                                 </li>
+                                @endcan
                                 @if($r->status === 'pending')
                                 <li><hr class="dropdown-divider"></li>
+                                @can('hr_advances_approve')
                                 <li>
                                     <button type="button" class="dropdown-item text-success btn-approve"
                                         data-id="{{ $r->id }}"
@@ -151,14 +156,18 @@
                                         {{ trans('hr.approve_advance') ?? 'اعتماد' }}
                                     </button>
                                 </li>
+                                @endcan
+                                @can('hr_advances_reject')
                                 <li>
                                     <button type="button" class="dropdown-item text-danger btn-reject" data-id="{{ $r->id }}">
                                         <i class="ri-close-line align-bottom me-2"></i>
                                         {{ trans('hr.reject_advance') ?? 'رفض' }}
                                     </button>
                                 </li>
+                                @endcan
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
+                                @can('hr_advances_delete')
                                 <li>
                                     <button type="button" class="dropdown-item text-danger btn-delete"
                                         data-id="{{ $r->id }}"
@@ -167,6 +176,7 @@
                                         {{ trans('hr.delete') ?? 'حذف' }}
                                     </button>
                                 </li>
+                                @endcan
                             </ul>
                         </div>
                     </td>
@@ -364,6 +374,13 @@
 $(document).ready(function () {
 
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+    
+    // permissions
+    var canEdit    = @json(auth()->user()->can('hr_advances_edit'));
+    var canApprove = @json(auth()->user()->can('hr_advances_approve'));
+    var canReject  = @json(auth()->user()->can('hr_advances_reject'));
+    var canDelete  = @json(auth()->user()->can('hr_advances_delete'));
+
 
     // ============================================================
     // Toast
@@ -514,26 +531,36 @@ $(document).ready(function () {
             '<i class="ri-more-fill align-middle"></i></button>' +
             '<ul class="dropdown-menu dropdown-menu-end">' +
             '<li><button type="button" class="dropdown-item btn-view-installments" data-id="' + d.id + '">' +
-            '<i class="ri-calendar-event-line align-bottom me-2 text-muted"></i>' + ts.view_installments + '</button></li>' +
-            '<li><button type="button" class="dropdown-item btn-edit" data-id="' + d.id + '">' +
-            '<i class="ri-pencil-fill align-bottom me-2 text-muted"></i>' + ts.edit + '</button></li>';
+            '<i class="ri-calendar-event-line align-bottom me-2 text-muted"></i>' + ts.view_installments + '</button></li>';
 
-        if (d.status === 'pending') {
-            html +=
-                '<li><hr class="dropdown-divider"></li>' +
-                '<li><button type="button" class="dropdown-item text-success btn-approve" data-id="' + d.id + '" ' +
-                'data-branch-id="' + (d.branch_id || '') + '" data-branch-name="' + (d.branch_name || '') + '" ' +
-                'data-employee-name="' + (d.employee_name || '') + '" data-amount="' + (d.total_amount || '') + '">' +
-                '<i class="ri-check-line align-bottom me-2"></i>' + ts.approve + '</button></li>' +
-                '<li><button type="button" class="dropdown-item text-danger btn-reject" data-id="' + d.id + '">' +
-                '<i class="ri-close-line align-bottom me-2"></i>' + ts.reject + '</button></li>';
+        if (canEdit) {
+            html += '<li><button type="button" class="dropdown-item btn-edit" data-id="' + d.id + '">' +
+                    '<i class="ri-pencil-fill align-bottom me-2 text-muted"></i>' + ts.edit + '</button></li>';
         }
 
-        html +=
-            '<li><hr class="dropdown-divider"></li>' +
-            '<li><button type="button" class="dropdown-item text-danger btn-delete" data-id="' + d.id + '" data-name="' + (d.employee_name || '') + '">' +
-            '<i class="ri-delete-bin-fill align-bottom me-2"></i>' + ts.delete + '</button></li>' +
-            '</ul></div>';
+        if (d.status === 'pending') {
+            if (canApprove || canReject) {
+                html += '<li><hr class="dropdown-divider"></li>';
+            }
+            if (canApprove) {
+                html += '<li><button type="button" class="dropdown-item text-success btn-approve" data-id="' + d.id + '" ' +
+                        'data-branch-id="' + (d.branch_id || '') + '" data-branch-name="' + (d.branch_name || '') + '" ' +
+                        'data-employee-name="' + (d.employee_name || '') + '" data-amount="' + (d.total_amount || '') + '">' +
+                        '<i class="ri-check-line align-bottom me-2"></i>' + ts.approve + '</button></li>';
+            }
+            if (canReject) {
+                html += '<li><button type="button" class="dropdown-item text-danger btn-reject" data-id="' + d.id + '">' +
+                        '<i class="ri-close-line align-bottom me-2"></i>' + ts.reject + '</button></li>';
+            }
+        }
+
+        if (canDelete) {
+            html += '<li><hr class="dropdown-divider"></li>' +
+                    '<li><button type="button" class="dropdown-item text-danger btn-delete" data-id="' + d.id + '" data-name="' + (d.employee_name || '') + '">' +
+                    '<i class="ri-delete-bin-fill align-bottom me-2"></i>' + ts.delete + '</button></li>';
+        }
+
+        html += '</ul></div>';
         return html;
     }
 

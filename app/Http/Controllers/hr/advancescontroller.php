@@ -21,7 +21,12 @@ class advancescontroller extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:hr_advances_view');
+        $this->middleware('permission:hr_advances_view')->only(['index', 'show', 'employeesByBranch']);
+        $this->middleware('permission:hr_advances_create')->only(['store']);
+        $this->middleware('permission:hr_advances_edit')->only(['update']);
+        $this->middleware('permission:hr_advances_delete')->only(['destroy']);
+        $this->middleware('permission:hr_advances_approve')->only(['approve', 'approveWithExpense']);
+        $this->middleware('permission:hr_advances_reject')->only(['reject']);
     }
 
     // ─────────────────────────────────────────
