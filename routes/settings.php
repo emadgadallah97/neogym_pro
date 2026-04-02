@@ -18,6 +18,10 @@ Route::group(
 
 
         });
+
+        Route::group(['namespace' => 'Application_settings'], function () {
+            Route::resource('referral_sources', 'referral_sourcescontroller');
+        });
     },
 );
 

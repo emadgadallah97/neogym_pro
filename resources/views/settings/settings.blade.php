@@ -330,6 +330,29 @@
     </div>
 </div>
 
+{{-- ⑫ طرق التعرف علينا --}}
+<div class="col">
+    <div class="card report-card h-100 shadow-sm border-0">
+        <div class="card-body d-flex flex-column text-center p-3">
+            <div class="report-icon-wrapper mx-auto mb-2">
+                <div class="avatar-title bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center report-icon-sm">
+                    <i class="ri-compass-discover-line fs-36"></i>
+                </div>
+            </div>
+            <h6 class="card-title mb-2 font">{{ trans('settings_trans.referral_sources_settings') }}</h6>
+            <p class="text-muted mb-3 small">
+                {{ trans('settings_trans.referral_sources_settings_desc') }}
+            </p>
+            <div class="mt-auto">
+                <a href="{{ route('referral_sources.index') }}" class="btn btn-soft-primary w-100 btn-sm">
+                    <i class="ri-compass-discover-line align-bottom me-1"></i>
+                    {{ trans('settings_trans.open') ?? 'فتح' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>
 
 @endsection

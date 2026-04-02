@@ -149,6 +149,14 @@ return [
     'trainer_session_pricing_desc'        => 'تحديد أسعار الحصص التدريبية لكل مدرب',
     'expenses_types_desc'                 => 'تصنيف وإدارة أنواع المصروفات في النظام',
     'income_types_desc'                   => 'تصنيف وإدارة أنواع الإيرادات في النظام',
+
+    'referral_sources_settings'      => 'إعدادات طرق التعرف علينا',
+    'referral_sources_settings_desc' => 'تعريف خيارات «من أين تعرفت علينا» لاستخدامها عند تسجيل الأعضاء',
+    'referral_sources_list'          => 'قائمة طرق التعرف علينا',
+    'add_new_referral_source'        => 'إضافة طريقة تعرف جديدة',
+    'update_referral_source'         => 'تعديل طريقة التعرف',
+    'sort_order'                     => 'ترتيب العرض',
+
     'countries_desc'    => 'إدارة قائمة الدول المتاحة في النظام',
     'governorate_desc'  => 'إدارة المحافظات التابعة لكل دولة',
     'city_desc'         => 'إدارة المدن التابعة لكل محافظة',

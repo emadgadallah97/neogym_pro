@@ -281,6 +281,14 @@ return [
     'trainer_session_pricing_desc'        => 'Set session prices for each trainer',
     'expenses_types_desc'                 => 'Classify and manage expense types in the system',
     'income_types_desc'                   => 'Classify and manage income types in the system',
+
+    'referral_sources_settings'      => 'How they heard about us — settings',
+    'referral_sources_settings_desc' => 'Define referral / discovery options for member registration',
+    'referral_sources_list'          => 'Referral sources list',
+    'add_new_referral_source'        => 'Add referral source',
+    'update_referral_source'         => 'Edit referral source',
+    'sort_order'                     => 'Display order',
+
     'countries_desc'    => 'Manage the list of available countries in the system',
     'governorate_desc'  => 'Manage governorates belonging to each country',
     'city_desc'         => 'Manage cities belonging to each governorate',
