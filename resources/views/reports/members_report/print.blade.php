@@ -347,6 +347,7 @@
 
                     $join = !empty($r->join_date) ? Carbon::parse($r->join_date)->format('Y-m-d') : '-';
                     $birth = !empty($r->birth_date) ? Carbon::parse($r->birth_date)->format('Y-m-d') : '-';
+                    $ageYears = !empty($r->birth_date) ? Carbon::parse($r->birth_date)->age : null;
 
                     $freezeRange = '-';
                     $frozenNow = $isFrozenNow($r->status ?? null, $r->freeze_from ?? null, $r->freeze_to ?? null);
@@ -400,7 +401,12 @@
 
                     <td class="wrap text-center">
                         <span class="block">{{ __('reports.mem_col_join_date') ?? 'الاشتراك' }}: {{ $join }}</span>
-                        <span class="block muted small">{{ __('reports.mem_col_birth_date') ?? 'الميلاد' }}: {{ $birth }}</span>
+                        <span class="block muted small">
+                            {{ __('reports.mem_col_birth_date') ?? 'الميلاد' }}: {{ $birth }}
+                            @if($ageYears !== null)
+                                ({{ __('reports.mem_col_age') ?? 'العمر' }}: {{ $ageYears }})
+                            @endif
+                        </span>
                     </td>
 
                     <td class="wrap">

@@ -280,6 +280,9 @@ return [
     'mem_filter_birth_date' => 'تاريخ الميلاد',
     'mem_filter_birth_date_from' => 'تاريخ الميلاد من',
     'mem_filter_birth_date_to' => 'تاريخ الميلاد إلى',
+    'mem_filter_age_from' => 'العمر من (سنوات)',
+    'mem_filter_age_to' => 'العمر إلى (سنوات)',
+    'mem_filter_age_summary' => 'العمر (سنوات)',
     'mem_filter_government' => 'المحافظة',
     'mem_filter_city' => 'المدينة',
     'mem_filter_area' => 'المنطقة',
@@ -329,6 +332,7 @@ return [
     'mem_col_dates' => 'تواريخ',
     'mem_col_join_date' => 'تاريخ الاشتراك',
     'mem_col_birth_date' => 'تاريخ الميلاد',
+    'mem_col_age' => 'العمر',
     'mem_col_freeze_range' => 'فترة التجميد',
 
     'mem_col_location' => 'الموقع',

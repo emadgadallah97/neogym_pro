@@ -96,6 +96,8 @@ class members_reportcontroller extends Controller
                 'join_date_to'   => $request->get('join_date_to'),
                 'birth_date_from' => $request->get('birth_date_from'),
                 'birth_date_to'  => $request->get('birth_date_to'),
+                'age_from'       => $request->get('age_from'),
+                'age_to'         => $request->get('age_to'),
                 'government_id'  => $request->get('government_id'),
                 'city_id'        => $request->get('city_id'),
                 'area_id'        => $request->get('area_id'),
@@ -338,6 +340,15 @@ class members_reportcontroller extends Controller
             $q->whereDate('m.birth_date', '<=', $request->get('birth_date_to'));
         }
 
+        if ($request->filled('age_from') && (int)$request->get('age_from') >= 0) {
+            $q->whereNotNull('m.birth_date')
+                ->whereRaw('TIMESTAMPDIFF(YEAR, m.birth_date, CURDATE()) >= ?', [(int)$request->get('age_from')]);
+        }
+        if ($request->filled('age_to') && (int)$request->get('age_to') >= 0) {
+            $q->whereNotNull('m.birth_date')
+                ->whereRaw('TIMESTAMPDIFF(YEAR, m.birth_date, CURDATE()) <= ?', [(int)$request->get('age_to')]);
+        }
+
         if ($request->filled('government_id')) {
             $q->where('m.id_government', (int)$request->get('government_id'));
         }
@@ -537,6 +548,12 @@ class members_reportcontroller extends Controller
             $chips[] = __('reports.mem_filter_birth_date') . ': ' .
                 ($request->get('birth_date_from') ?: '---') . ' ⟶ ' . ($request->get('birth_date_to') ?: '---');
         }
+        if ($request->filled('age_from') || $request->filled('age_to')) {
+            $chips[] = __('reports.mem_filter_age_summary') . ': ' .
+                ($request->get('age_from') !== null && $request->get('age_from') !== '' ? (string)(int)$request->get('age_from') : '---') .
+                ' ⟶ ' .
+                ($request->get('age_to') !== null && $request->get('age_to') !== '' ? (string)(int)$request->get('age_to') : '---');
+        }
 
         if ($request->filled('freeze_now')) {
             $chips[] = __('reports.mem_filter_freeze_now') . ': ' . $this->translateYesNo($request->get('freeze_now'));
@@ -657,7 +674,7 @@ class members_reportcontroller extends Controller
                 $this->translateStatus($r->status ?? null),
                 $this->translateGender($r->gender ?? null),
                 !empty($r->join_date) ? Carbon::parse($r->join_date)->format('Y-m-d') : '-',
-                !empty($r->birth_date) ? Carbon::parse($r->birth_date)->format('Y-m-d') : '-',
+                $this->formatBirthDateWithAge($r->birth_date ?? null),
                 $freezeRange,
                 $govName,
                 $cityName,
@@ -724,12 +741,45 @@ class members_reportcontroller extends Controller
     private function buildDatesBlock($join, $birth): string
     {
         $joinTxt = !empty($join) ? Carbon::parse($join)->format('Y-m-d') : '-';
-        $birthTxt = !empty($birth) ? Carbon::parse($birth)->format('Y-m-d') : '-';
+        $birthLine = $this->formatBirthDateWithAgeHtml($birth);
 
         return '<div class="d-flex flex-column">' .
             '<span class="fw-semibold">' . e(__('reports.mem_col_join_date') . ': ' . $joinTxt) . '</span>' .
-            '<small class="text-muted">' . e(__('reports.mem_col_birth_date') . ': ' . $birthTxt) . '</small>' .
+            '<small class="text-muted">' . $birthLine . '</small>' .
             '</div>';
+    }
+
+    /**
+     * عرض تاريخ الميلاد مع العمر الحالي (نص عادي لـ Excel).
+     */
+    private function formatBirthDateWithAge($birth): string
+    {
+        if (empty($birth)) {
+            return '-';
+        }
+
+        $d = Carbon::parse($birth);
+        $dateStr = $d->format('Y-m-d');
+        $age = $d->age;
+
+        return $dateStr . ' (' . __('reports.mem_col_age') . ': ' . $age . ')';
+    }
+
+    /**
+     * تاريخ الميلاد + العمر مع ترميز HTML للجدول.
+     */
+    private function formatBirthDateWithAgeHtml($birth): string
+    {
+        if (empty($birth)) {
+            return e(__('reports.mem_col_birth_date') . ': -');
+        }
+
+        $d = Carbon::parse($birth);
+        $dateStr = $d->format('Y-m-d');
+        $age = $d->age;
+
+        return e(__('reports.mem_col_birth_date') . ': ' . $dateStr) .
+            ' <span class="text-muted">(' . e(__('reports.mem_col_age')) . ': ' . e((string)$age) . ')</span>';
     }
 
     private function buildLocationBlock($gov, $city, $area): string

@@ -228,6 +228,16 @@
                 <input type="date" class="form-control" name="birth_date_to" value="{{ $filters['birth_date_to'] ?? '' }}">
             </div>
 
+            <div class="col-md-2">
+                <label class="form-label mb-1">{{ __('reports.mem_filter_age_from') ?? 'العمر من' }}</label>
+                <input type="number" class="form-control" name="age_from" value="{{ $filters['age_from'] ?? '' }}" min="0" max="150" step="1" placeholder="0">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label mb-1">{{ __('reports.mem_filter_age_to') ?? 'العمر إلى' }}</label>
+                <input type="number" class="form-control" name="age_to" value="{{ $filters['age_to'] ?? '' }}" min="0" max="150" step="1" placeholder="120">
+            </div>
+
             <div class="col-md-4">
                 <label class="form-label mb-1">{{ __('reports.mem_filter_government') ?? 'المحافظة' }}</label>
                 <select name="government_id" class="form-select select2" data-placeholder="{{ __('reports.mem_filter_government') ?? 'المحافظة' }}">
@@ -391,6 +401,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         obj.birth_date_from = $form.find('[name="birth_date_from"]').val() || '';
         obj.birth_date_to = $form.find('[name="birth_date_to"]').val() || '';
+        obj.age_from = $form.find('[name="age_from"]').val() || '';
+        obj.age_to = $form.find('[name="age_to"]').val() || '';
 
         obj.government_id = $form.find('[name="government_id"]').val() || '';
         obj.city_id = $form.find('[name="city_id"]').val() || '';
@@ -505,6 +517,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 d.birth_date_from = f.birth_date_from;
                 d.birth_date_to = f.birth_date_to;
+                d.age_from = f.age_from;
+                d.age_to = f.age_to;
 
                 d.government_id = f.government_id;
                 d.city_id = f.city_id;
