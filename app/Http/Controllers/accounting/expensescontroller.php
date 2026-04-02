@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\DB;
 
 class expensescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:expenses_view');
+        $this->middleware('permission:expenses_create', ['only' => ['store']]);
+        $this->middleware('permission:expenses_edit', ['only' => ['update']]);
+        $this->middleware('permission:expenses_delete', ['only' => ['destroy']]);
+    }
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

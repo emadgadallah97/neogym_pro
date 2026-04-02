@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\DB;
 
 class commissionscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:commissions_view');
+    }
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

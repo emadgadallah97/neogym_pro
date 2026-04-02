@@ -14,6 +14,13 @@ use App\Http\Controllers\Controller;
 
 class incomecontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:income_view');
+        $this->middleware('permission:income_create', ['only' => ['store']]);
+        $this->middleware('permission:income_edit',   ['only' => ['update']]);
+        $this->middleware('permission:income_delete', ['only' => ['destroy']]);
+    }
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

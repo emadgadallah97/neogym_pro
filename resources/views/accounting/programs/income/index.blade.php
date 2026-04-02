@@ -68,9 +68,11 @@
 
 
                     <div class="d-flex gap-2">
+                        @can('income_create')
                         <button data-bs-toggle="modal" data-bs-target="#addIncomeModal" class="btn btn-primary">
                             <i class="ri-add-line align-bottom me-1"></i> {{ trans('accounting.add_new_income') }}
                         </button>
+                        @endcan
                     </div>
                 </div>
 
@@ -366,16 +368,20 @@
                                             <i class="ri-more-fill align-middle"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
+                                            @can('income_edit')
                                             <li>
                                                 <button data-bs-toggle="modal" data-bs-target="#editIncomeModal{{ $row->id }}" class="dropdown-item">
-                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> {{ trans('accounting.edit') ?? 'Edit' }}
                                                 </button>
                                             </li>
+                                            @endcan
+                                            @can('income_delete')
                                             <li>
                                                 <button data-bs-toggle="modal" data-bs-target="#deleteIncomeModal{{ $row->id }}" class="dropdown-item">
-                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> {{ trans('accounting.delete') ?? 'Delete' }}
                                                 </button>
                                             </li>
+                                            @endcan
                                         </ul>
                                     </div>
                                 </td>

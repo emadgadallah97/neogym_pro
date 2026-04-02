@@ -64,9 +64,11 @@
                     </div>
 
                     <div class="d-flex gap-2">
+                        @can('expenses_create')
                         <button data-bs-toggle="modal" data-bs-target="#addExpenseModal" class="btn btn-primary">
                             <i class="ri-add-line align-bottom me-1"></i> {{ trans('accounting.add_new_expense') }}
                         </button>
+                        @endcan
                     </div>
                 </div>
 
@@ -329,20 +331,24 @@
                                             <i class="ri-more-fill align-middle"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
+                                            @can('expenses_edit')
                                             <li>
                                                 <button
                                                     data-expense-id="{{ $Expense->id }}"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#editExpenseModal{{ $Expense->id }}"
                                                     class="dropdown-item edit-item-btn js-open-edit-expense">
-                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> {{ trans('accounting.edit') ?? 'Edit' }}
                                                 </button>
                                             </li>
+                                            @endcan
+                                            @can('expenses_delete')
                                             <li>
                                                 <button data-bs-toggle="modal" data-bs-target="#deleteExpenseModal{{ $Expense->id }}" class="dropdown-item edit-item-btn">
-                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> {{ trans('accounting.delete') ?? 'Delete' }}
                                                 </button>
                                             </li>
+                                            @endcan
                                         </ul>
                                     </div>
                                 </td>

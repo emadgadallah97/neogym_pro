@@ -18,7 +18,51 @@ class AccountingPermissionSeeder extends Seeder
     public function run()
     {
         $permissions = [
-
+            [
+                'name'     => 'expenses_view',
+                'title'    => ['en' => 'Expenses', 'ar' => 'المصروفات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'income_view',
+                'title'    => ['en' => 'Income', 'ar' => 'الإيرادات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_view',
+                'title'    => ['en' => 'Commissions', 'ar' => 'العمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'expenses_create',
+                'title'    => ['en' => 'Add Expense', 'ar' => 'إضافة مصروف'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'expenses_edit',
+                'title'    => ['en' => 'Edit Expense', 'ar' => 'تعديل مصروف'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'expenses_delete',
+                'title'    => ['en' => 'Delete Expense', 'ar' => 'حذف مصروف'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'income_create',
+                'title'    => ['en' => 'Add Income', 'ar' => 'إضافة إيراد'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'income_edit',
+                'title'    => ['en' => 'Edit Income', 'ar' => 'تعديل إيراد'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'income_delete',
+                'title'    => ['en' => 'Delete Income', 'ar' => 'حذف إيراد'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
         ];
 
 

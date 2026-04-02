@@ -330,4 +330,6 @@ return [
   'treasury_closed_by'                 => 'أُغلقت بواسطة',
 
   'branch_not_allowed'                 => 'ليس لديك صلاحية الوصول لهذا الفرع.',
+    'edit'                    => 'تعديل',
+
 ];
