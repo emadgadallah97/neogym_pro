@@ -80,11 +80,13 @@ $branchCounts = $Members->whereNotNull('branch_id')
                     </div>
 
                     <div class="d-flex gap-2">
+                        @can('member_create')
                         <button data-bs-toggle="modal" data-bs-target="#addMemberModal"
                             class="btn btn-primary waves-effect waves-light" type="button">
                             <i class="mdi mdi-account-plus-outline"></i>
                             {{ trans('members.add_new_member') }}
                         </button>
+                        @endcan
                     </div>
                 </div>
 
@@ -344,6 +346,7 @@ $branchCounts = $Members->whereNotNull('branch_id')
                                     <div class="d-flex align-items-center gap-1 justify-content-end flex-wrap">
 
                                         {{-- View (AJAX show) --}}
+                                        @can('member_view')
                                         <button type="button"
                                             class="btn btn-sm btn-soft-info btn-icon"
                                             title="{{ trans('members.view') }}"
@@ -354,8 +357,10 @@ $branchCounts = $Members->whereNotNull('branch_id')
                                             data-show-url="{{ route('members.show', $Member->id) }}">
                                             <i class="mdi mdi-eye-outline"></i>
                                         </button>
+                                        @endcan
 
                                         {{-- Edit (AJAX show + set update action) --}}
+                                        @can('member_edit')
                                         <button type="button"
                                             class="btn btn-sm btn-soft-warning btn-icon btn-edit-member"
                                             title="{{ trans('members.edit') }}"
@@ -366,8 +371,10 @@ $branchCounts = $Members->whereNotNull('branch_id')
                                             data-show-url="{{ route('members.show', $Member->id) }}">
                                             <i class="mdi mdi-pencil-outline"></i>
                                         </button>
+                                        @endcan
 
                                         {{-- Card --}}
+                                        @can('member_card_and_qr')
                                         <a class="btn btn-sm btn-soft-primary btn-icon"
                                             title="{{ trans('members.print_card') }}"
                                             data-tooltip="1"
@@ -383,8 +390,10 @@ $branchCounts = $Members->whereNotNull('branch_id')
                                             href="{{ route('members.qr_png', $Member->id) }}">
                                             <i class="mdi mdi-qrcode"></i>
                                         </a>
+                                        @endcan
 
                                         {{-- Delete --}}
+                                        @can('member_delete')
                                         <button type="button"
                                             class="btn btn-sm btn-soft-danger btn-icon btn-delete-member"
                                             title="{{ trans('members.delete') }}"
@@ -395,6 +404,7 @@ $branchCounts = $Members->whereNotNull('branch_id')
                                             data-name="{{ $Member->first_name }} {{ $Member->last_name }}">
                                             <i class="ri-delete-bin-6-line"></i>
                                         </button>
+                                        @endcan
 
                                     </div>
                                 </td>
@@ -490,6 +500,14 @@ $branchCounts = $Members->whereNotNull('branch_id')
         saved: @json(trans('members.saved')),
         male: @json(trans('members.male')),
         female: @json(trans('members.female')),
+    };
+
+    const MEMBERS_PERMISSIONS = {
+        create: @can('member_create') true @else false @endcan,
+        view: @can('member_view') true @else false @endcan,
+        edit: @can('member_edit') true @else false @endcan,
+        delete: @can('member_delete') true @else false @endcan,
+        card_and_qr: @can('member_card_and_qr') true @else false @endcan,
     };
 
     const MEMBERS_ROUTES = @json($MEMBERS_ROUTES);
@@ -671,6 +689,21 @@ $branchCounts = $Members->whereNotNull('branch_id')
         const email = member.email ? member.email : '-';
         const showUrl = routeWithId(MEMBERS_ROUTES.show, member.id);
 
+        let actions = '';
+        if (MEMBERS_PERMISSIONS.view) {
+            actions += `<button type="button" class="btn btn-sm btn-soft-info btn-icon" title="${MEMBERS_TR.view}" data-tooltip="1" data-bs-toggle="modal" data-bs-target="#viewMemberModal" data-id="${member.id}" data-show-url="${showUrl}"><i class="mdi mdi-eye-outline"></i></button> `;
+        }
+        if (MEMBERS_PERMISSIONS.edit) {
+            actions += `<button type="button" class="btn btn-sm btn-soft-warning btn-icon btn-edit-member" title="${MEMBERS_TR.edit}" data-tooltip="1" data-bs-toggle="modal" data-bs-target="#editMemberModal" data-id="${member.id}" data-show-url="${showUrl}"><i class="mdi mdi-pencil-outline"></i></button> `;
+        }
+        if (MEMBERS_PERMISSIONS.card_and_qr) {
+            actions += `<a class="btn btn-sm btn-soft-primary btn-icon" title="${MEMBERS_TR.print_card}" data-tooltip="1" target="_blank" href="${member.card_url || routeWithId(MEMBERS_ROUTES.card, member.id)}"><i class="mdi mdi-card-account-details-outline"></i></a> `;
+            actions += `<a class="btn btn-sm btn-soft-secondary btn-icon" title="${MEMBERS_TR.download_qr_png}" data-tooltip="1" href="${member.qr_png_url || routeWithId(MEMBERS_ROUTES.qr_png, member.id)}"><i class="mdi mdi-qrcode"></i></a> `;
+        }
+        if (MEMBERS_PERMISSIONS.delete) {
+            actions += `<button type="button" class="btn btn-sm btn-soft-danger btn-icon btn-delete-member" title="${MEMBERS_TR.delete}" data-tooltip="1" data-bs-toggle="modal" data-bs-target="#deleteMemberModal" data-id="${member.id}" data-name="${member.full_name || ''}"><i class="ri-delete-bin-6-line"></i></button>`;
+        }
+
         return `
 <tr data-row-id="${member.id}">
     <td></td>
@@ -690,50 +723,7 @@ $branchCounts = $Members->whereNotNull('branch_id')
     <td>${member.join_date || ''}</td>
     <td>
         <div class="d-flex align-items-center gap-1 justify-content-end flex-wrap">
-
-            <button type="button"
-                class="btn btn-sm btn-soft-info btn-icon"
-                title="${MEMBERS_TR.view}"
-                data-tooltip="1"
-                data-bs-toggle="modal"
-                data-bs-target="#viewMemberModal"
-                data-id="${member.id}"
-                data-show-url="${showUrl}"
-            ><i class="mdi mdi-eye-outline"></i></button>
-
-            <button type="button"
-                class="btn btn-sm btn-soft-warning btn-icon btn-edit-member"
-                title="${MEMBERS_TR.edit}"
-                data-tooltip="1"
-                data-bs-toggle="modal"
-                data-bs-target="#editMemberModal"
-                data-id="${member.id}"
-                data-show-url="${showUrl}"
-            ><i class="mdi mdi-pencil-outline"></i></button>
-
-            <a class="btn btn-sm btn-soft-primary btn-icon"
-               title="${MEMBERS_TR.print_card}"
-               data-tooltip="1"
-               target="_blank"
-               href="${member.card_url || routeWithId(MEMBERS_ROUTES.card, member.id)}"
-            ><i class="mdi mdi-card-account-details-outline"></i></a>
-
-            <a class="btn btn-sm btn-soft-secondary btn-icon"
-               title="${MEMBERS_TR.download_qr_png}"
-               data-tooltip="1"
-               href="${member.qr_png_url || routeWithId(MEMBERS_ROUTES.qr_png, member.id)}"
-            ><i class="mdi mdi-qrcode"></i></a>
-
-            <button type="button"
-                class="btn btn-sm btn-soft-danger btn-icon btn-delete-member"
-                title="${MEMBERS_TR.delete}"
-                data-tooltip="1"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteMemberModal"
-                data-id="${member.id}"
-                data-name="${member.full_name || ''}"
-            ><i class="ri-delete-bin-6-line"></i></button>
-
+            ${actions || '-'}
         </div>
     </td>
 </tr>`;

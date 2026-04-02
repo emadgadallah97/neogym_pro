@@ -24,6 +24,11 @@ class memberscontroller extends Controller
     public function __construct()
     {
         $this->middleware('permission:members');
+        $this->middleware('permission:member_create', ['only' => ['store']]);
+        $this->middleware('permission:member_view', ['only' => ['show']]);
+        $this->middleware('permission:member_edit', ['only' => ['update']]);
+        $this->middleware('permission:member_delete', ['only' => ['destroy']]);
+        $this->middleware('permission:member_card_and_qr', ['only' => ['card', 'qrPng']]);
     }
     public function index()
     {

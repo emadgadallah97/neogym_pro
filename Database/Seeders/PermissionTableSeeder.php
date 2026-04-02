@@ -130,7 +130,7 @@ class PermissionTableSeeder extends Seeder
         $this->call([
             \Database\Seeders\permissions\EmployeesPermissionSeeder::class,
             \Database\Seeders\permissions\AttendancesPermissionSeeder::class,
-
+            \Database\Seeders\permissions\MembersPermissionSeeder::class,
         ]);
 
         foreach ($permissions as $permissionData) {
