@@ -355,6 +355,7 @@
 
 
                                             {{-- View --}}
+                                            @can('employee_view')
                                             <button
                                                 type="button"
                                                 class="btn btn-sm btn-soft-info btn-icon"
@@ -389,9 +390,11 @@
                                             >
                                                 <i class="mdi mdi-eye-outline"></i>
                                             </button>
+                                            @endcan
 
 
                                             {{-- Edit --}}
+                                            @can('employee_edit')
                                             <button
                                                 type="button"
                                                 class="btn btn-sm btn-soft-warning btn-icon"
@@ -426,9 +429,11 @@
                                             >
                                                 <i class="mdi mdi-pencil-outline"></i>
                                             </button>
+                                            @endcan
 
 
                                             {{-- More (Delete only) --}}
+                                            @can('employee_delete')
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-soft-secondary btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ trans('employees.more') ?? 'المزيد' }}">
                                                     <i class="ri-more-2-fill"></i>
@@ -448,6 +453,7 @@
                                                     </li>
                                                 </ul>
                                             </div>
+                                            @endcan
 
 
                                         </div>

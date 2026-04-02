@@ -26,6 +26,21 @@ class EmployeesPermissionSeeder extends Seeder
                 'title'    => ['en' => 'Create Employee',      'ar' => 'انشاء موظف'],
                 'category' => ['en' => 'employyes',        'ar' => 'الموظفين'],
             ],
+            [
+                'name'     => 'employee_view',
+                'title'    => ['en' => 'View Employee',      'ar' => 'عرض موظف'],
+                'category' => ['en' => 'employyes',        'ar' => 'الموظفين'],
+            ],
+            [
+                'name'     => 'employee_edit',
+                'title'    => ['en' => 'Edit Employee',      'ar' => 'تعديل موظف'],
+                'category' => ['en' => 'employyes',        'ar' => 'الموظفين'],
+            ],
+            [
+                'name'     => 'employee_delete',
+                'title'    => ['en' => 'Delete Employee',      'ar' => 'حذف موظف'],
+                'category' => ['en' => 'employyes',        'ar' => 'الموظفين'],
+            ],
 
 
         ];

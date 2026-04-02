@@ -16,11 +16,13 @@ use App\Traits\store\file_storage;
 class employeescontroller extends Controller
 {
     use file_storage;
-    function __construct() {
-                $this->middleware('permission:employees');
-                $this->middleware('permission:employee_create', ['only' => ['create','store']]);
-
-
+    function __construct()
+    {
+        $this->middleware('permission:employees');
+        $this->middleware('permission:employee_view', ['only' => ['show']]);
+        $this->middleware('permission:employee_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:employee_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:employee_delete', ['only' => ['destroy']]);
     }
     private function generateEmployeeCode($id): string
     {
