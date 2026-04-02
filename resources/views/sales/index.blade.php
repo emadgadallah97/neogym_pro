@@ -49,6 +49,7 @@
 @endif
 
 {{-- زر الانتقال لصفحة الاشتراكات --}}
+@can('sales_view_subscriptions')
 <div class="row mb-3">
     <div class="col-12">
         <a href="{{ route('sales.subscriptions_list') }}" class="btn btn-soft-info">
@@ -57,6 +58,7 @@
         </a>
     </div>
 </div>
+@endcan
 
 <div class="row">
     <div class="col-lg-12">

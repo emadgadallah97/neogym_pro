@@ -18,6 +18,12 @@ use Carbon\Carbon;
 
 class SubscriptionPtAddonSaleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:sales');
+        $this->middleware('permission:sales_add_pt_sessions', ['only' => ['create', 'store', 'ajaxTrainerSessionPrice', 'invoicePtPrint']]);
+    }
+
     private function assertEligible(MemberSubscription $sub): void
     {
         $status = (string)($sub->status ?? '');

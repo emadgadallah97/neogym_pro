@@ -55,8 +55,10 @@ class salescontroller extends Controller
         $this->couponEngine = $couponEngine;
         $this->commissionService = $commissionService;
         $this->availableOffersService = $availableOffersService;
-                $this->middleware('permission:sales');
-
+        
+        $this->middleware('permission:sales');
+        $this->middleware('permission:sales_view_subscriptions', ['only' => ['subscriptionsList', 'ajaxCurrentSubscriptionsTable']]);
+        $this->middleware('permission:sales_view_subscription_details', ['only' => ['show', 'ajaxSubscriptionShowModal', 'invoicePrint']]);
     }
 
     private function getBasePriceWithoutTrainer(int $branchId, int $planId): ?float
@@ -309,19 +311,23 @@ public function ajaxCurrentSubscriptionsTable(Request $request)
             && $isNotExpired
             && ($baseIncluded == 0 || $baseRemaining > 0);
 
-        $showBtn  = '<button type="button" class="btn btn-sm btn-outline-primary js-subscription-show" data-id="' . $row->id . '">'
-                    . (trans('sales.view') ?? 'عرض') . '</button>';
+        $showBtn = '';
+        if (auth()->user()->can('sales_view_subscription_details')) {
+            $showBtn  = '<button type="button" class="btn btn-sm btn-outline-primary js-subscription-show" data-id="' . $row->id . '">'
+                        . (trans('sales.view') ?? 'عرض') . '</button>';
+        }
 
         $addPtBtn = '';
-        if ($canAddPt) {
+        if ($canAddPt && auth()->user()->can('sales_add_pt_sessions')) {
             $url      = route('sales.subscriptions.pt_addons.create', $row->id);
-            $addPtBtn = ' <a href="' . $url . '" target="_blank" class="btn btn-sm btn-outline-success">'
+            $addPtBtn = ' <a href="' . $url . '" target="_blank" class="btn btn-sm btn-outline-success ms-1">'
                         . (trans('sales.add_pt') ?? 'إضافة PT') . '</a>';
         }
 
         $renewBtn = '';
+        // NOTE: Keeping renewBtn logic as is, or you might want to add a permission for it later if requested.
         if ((string)($row->status ?? '') === 'expired' && is_null($row->renewed_to)) {
-            $renewBtn = ' <button type="button" class="btn btn-sm btn-outline-warning js-subscription-renew" data-id="' . $row->id . '">'
+            $renewBtn = ' <button type="button" class="btn btn-sm btn-outline-warning ms-1 js-subscription-renew" data-id="' . $row->id . '">'
                         . (trans('sales.renew') ?? 'تجديد') . '</button>';
         }
 

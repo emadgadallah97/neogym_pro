@@ -132,6 +132,16 @@ class PermissionTableSeeder extends Seeder
             \Database\Seeders\permissions\AttendancesPermissionSeeder::class,
             \Database\Seeders\permissions\MembersPermissionSeeder::class,
             \Database\Seeders\permissions\Subscriptions_PlansPermissionSeeder::class,
+            \Database\Seeders\permissions\SalesPermissionSeeder::class,
+            \Database\Seeders\permissions\CouponsPermissionSeeder::class,
+            \Database\Seeders\permissions\OffersPermissionSeeder::class,
+            \Database\Seeders\permissions\AccountingPermissionSeeder::class,
+            \Database\Seeders\permissions\HRPermissionSeeder::class,
+            \Database\Seeders\permissions\CRMPermissionSeeder::class,
+            \Database\Seeders\permissions\UsersermissionSeeder::class,
+            \Database\Seeders\permissions\RolesermissionSeeder::class,
+            \Database\Seeders\permissions\ReportsermissionSeeder::class,
+            \Database\Seeders\permissions\SettingsPermissionSeeder::class,
         ]);
 
         foreach ($permissions as $permissionData) {

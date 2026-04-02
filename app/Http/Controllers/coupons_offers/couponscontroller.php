@@ -16,7 +16,11 @@ class couponscontroller extends Controller
 {
     public function __construct()
     {
-                $this->middleware('permission:coupons');
+        $this->middleware('permission:coupons');
+        $this->middleware('permission:coupon_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:coupon_view', ['only' => ['show']]);
+        $this->middleware('permission:coupon_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:coupon_delete', ['only' => ['destroy']]);
     }
 
     public function index()
