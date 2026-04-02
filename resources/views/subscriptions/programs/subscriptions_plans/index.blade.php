@@ -77,9 +77,11 @@
                     </div>
 
                     <div class="d-flex gap-2">
+                        @can('subscriptions_plan_create')
                         <a href="{{ route('subscriptions_plans.create') }}" class="btn btn-primary">
                             <i class="ri-add-line align-bottom me-1"></i> {{ trans('subscriptions.add_new_plan') }}
                         </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -317,15 +319,23 @@
                                 <td>{{$Plan->created_at}}</td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('subscriptions_plans.show', $Plan->id) }}" class="btn btn-soft-primary btn-sm" title="{{ trans('subscriptions.view') }}">
+                                        @can('subscriptions_plan_view')
+                                        <a href="{{ route('subscriptions_plans.show', $Plan->id) }}" class="btn btn-sm btn-soft-primary" title="{{ trans('subscriptions.view') }}">
                                             <i class="ri-eye-fill align-bottom"></i>
                                         </a>
-                                        <a href="{{ route('subscriptions_plans.edit', $Plan->id) }}" class="btn btn-soft-secondary btn-sm" title="{{ trans('subscriptions.edit') }}">
+                                        @endcan
+                                        
+                                        @can('subscriptions_plan_edit')
+                                        <a href="{{ route('subscriptions_plans.edit', $Plan->id) }}" class="btn btn-sm btn-soft-secondary" title="{{ trans('subscriptions.edit') }}">
                                             <i class="ri-pencil-fill align-bottom"></i>
                                         </a>
-                                        <button type="button" data-bs-toggle="modal" data-bs-target="#deleteModal{{$Plan->id}}" class="btn btn-soft-danger btn-sm" title="{{ trans('subscriptions.delete') }}">
+                                        @endcan
+
+                                        @can('subscriptions_plan_delete')
+                                        <button type="button" data-bs-toggle="modal" data-bs-target="#deleteModal{{$Plan->id}}" class="btn btn-sm btn-soft-danger" title="{{ trans('subscriptions.delete') }}">
                                             <i class="ri-delete-bin-fill align-bottom"></i>
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

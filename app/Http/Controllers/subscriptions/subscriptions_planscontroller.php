@@ -19,6 +19,10 @@ class subscriptions_planscontroller extends Controller
     public function __construct()
     {
         $this->middleware('permission:subscriptions');
+        $this->middleware('permission:subscriptions_plan_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:subscriptions_plan_view', ['only' => ['show']]);
+        $this->middleware('permission:subscriptions_plan_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:subscriptions_plan_delete', ['only' => ['destroy']]);
     }
     private function periodTypes()
     {
