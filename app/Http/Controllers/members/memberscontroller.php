@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\general\GeneralSetting;
 use App\Models\general\Branch;
 use App\Models\members\Member;
+use App\Models\ReferralSource;
 use App\Traits\store\file_storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -45,7 +46,14 @@ class memberscontroller extends Controller
         $Cities      = \App\models\City::orderByDesc('id')->get();
         $Areas       = \App\models\area::orderByDesc('id')->get();
 
-        return view('members.index', compact('Members', 'Branches', 'Governments', 'Cities', 'Areas'));
+        $ReferralSources = ReferralSource::query()
+            ->whereNull('deleted_at')
+            ->orderByDesc('status')
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('members.index', compact('Members', 'Branches', 'Governments', 'Cities', 'Areas', 'ReferralSources'));
     }
 
 
@@ -71,7 +79,7 @@ class memberscontroller extends Controller
 
         $this->autoUnfreezeExpiredMembers();
 
-        $member->load(['branch']);
+        $member->load(['branch', 'referralSource']);
 
         if ($request->ajax()) {
             return response()->json([
@@ -116,7 +124,7 @@ class memberscontroller extends Controller
 
         $this->autoUnfreezeExpiredMembers();
 
-        $member->load(['branch']);
+        $member->load(['branch', 'referralSource']);
 
         if ($request->ajax()) {
             return response()->json([
@@ -140,6 +148,7 @@ class memberscontroller extends Controller
             'government',
             'city',
             'area',
+            'referralSource',
         ])->findOrFail($id);
 
         $this->autoUnfreezeExpiredMembers();
@@ -251,11 +260,21 @@ class memberscontroller extends Controller
 
     private function validateMember(Request $request, $memberId = null): array
     {
+        if ($request->input('referral_source_id') === '' || $request->input('referral_source_id') === null) {
+            $request->merge(['referral_source_id' => null]);
+        }
+
         $rules = [
             'first_name' => ['required', 'string', 'max:190'],
             'last_name' => ['required', 'string', 'max:190'],
 
             'branch_id' => ['required', 'integer', 'exists:branches,id'],
+
+            'referral_source_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('referral_sources', 'id')->whereNull('deleted_at'),
+            ],
 
             'gender' => ['nullable', Rule::in(['male', 'female'])],
             'birth_date' => ['nullable', 'date'],
@@ -371,6 +390,15 @@ class memberscontroller extends Controller
             ? $member->branch->getTranslation('name', 'ar')
             : '-';
 
+        $member->loadMissing(['referralSource']);
+
+        $locale = app()->getLocale();
+        $referralName = null;
+        if ($member->referralSource) {
+            $referralName = $member->referralSource->getTranslation('name', $locale)
+                ?: $member->referralSource->getTranslation('name', 'ar');
+        }
+
         $payload = [
             'id' => $member->id,
             'member_code' => $member->member_code,
@@ -379,6 +407,8 @@ class memberscontroller extends Controller
             'full_name' => $member->full_name,
             'branch_id' => $member->branch_id,
             'branch_name' => $branchName,
+            'referral_source_id' => $member->referral_source_id,
+            'referral_source_name' => $referralName,
             'gender' => $member->gender,
             'birth_date' => optional($member->birth_date)->format('Y-m-d'),
             'phone' => $member->phone,
@@ -412,7 +442,6 @@ class memberscontroller extends Controller
             $payload['area_name'] = $member->area ? $member->area->getTranslation('name', 'ar') : '-';
 
             // ── Subscriptions ──
-            $locale = app()->getLocale();
             $subs = \Illuminate\Support\Facades\DB::table('member_subscriptions')
                 ->where('member_id', $member->id)
                 ->whereNull('deleted_at')

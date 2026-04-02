@@ -134,6 +134,12 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
+                                        <div class="p-2 border rounded bg-light">
+                                            <small class="text-muted">{{ trans('members.referral_source') }}</small>
+                                            <div class="fw-semibold" id="viewMemberReferralSource">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="p-2 border rounded">
                                             <small class="text-muted">{{ trans('members.gender') }}</small>
                                             <div class="fw-semibold" id="viewMemberGender">-</div>

@@ -52,6 +52,7 @@ return [
     'allergies' => 'حساسية',
     'notes' => 'ملاحظات',
     'national_id' => 'الرقم القومي',
+    'referral_source' => 'من أين تعرفت علينا',
 
     'photo' => 'الصورة',
     'view_photo' => 'عرض الصورة',

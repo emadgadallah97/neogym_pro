@@ -304,14 +304,15 @@
         <table>
             <colgroup>
                 <col style="width:3%">
-                <col style="width:14%">
-                <col style="width:9%">
+                <col style="width:12%">
+                <col style="width:8%">
+                <col style="width:8%">
                 <col style="width:7%">
                 <col style="width:6%">
-                <col style="width:10%">
-                <col style="width:16%">
                 <col style="width:9%">
-                <col style="width:16%">
+                <col style="width:14%">
+                <col style="width:8%">
+                <col style="width:14%">
                 <col style="width:10%">
             </colgroup>
             <thead>
@@ -319,6 +320,7 @@
                 <th>#</th>
                 <th>{{ __('reports.mem_col_member') ?? 'العضو' }}</th>
                 <th>{{ __('reports.mem_col_branch') ?? 'الفرع' }}</th>
+                <th>{{ __('reports.mem_col_referral_source') ?? 'من أين تعرفت علينا' }}</th>
                 <th>{{ __('reports.mem_col_status') ?? 'الحالة' }}</th>
                 <th>{{ __('reports.mem_col_gender') ?? 'النوع' }}</th>
                 <th>{{ __('reports.mem_col_dates') ?? 'تواريخ' }}</th>
@@ -332,6 +334,7 @@
             @forelse($rows as $i => $r)
                 @php
                     $branchName = $nameJsonOrText($r->branch_name ?? null) ?: '-';
+                    $referralPrintName = $nameJsonOrText($r->referral_source_name ?? null) ?: '-';
                     $govName = $nameJsonOrText($r->gov_name ?? null) ?: '-';
                     $cityName = $nameJsonOrText($r->city_name ?? null) ?: '-';
                     $areaName = $nameJsonOrText($r->area_name ?? null) ?: '-';
@@ -381,6 +384,8 @@
 
                     <td class="wrap text-center">{{ $branchName }}</td>
 
+                    <td class="wrap text-center">{{ $referralPrintName }}</td>
+
                     <td class="wrap text-center">
                         <span class="{{ $statusBadge }}">{{ $statusLbl }}</span>
                         @if(($r->status ?? '') === 'frozen')
@@ -419,7 +424,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center" style="padding:18px;color:#999">
+                    <td colspan="11" class="text-center" style="padding:18px;color:#999">
                         {{ __('reports.no_results') ?? 'لا توجد نتائج' }}
                     </td>
                 </tr>

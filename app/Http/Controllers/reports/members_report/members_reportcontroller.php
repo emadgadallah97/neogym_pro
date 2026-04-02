@@ -5,7 +5,7 @@ namespace App\Http\Controllers\reports\members_report;
 use App\Http\Controllers\Controller;
 use App\Models\general\Branch;
 use App\Models\general\GeneralSetting;
-use App\Models\members\Member;
+use App\Models\ReferralSource;
 use App\models\government;
 use App\models\City;
 use App\models\area;
@@ -53,6 +53,13 @@ class members_reportcontroller extends Controller
         $cities      = City::query()->select('id', 'name', 'id_government')->whereNull('deleted_at')->orderByDesc('id')->get();
         $areas       = area::query()->select('id', 'name', 'id_city')->whereNull('deleted_at')->orderByDesc('id')->get();
 
+        $referralSources = ReferralSource::query()
+            ->whereNull('deleted_at')
+            ->orderByDesc('status')
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+
         $kpis = [
             'total'          => 0,
             'active'         => 0,
@@ -77,12 +84,14 @@ class members_reportcontroller extends Controller
             'governments' => $governments,
             'cities'      => $cities,
             'areas'       => $areas,
+            'referralSources' => $referralSources,
             'kpis'        => $kpis,
             'filters'     => [
                 'member_term'    => $request->get('member_term'),
                 'branch_ids'     => (array)$request->get('branch_ids', []),
                 'status'         => $request->get('status'),
                 'gender'         => $request->get('gender'),
+                'referral_source_id' => $request->get('referral_source_id'),
                 'join_date_from' => $request->get('join_date_from'),
                 'join_date_to'   => $request->get('join_date_to'),
                 'birth_date_from' => $request->get('birth_date_from'),
@@ -133,17 +142,18 @@ class members_reportcontroller extends Controller
         $columnsMap = [
             0  => 'm.first_name',
             1  => 'b.name',
-            2  => 'm.status',
-            3  => 'm.gender',
-            4  => 'm.join_date',
-            5  => 'm.birth_date',
-            6  => 'g.name',
-            7  => 'c.name',
-            8  => 'a.name',
-            9  => 'm.height',
-            10 => 'm.weight',
-            11 => 'ua.name',
-            12 => 'm.id',
+            2  => 'm.referral_source_id',
+            3  => 'm.status',
+            4  => 'm.gender',
+            5  => 'm.join_date',
+            6  => 'm.birth_date',
+            7  => 'g.name',
+            8  => 'c.name',
+            9  => 'a.name',
+            10 => 'm.height',
+            11 => 'm.weight',
+            12 => 'ua.name',
+            13 => 'm.id',
         ];
 
         $orderBy = $columnsMap[$orderColIndex] ?? 'm.id';
@@ -159,6 +169,7 @@ class members_reportcontroller extends Controller
         $data = [];
         foreach ($rows as $idx => $r) {
             $branchName = $this->nameJsonOrText($r->branch_name ?? null, $locale) ?: '-';
+            $referralName = $this->nameJsonOrText($r->referral_source_name ?? null, $locale) ?: '-';
             $govName = $this->nameJsonOrText($r->gov_name ?? null, $locale) ?: '-';
             $cityName = $this->nameJsonOrText($r->city_name ?? null, $locale) ?: '-';
             $areaName = $this->nameJsonOrText($r->area_name ?? null, $locale) ?: '-';
@@ -177,6 +188,8 @@ class members_reportcontroller extends Controller
                 ),
 
                 'branch' => $branchName,
+
+                'referral_source' => $referralName,
 
                 'status_block' => $this->buildStatusBlock($r->status ?? null, $r->freeze_from ?? null, $r->freeze_to ?? null),
 
@@ -219,6 +232,9 @@ class members_reportcontroller extends Controller
                 $j->on('a.id', '=', 'm.id_area')->whereNull('a.deleted_at');
             })
             ->leftJoin('users as ua', 'ua.id', '=', 'm.user_add')
+            ->leftJoin('referral_sources as rs', function ($j) {
+                $j->on('rs.id', '=', 'm.referral_source_id')->whereNull('rs.deleted_at');
+            })
             ->select([
                 'm.id',
                 'm.member_code',
@@ -247,6 +263,7 @@ class members_reportcontroller extends Controller
                 'm.user_add',
 
                 'b.name as branch_name',
+                'rs.name as referral_source_name',
                 'g.name as gov_name',
                 'c.name as city_name',
                 'a.name as area_name',
@@ -297,6 +314,13 @@ class members_reportcontroller extends Controller
             $g = $this->normalizeGender($request->get('gender'));
             if (!empty($g)) {
                 $q->where('m.gender', $g);
+            }
+        }
+
+        if ($request->filled('referral_source_id')) {
+            $rid = (int)$request->get('referral_source_id');
+            if ($rid > 0) {
+                $q->where('m.referral_source_id', $rid);
             }
         }
 
@@ -393,6 +417,7 @@ class members_reportcontroller extends Controller
                 ->orWhere('g.name', 'like', $like)
                 ->orWhere('c.name', 'like', $like)
                 ->orWhere('a.name', 'like', $like)
+                ->orWhere('rs.name', 'like', $like)
                 ->orWhere(DB::raw("COALESCE(ua.name,'')"), 'like', $like);
         });
     }
@@ -482,6 +507,12 @@ class members_reportcontroller extends Controller
         if ($request->filled('status')) $chips[] = __('reports.mem_filter_status') . ': ' . $this->translateStatus($request->get('status'));
         if ($request->filled('gender')) $chips[] = __('reports.mem_filter_gender') . ': ' . $this->translateGender($request->get('gender'));
 
+        if ($request->filled('referral_source_id') && (int)$request->get('referral_source_id') > 0) {
+            $rs = ReferralSource::query()->where('id', (int)$request->get('referral_source_id'))->first();
+            $rsn = $rs ? $this->nameJsonOrText($rs->name ?? null, app()->getLocale()) : '';
+            $chips[] = __('reports.mem_filter_referral_source') . ': ' . ($rsn ?: '---');
+        }
+
         if ($request->filled('government_id')) {
             $g  = government::query()->where('id', (int)$request->get('government_id'))->first();
             $gn = $g ? (method_exists($g, 'getTranslation') ? $g->getTranslation('name', app()->getLocale()) : ($g->name ?? '')) : '';
@@ -560,6 +591,7 @@ class members_reportcontroller extends Controller
             __('reports.mem_col_member_code'),
             __('reports.mem_col_name'),
             __('reports.mem_col_branch'),
+            __('reports.mem_col_referral_source'),
             __('reports.mem_col_status'),
             __('reports.mem_col_gender'),
             __('reports.mem_col_join_date'),
@@ -607,6 +639,7 @@ class members_reportcontroller extends Controller
             $memberName = trim(($r->first_name ?? '') . ' ' . ($r->last_name ?? '')) ?: '-';
 
             $branchName = $this->nameJsonOrText($r->branch_name ?? null, $locale) ?: '-';
+            $referralExcelName = $this->nameJsonOrText($r->referral_source_name ?? null, $locale) ?: '-';
             $govName = $this->nameJsonOrText($r->gov_name ?? null, $locale) ?: '-';
             $cityName = $this->nameJsonOrText($r->city_name ?? null, $locale) ?: '-';
             $areaName = $this->nameJsonOrText($r->area_name ?? null, $locale) ?: '-';
@@ -620,6 +653,7 @@ class members_reportcontroller extends Controller
                 $r->member_code ?: '-',
                 $memberName,
                 $branchName,
+                $referralExcelName,
                 $this->translateStatus($r->status ?? null),
                 $this->translateGender($r->gender ?? null),
                 !empty($r->join_date) ? Carbon::parse($r->join_date)->format('Y-m-d') : '-',

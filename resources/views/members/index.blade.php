@@ -3,8 +3,19 @@
 @section('title')
 {{ trans('main_trans.title') }}
 @stop
-
 @section('content')
+
+<style>
+    #addMemberModal .select2-container,
+    #editMemberModal .select2-container {
+        width: 100% !important;
+    }
+    #addMemberModal .select2-dropdown,
+    #editMemberModal .select2-dropdown {
+        z-index: 10055;
+    }
+</style>
+
 
 @php
 $CITIES_JS = $Cities->map(function ($c) {
@@ -442,6 +453,7 @@ $branchCounts = $Members->whereNotNull('branch_id')
 'Governments' => $Governments,
 'Cities' => $Cities,
 'Areas' => $Areas,
+'ReferralSources' => $ReferralSources,
 ])
 
 {{-- Edit Modal --}}
@@ -460,6 +472,7 @@ $branchCounts = $Members->whereNotNull('branch_id')
 'Governments' => $Governments,
 'Cities' => $Cities,
 'Areas' => $Areas,
+'ReferralSources' => $ReferralSources,
 ])
 
 <script>
@@ -619,6 +632,10 @@ $branchCounts = $Members->whereNotNull('branch_id')
                         form.reset();
                         initFreezeToggle(form);
                         initGeo(form);
+                        var $addRs = $('#addReferralSourceId');
+                        if ($addRs.length && $addRs.hasClass('select2-hidden-accessible')) {
+                            $addRs.val('').trigger('change');
+                        }
                     }
                 },
                 error: function(xhr) {
@@ -722,6 +739,41 @@ $branchCounts = $Members->whereNotNull('branch_id')
 </tr>`;
     }
 
+    function destroyMemberReferralSelect2($el) {
+        if (typeof $ === 'undefined' || !$el || !$el.length) return;
+        if ($el.hasClass('select2-hidden-accessible')) {
+            $el.select2('destroy');
+        }
+    }
+
+    function initMemberReferralSelect2() {
+        if (typeof $ === 'undefined' || !$.fn || !$.fn.select2) return;
+
+        var $add = $('#addReferralSourceId');
+        var $edit = $('#editReferralSourceId');
+        destroyMemberReferralSelect2($add);
+        destroyMemberReferralSelect2($edit);
+
+        var rtl = @json(app()->getLocale() === 'ar');
+        function opts($modal) {
+            return {
+                width: '100%',
+                dir: rtl ? 'rtl' : 'ltr',
+                placeholder: MEMBERS_TR.choose,
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                dropdownParent: $modal.length ? $modal : $(document.body)
+            };
+        }
+
+        if ($add.length) {
+            $add.select2(opts($('#addMemberModal')));
+        }
+        if ($edit.length) {
+            $edit.select2(opts($('#editMemberModal')));
+        }
+    }
+
     function fetchMember(url, onSuccess) {
         if (!url) return;
 
@@ -747,6 +799,8 @@ $branchCounts = $Members->whereNotNull('branch_id')
             initFreezeToggle(f);
             initGeo(f);
         });
+
+        initMemberReferralSelect2();
 
         // DataTable
         let dt = null;
@@ -912,6 +966,9 @@ $branchCounts = $Members->whereNotNull('branch_id')
 
                     document.getElementById('viewMemberNationalId').textContent = m.national_id || '-';
 
+                    const refEl = document.getElementById('viewMemberReferralSource');
+                    if (refEl) refEl.textContent = m.referral_source_name || '-';
+
                     document.getElementById('viewMemberMedical').textContent = m.medical_conditions || '-';
                     document.getElementById('viewMemberAllergies').textContent = m.allergies || '-';
                     document.getElementById('viewMemberNotes').textContent = m.notes || '-';
@@ -1067,6 +1124,13 @@ $branchCounts = $Members->whereNotNull('branch_id')
 
                     // Raqm Qawmi
                     $('#editNationalId').val(m.national_id || '');
+
+                    var $editRs = $('#editReferralSourceId');
+                    if ($editRs.length && $editRs.hasClass('select2-hidden-accessible')) {
+                        $editRs.val(m.referral_source_id ? String(m.referral_source_id) : '').trigger('change');
+                    } else {
+                        $editRs.val(m.referral_source_id ? String(m.referral_source_id) : '');
+                    }
 
                     // Emergency contacts
                     const emgData = m.emergency_contacts || [];

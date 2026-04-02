@@ -1,4 +1,5 @@
 @php
+    $ReferralSources = $ReferralSources ?? collect();
     $mode = $mode ?? 'add';
     $modalId = $modalId ?? 'memberModal';
     $headerClass = $headerClass ?? 'bg-soft-primary';
@@ -153,6 +154,19 @@
                                            id="{{ $mode === 'edit' ? 'editNationalId' : 'addNationalId' }}"
                                            maxlength="30"
                                            placeholder="01234567890123">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ trans('members.referral_source') }}</label>
+                                    <select class="form-select select2 js-member-referral-source"
+                                            name="referral_source_id"
+                                            id="{{ $mode === 'edit' ? 'editReferralSourceId' : 'addReferralSourceId' }}"
+                                            data-placeholder="{{ trans('settings_trans.choose') }}">
+                                        <option value="">{{ trans('settings_trans.choose') }}</option>
+                                        @foreach($ReferralSources as $rs)
+                                            <option value="{{ $rs->id }}">{{ $rs->getTranslation('name', app()->getLocale()) }}@if(!$rs->status) ({{ trans('settings_trans.inactive') }})@endif</option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
                                 <div class="col-md-6 mb-3">

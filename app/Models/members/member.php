@@ -19,6 +19,7 @@ class Member extends Model
         'member_code',
         'device_user_id',
         'branch_id',
+        'referral_source_id',
         'first_name',
         'last_name',
         'gender',
@@ -111,6 +112,11 @@ class Member extends Model
     public function branch()
     {
         return $this->belongsTo(\App\Models\general\Branch::class, 'branch_id');
+    }
+
+    public function referralSource()
+    {
+        return $this->belongsTo(\App\Models\ReferralSource::class, 'referral_source_id');
     }
 
     public function government()

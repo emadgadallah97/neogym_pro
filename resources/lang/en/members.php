@@ -5,6 +5,7 @@ return [
   'date_join' => 'Join date',
 
   'national_id' => 'National ID',
+  'referral_source' => 'How did you hear about us?',
 
   // Tabs
   'tab_basic'       => 'Basic',

@@ -192,6 +192,22 @@
                 </select>
             </div>
 
+            <div class="col-md-4">
+                <label class="form-label mb-1">{{ __('reports.mem_filter_referral_source') ?? 'من أين تعرفت علينا' }}</label>
+                <select name="referral_source_id" id="filterReferralSource" class="form-select select2"
+                        data-placeholder="{{ __('reports.mem_filter_referral_source') ?? 'من أين تعرفت علينا' }}">
+                    <option value="">{{ __('reports.mem_all') ?? 'الكل' }}</option>
+                    @foreach($referralSources as $rs)
+                        @php
+                            $rsn = method_exists($rs,'getTranslation') ? $rs->getTranslation('name', app()->getLocale()) : ($rs->name ?? '');
+                        @endphp
+                        <option value="{{ $rs->id }}" {{ (string)($filters['referral_source_id'] ?? '') === (string)$rs->id ? 'selected' : '' }}>
+                            {{ $rsn }}@if(!$rs->status) ({{ __('settings_trans.inactive') ?? 'غير نشط' }})@endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="col-md-3">
                 <label class="form-label mb-1">{{ __('reports.mem_filter_join_date_from') ?? 'تاريخ الاشتراك من' }}</label>
                 <input type="date" class="form-control" name="join_date_from" value="{{ $filters['join_date_from'] ?? '' }}">
@@ -337,6 +353,7 @@
                 <tr>
                     <th>{{ __('reports.mem_col_member') ?? 'بيانات العضو' }}</th>
                     <th>{{ __('reports.mem_col_branch') ?? 'الفرع' }}</th>
+                    <th>{{ __('reports.mem_col_referral_source') ?? 'من أين تعرفت علينا' }}</th>
                     <th>{{ __('reports.mem_col_status') ?? 'الحالة' }}</th>
                     <th>{{ __('reports.mem_col_gender') ?? 'النوع' }}</th>
                     <th>{{ __('reports.mem_col_dates') ?? 'تواريخ' }}</th>
@@ -367,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         obj.status = $form.find('[name="status"]').val() || '';
         obj.gender = $form.find('[name="gender"]').val() || '';
+        obj.referral_source_id = $form.find('[name="referral_source_id"]').val() || '';
 
         obj.join_date_from = $form.find('[name="join_date_from"]').val() || '';
         obj.join_date_to = $form.find('[name="join_date_to"]').val() || '';
@@ -480,6 +498,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 d.status = f.status;
                 d.gender = f.gender;
+                d.referral_source_id = f.referral_source_id;
 
                 d.join_date_from = f.join_date_from;
                 d.join_date_to = f.join_date_to;
@@ -503,11 +522,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
         columnDefs: [
-            { targets: [0, 2, 4, 5, 6, 7], className: 'dt-cell-wrap' }
+            { targets: [0, 2, 3, 5, 6, 7, 8], className: 'dt-cell-wrap' }
         ],
         columns: [
             { data: 'member_block', name: 'member_block' },
             { data: 'branch', name: 'branch' },
+            { data: 'referral_source', name: 'referral_source' },
             { data: 'status_block', name: 'status_block' },
             { data: 'gender_text', name: 'gender_text' },
             { data: 'dates_block', name: 'dates_block' },
