@@ -83,9 +83,11 @@
                     <i class="ri-filter-3-line me-1"></i> {{ trans('hr.filter') }}
                 </button>
 
+                @can('hr_allowances_create')
                 <button type="button" class="btn btn-success font" id="btnOpenAdd">
                     <i class="ri-add-line me-1"></i> {{ trans('hr.add_allowance') ?? 'إضافة' }}
                 </button>
+                @endcan
             </div>
 
         </div>
@@ -147,23 +149,28 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
 
+                                    @can('hr_allowances_edit')
                                     <li>
                                         <button type="button" class="dropdown-item btn-edit" data-id="{{ $r->id }}">
                                             <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                             {{ trans('hr.edit') }}
                                         </button>
                                     </li>
+                                    @endcan
 
                                     @if($r->status === 'pending')
+                                        @can('hr_allowances_approve')
                                         <li>
                                             <button type="button" class="dropdown-item text-success btn-approve" data-id="{{ $r->id }}">
                                                 <i class="ri-check-line align-bottom me-2"></i>
                                                 {{ trans('hr.approve') ?? 'اعتماد' }}
                                             </button>
                                         </li>
+                                        @endcan
                                     @endif
 
                                     @if($r->status !== 'applied' && empty($r->payroll_id))
+                                        @can('hr_allowances_delete')
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <button type="button" class="dropdown-item text-danger btn-delete"
@@ -173,6 +180,7 @@
                                                 {{ trans('hr.delete') }}
                                             </button>
                                         </li>
+                                        @endcan
                                     @endif
 
                                 </ul>
@@ -286,6 +294,11 @@
 
 <script>
 $(document).ready(function () {
+    
+    // permissions for JS
+    var canEdit    = {{ auth()->user()->can('hr_allowances_edit')    ? 'true' : 'false' }};
+    var canApprove = {{ auth()->user()->can('hr_allowances_approve') ? 'true' : 'false' }};
+    var canDelete  = {{ auth()->user()->can('hr_allowances_delete')  ? 'true' : 'false' }};
 
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
 
@@ -364,18 +377,20 @@ $(document).ready(function () {
                 '<button class="btn btn-soft-secondary btn-sm" type="button" data-bs-toggle="dropdown">' +
                     '<i class="ri-more-fill align-middle"></i>' +
                 '</button>' +
-                '<ul class="dropdown-menu dropdown-menu-end">' +
-                    '<li><button type="button" class="dropdown-item btn-edit" data-id="'+d.id+'">' +
-                        '<i class="ri-pencil-fill align-bottom me-2 text-muted"></i>{{ trans('hr.edit') }}' +
-                    '</button></li>';
+                '<ul class="dropdown-menu dropdown-menu-end">';
+        if (canEdit) {
+            html += '<li><button type="button" class="dropdown-item btn-edit" data-id="'+d.id+'">' +
+                    '<i class="ri-pencil-fill align-bottom me-2 text-muted"></i>{{ trans('hr.edit') }}' +
+                '</button></li>';
+        }
 
-        if (d.status === 'pending') {
+        if (d.status === 'pending' && canApprove) {
             html += '<li><button type="button" class="dropdown-item text-success btn-approve" data-id="'+d.id+'">' +
                 '<i class="ri-check-line align-bottom me-2"></i>{{ trans('hr.approve') ?? 'اعتماد' }}' +
             '</button></li>';
         }
 
-        if (d.status !== 'applied' && !d.payroll_id) {
+        if (d.status !== 'applied' && !d.payroll_id && canDelete) {
             html += '<li><hr class="dropdown-divider"></li>' +
                 '<li><button type="button" class="dropdown-item text-danger btn-delete" data-id="'+d.id+'" data-name="'+(d.employee_name||'')+'">' +
                     '<i class="ri-delete-bin-fill align-bottom me-2"></i>{{ trans('hr.delete') }}' +

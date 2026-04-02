@@ -108,6 +108,26 @@ class HRPermissionSeeder extends Seeder
                 'title'    => ['en' => 'Deductions - Delete', 'ar' => 'حذف خصم/جزاء'],
                 'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
             ],
+            [
+                'name'     => 'hr_allowances_create',
+                'title'    => ['en' => 'Allowances - Create', 'ar' => 'إضافة مكافأة/بدل'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_allowances_edit',
+                'title'    => ['en' => 'Allowances - Edit', 'ar' => 'تعديل مكافأة/بدل'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_allowances_approve',
+                'title'    => ['en' => 'Allowances - Approve', 'ar' => 'اعتماد مكافأة/بدل'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
+            [
+                'name'     => 'hr_allowances_delete',
+                'title'    => ['en' => 'Allowances - Delete', 'ar' => 'حذف مكافأة/بدل'],
+                'category' => ['en' => 'human_resources', 'ar' => 'الموارد البشرية'],
+            ],
         ];
 
 

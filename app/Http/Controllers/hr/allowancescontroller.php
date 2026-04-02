@@ -16,7 +16,11 @@ class allowancescontroller extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:hr_allowances_view');
+        $this->middleware('permission:hr_allowances_view')->only(['index', 'show', 'employeesByBranch']);
+        $this->middleware('permission:hr_allowances_create')->only(['store']);
+        $this->middleware('permission:hr_allowances_edit')->only(['update']);
+        $this->middleware('permission:hr_allowances_delete')->only(['destroy']);
+        $this->middleware('permission:hr_allowances_approve')->only(['approve']);
     }
 
     // ─────────────────────────────────────────
