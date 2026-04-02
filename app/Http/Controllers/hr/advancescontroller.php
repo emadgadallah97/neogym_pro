@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\Validator;
 
 class advancescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_advances_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────

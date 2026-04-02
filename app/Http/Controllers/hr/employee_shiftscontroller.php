@@ -17,6 +17,11 @@ use Illuminate\Validation\Rule;
 
 class employee_shiftscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_employee_shifts_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────

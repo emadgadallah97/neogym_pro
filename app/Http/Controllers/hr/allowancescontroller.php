@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Log;
 
 class allowancescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_allowances_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────

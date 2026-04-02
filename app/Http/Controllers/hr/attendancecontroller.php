@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\Log;
 
 class attendancecontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_attendance_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────

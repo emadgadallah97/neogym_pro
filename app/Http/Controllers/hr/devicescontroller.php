@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Auth;
 
 class devicescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_devices_view');
+    }
+
     public function index()
     {
         // ✅ إعدادات — يرى كل الأجهزة بغض النظر عن الفرع

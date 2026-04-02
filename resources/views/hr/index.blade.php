@@ -87,6 +87,7 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-4 g-3 gy-4">
 
     {{-- ① الحضور والانصراف --}}
+    @can('hr_attendance_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -109,9 +110,11 @@
             </div>
         </div>
     </div>
+    @endcan
 
 
     {{-- ② السلف --}}
+    @can('hr_advances_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -134,8 +137,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ③ الخصومات والجزاءات --}}
+    @can('hr_deductions_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -158,8 +163,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ④ الإضافي  --}}
+    @can('hr_overtime_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -182,8 +189,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ④ المكافاءات والبدلات  --}}
+    @can('hr_allowances_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -206,7 +215,9 @@
             </div>
         </div>
     </div>
+    @endcan
     {{-- ⑤ كشف وصرف الرواتب --}}
+    @can('hr_payrolls_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -229,8 +240,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑥ أجهزة الحضور --}}
+    @can('hr_devices_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -253,9 +266,11 @@
             </div>
         </div>
     </div>
+    @endcan
 
 
     {{-- ⑧ الموظفون --}}
+    @can('employees')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -278,7 +293,9 @@
             </div>
         </div>
     </div>
+    @endcan
     {{-- ⑨ الورديات --}}
+    @can('hr_shifts_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -301,8 +318,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑩ ورديات الموظفين (إسناد الورديات) --}}
+    @can('hr_employee_shifts_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -325,6 +344,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
 
 </div>

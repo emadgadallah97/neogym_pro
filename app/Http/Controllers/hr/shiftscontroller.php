@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class shiftscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_shifts_view');
+    }
+
     public function index()
     {
         $shifts = HrShift::orderByDesc('id')->get();

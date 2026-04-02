@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Log;
 
 class deductionscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_deductions_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────

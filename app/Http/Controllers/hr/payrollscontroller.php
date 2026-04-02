@@ -22,6 +22,11 @@ use Illuminate\Support\Facades\Log;
 
 class payrollscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_payrolls_view');
+    }
+
     private const AUTO_ATTENDANCE_NOTES = 'AUTO_ATTENDANCE_DEDUCTION';
     private const WORK_DAYS             = 26;
     private const AUTO_OT_TAG           = 'AUTO_OT_FROM_PAYROLL';

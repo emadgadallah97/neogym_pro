@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Log;
 
 class overtimecontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:hr_overtime_view');
+    }
+
     // ─────────────────────────────────────────
     // Helpers — Branch Access
     // ─────────────────────────────────────────
