@@ -18,6 +18,8 @@ class employeescontroller extends Controller
     use file_storage;
     function __construct() {
                 $this->middleware('permission:employees');
+                $this->middleware('permission:employee_create', ['only' => ['create','store']]);
+
 
     }
     private function generateEmployeeCode($id): string

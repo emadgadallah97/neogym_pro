@@ -37,9 +37,11 @@
 
 
                     <div class="d-flex gap-2">
+                        @can('employee_create')
                         <button data-bs-toggle="modal" data-bs-target="#addEmployeeModal" class="btn btn-primary waves-effect waves-light" type="button">
                             <i class="mdi mdi-account-plus-outline"></i> {{ trans('employees.add_new_employee') }}
                         </button>
+                        @endcan
                     </div>
                 </div>
 

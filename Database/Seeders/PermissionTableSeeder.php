@@ -128,7 +128,7 @@ class PermissionTableSeeder extends Seeder
         ];
 
         $this->call([
-            // \Database\Seeders\permissions\OutpatientPermissionSeeder::class,
+            \Database\Seeders\permissions\EmployeesPermissionSeeder::class,
         ]);
 
         foreach ($permissions as $permissionData) {
