@@ -16,7 +16,11 @@ class deductionscontroller extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:hr_deductions_view');
+        $this->middleware('permission:hr_deductions_view')->only(['index', 'show', 'employeesByBranch']);
+        $this->middleware('permission:hr_deductions_create')->only(['store']);
+        $this->middleware('permission:hr_deductions_edit')->only(['update']);
+        $this->middleware('permission:hr_deductions_delete')->only(['destroy']);
+        $this->middleware('permission:hr_deductions_approve')->only(['approve']);
     }
 
     // ─────────────────────────────────────────
