@@ -84,5 +84,8 @@ return [
     'guests' => 'الضيوف',
 
     'notes' => 'ملاحظات',
+        'confirm_cancel_attendance' => 'تأكيد الغاء الحضور',
+    'confirm_cancel_pt' => 'تاكيد الغاء حضور الحصه الخاصه فقط !',
+
 
 ];

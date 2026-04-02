@@ -22,6 +22,9 @@ class attendancescontroller extends Controller
     {
         $this->service = $service;
         $this->middleware('permission:attendance');
+        $this->middleware('permission:attendance_cancel', ['only' => ['cancel']]);
+        $this->middleware('permission:attendance_pt_cancel', ['only' => ['cancelPt']]);
+        $this->middleware('permission:attendance_guest_add', ['only' => ['storeGuest']]);
 
     }
     // ─────────────────────────────────────────────────────────────
@@ -303,33 +306,42 @@ class attendancescontroller extends Controller
             if (!$row->is_cancelled) {
                 $actions = '';
 
+                // Cancel PT
                 if ((int)$row->is_pt_deducted === 1 && !empty($row->pt_addon_id)) {
-                    $actions .= '<form method="POST" action="' . e(route('attendances.actions.cancel_pt', $row->id)) . '" style="display:inline;" onsubmit="return confirm(\'' . e(trans('attendances.confirm_cancel_pt') ?: 'Cancel PT deduction?') . '\');">'
+                    if (Auth::user()->can('attendance_pt_cancel')) {
+                        $actions .= '<form method="POST" action="' . e(route('attendances.actions.cancel_pt', $row->id)) . '" style="display:inline;" onsubmit="return confirm(\'' . e(trans('attendances.confirm_cancel_pt') ?: 'Cancel PT deduction?') . '\');">'
+                            . csrf_field()
+                            . '<button type="submit" class="btn btn-sm btn-warning">' . e(trans('attendances.cancel_pt')) . '</button>'
+                            . '</form> ';
+                    }
+                }
+
+                // Cancel Attendance
+                if (Auth::user()->can('attendance_cancel')) {
+                    $actions .= '<form method="POST" action="' . e(route('attendances.actions.cancel', $row->id)) . '" style="display:inline;" onsubmit="return confirm(\'' . e(trans('attendances.confirm_cancel_attendance') ?: 'Cancel attendance?') . '\');">'
                         . csrf_field()
-                        . '<button type="submit" class="btn btn-sm btn-warning">' . e(trans('attendances.cancel_pt')) . '</button>'
+                        . '<button type="submit" class="btn btn-sm btn-danger">' . e(trans('attendances.cancel_attendance')) . '</button>'
                         . '</form> ';
                 }
 
-                $actions .= '<form method="POST" action="' . e(route('attendances.actions.cancel', $row->id)) . '" style="display:inline;" onsubmit="return confirm(\'' . e(trans('attendances.confirm_cancel_attendance') ?: 'Cancel attendance?') . '\');">'
-                    . csrf_field()
-                    . '<button type="submit" class="btn btn-sm btn-danger">' . e(trans('attendances.cancel_attendance')) . '</button>'
-                    . '</form> ';
+                // Add Guest
+                if (Auth::user()->can('attendance_guest_add')) {
+                    $actions .= '<button type="button" class="btn btn-sm btn-primary" onclick="var el=document.getElementById(\'guest_form_' . e((string)$row->id) . '\'); if(el){el.style.display=\'block\';}">'
+                        . e(trans('attendances.add_guest'))
+                        . '</button>';
 
-                $actions .= '<button type="button" class="btn btn-sm btn-primary" onclick="var el=document.getElementById(\'guest_form_' . e((string)$row->id) . '\'); if(el){el.style.display=\'block\';}">'
-                    . e(trans('attendances.add_guest'))
-                    . '</button>';
+                    $actions .= '<div id="guest_form_' . e((string)$row->id) . '" style="display:none; margin-top:6px;">'
+                        . '<form method="POST" action="' . e(route('attendances.actions.guests.store', $row->id)) . '">'
+                        . csrf_field()
+                        . '<input type="text" name="guest_name" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.guest_name')) . '">'
+                        . '<input type="text" name="guest_phone" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.guest_phone')) . '">'
+                        . '<input type="text" name="notes" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.notes') ?: 'Notes') . '">'
+                        . '<button class="btn btn-sm btn-success" type="submit">' . e(trans('attendances.save_guest')) . '</button>'
+                        . '</form>'
+                        . '</div>';
+                }
 
-                $actions .= '<div id="guest_form_' . e((string)$row->id) . '" style="display:none; margin-top:6px;">'
-                    . '<form method="POST" action="' . e(route('attendances.actions.guests.store', $row->id)) . '">'
-                    . csrf_field()
-                    . '<input type="text" name="guest_name" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.guest_name')) . '">'
-                    . '<input type="text" name="guest_phone" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.guest_phone')) . '">'
-                    . '<input type="text" name="notes" class="form-control form-control-sm mb-1" placeholder="' . e(trans('attendances.notes') ?: 'Notes') . '">'
-                    . '<button class="btn btn-sm btn-success" type="submit">' . e(trans('attendances.save_guest')) . '</button>'
-                    . '</form>'
-                    . '</div>';
-
-                $actionsHtml = $actions;
+                $actionsHtml = !empty($actions) ? $actions : '-';
             }
 
             $data[] = [

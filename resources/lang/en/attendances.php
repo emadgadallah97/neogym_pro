@@ -76,4 +76,5 @@ return [
     'guest_people_limit_reached' => 'Guest count limit reached for this visit.',
     'guest_times_limit_reached' => 'Guest usage times limit reached for this plan.',
     'guest_added_success' => 'Guest added successfully.',
+    'confirm_cancel_attendance' => 'Confirm Cancel Attendance',
 ];
