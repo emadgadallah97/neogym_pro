@@ -302,9 +302,15 @@ $locale = app()->getLocale();
                         </div>
 
                         <div class="col-md-1 text-end">
+                            @can('commissions_extract')
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="ri-search-line align-bottom me-1"></i> {{ trans('accounting.commissions_preview') }}
                             </button>
+                            @else
+                            <button type="button" class="btn btn-primary w-100 opacity-50" disabled title="No Permission">
+                                <i class="ri-search-line align-bottom me-1"></i> {{ trans('accounting.commissions_preview') }}
+                            </button>
+                            @endcan
                         </div>
                     </div>
                 </form>
@@ -408,16 +414,20 @@ $locale = app()->getLocale();
                                 </label>
                                 <input type="text" name="notes" class="form-control" placeholder="{{ trans('accounting.commissions_notes_hint') }}">
                             </div>
+                            @can('commissions_create')
                             <div class="col-md-2">
                                 <button type="submit" name="action" value="save_draft" class="btn btn-soft-secondary w-100">
                                     <i class="ri-save-3-line align-bottom me-1"></i> {{ trans('accounting.save_draft') }}
                                 </button>
                             </div>
+                            @endcan
+                            @can('commissions_pay')
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-success w-100" id="btnPayNowTrigger">
                                     <i class="ri-check-double-line align-bottom me-1"></i> {{ trans('accounting.pay_now') }}
                                 </button>
                             </div>
+                            @endcan
                         </div>
                     </div>
 
@@ -668,9 +678,22 @@ $locale = app()->getLocale();
                                     <span class="text-muted">/ {{ (int)$st->all_items_count }}</span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('commissions.show', $st->id) }}" class="btn btn-sm btn-soft-primary">
-                                        <i class="ri-eye-line align-bottom me-1"></i> {{ trans('accounting.view') }}
-                                    </a>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="{{ route('commissions.show', $st->id) }}" class="btn btn-sm btn-soft-primary">
+                                            <i class="ri-eye-line align-bottom me-1"></i> {{ trans('accounting.view') }}
+                                        </a>
+                                        @if($st->status === 'draft')
+                                            @can('commissions_delete')
+                                                <form action="{{ route('commissions.destroy', $st->id) }}" method="POST" onsubmit="return confirm('{{ trans('accounting.delete_confirm_text') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-soft-danger">
+                                                        <i class="ri-delete-bin-line align-bottom"></i>
+                                                    </button>
+                                                </form>
+                                            @endcan
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach

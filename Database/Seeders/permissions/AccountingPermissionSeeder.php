@@ -34,6 +34,36 @@ class AccountingPermissionSeeder extends Seeder
                 'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
             ],
             [
+                'name'     => 'commissions_create',
+                'title'    => ['en' => 'Add Commission Settlement', 'ar' => 'إضافة تسوية عمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_pay',
+                'title'    => ['en' => 'Pay Commission', 'ar' => 'صرف عمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_cancel',
+                'title'    => ['en' => 'Cancel Commission Settlement', 'ar' => 'إلغاء تسوية عمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_delete',
+                'title'    => ['en' => 'Delete Commission Settlement', 'ar' => 'حذف تسوية عمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_print',
+                'title'    => ['en' => 'Print Commission Settlement', 'ar' => 'طباعة تسوية عمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
+                'name'     => 'commissions_extract',
+                'title'    => ['en' => 'Extract/Preview Commissions', 'ar' => 'استخراج/معاينة العمولات'],
+                'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],
+            ],
+            [
                 'name'     => 'expenses_create',
                 'title'    => ['en' => 'Add Expense', 'ar' => 'إضافة مصروف'],
                 'category' => ['en' => 'accounting', 'ar' => 'الحسابات'],

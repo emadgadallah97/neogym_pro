@@ -20,7 +20,12 @@ class commissionscontroller extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:commissions_view');
+        $this->middleware('permission:commissions_view')->only(['index', 'show']);
+        $this->middleware('permission:commissions_create')->only(['store']);
+        $this->middleware('permission:commissions_pay')->only(['pay']);
+        $this->middleware('permission:commissions_cancel')->only(['cancel']);
+        $this->middleware('permission:commissions_delete')->only(['destroy']);
+        $this->middleware('permission:commissions_print')->only(['printSettlement']);
     }
     // ─────────────────────────────────────────────────────────────
     // Helpers
@@ -105,6 +110,7 @@ class commissionscontroller extends Controller
         $branchId        = (int)($request->get('branch_id') ?: 0);
 
         if ($dateFrom && $dateTo) {
+            $this->authorize('commissions_extract');
             $from = Carbon::parse($dateFrom)->startOfDay();
             $to   = Carbon::parse($dateTo)->endOfDay();
 
@@ -169,6 +175,9 @@ class commissionscontroller extends Controller
 
     public function store(Request $request)
     {
+        if ($request->action === 'pay_now') {
+            $this->authorize('commissions_pay');
+        }
         $data = $request->validate([
             'date_from'                  => 'required|date',
             'date_to'                    => 'required|date|after_or_equal:date_from',

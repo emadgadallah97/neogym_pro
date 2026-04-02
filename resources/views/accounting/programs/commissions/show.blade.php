@@ -170,9 +170,11 @@ $locale = app()->getLocale();
                         <a href="{{ route('commissions.index') }}" class="btn btn-soft-secondary">
                             <i class="ri-arrow-go-back-line align-bottom me-1"></i>{{ trans('accounting.back') ?? trans('accounting.view') }}
                         </a>
+                        @can('commissions_print')
                         <a href="{{ route('commissions.print', $settlement->id) }}" target="_blank" class="btn btn-soft-primary">
                             <i class="ri-printer-line align-bottom me-1"></i>{{ trans('accounting.print') ?? 'Print' }}
                         </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -257,16 +259,30 @@ $locale = app()->getLocale();
                         </div>
 
                         <div class="d-flex gap-2">
+                            @can('commissions_pay')
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#payConfirmModal">
                                 <i class="ri-check-double-line align-bottom me-1"></i> {{ trans('accounting.mark_as_paid') }}
                             </button>
+                            @endcan
 
+                            @can('commissions_cancel')
                             <form method="post" action="{{ route('commissions.cancel', $settlement->id) }}" class="d-inline">
                                 @csrf
                                 <button class="btn btn-soft-secondary">
                                     <i class="ri-close-circle-line align-bottom me-1"></i> {{ trans('accounting.cancel_settlement') }}
                                 </button>
                             </form>
+                            @endcan
+
+                            @can('commissions_delete')
+                            <form action="{{ route('commissions.destroy', $settlement->id) }}" method="POST" onsubmit="return confirm('{{ trans('accounting.delete_confirm_text') }}')" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-soft-danger">
+                                    <i class="ri-delete-bin-line align-bottom me-1"></i> {{ trans('accounting.delete') }}
+                                </button>
+                            </form>
+                            @endcan
                         </div>
                     </div>
                 </div>
