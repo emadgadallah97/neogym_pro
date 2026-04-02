@@ -30,6 +30,7 @@
             <small class="text-muted">{{ trans('crm.prospects_total', ['count' => number_format($prospects->total())]) }}</small>
         </div>
         <div class="d-flex gap-2">
+            @can('crm_prospects_create')
             <a href="{{ route('crm.prospects.import') }}" class="btn btn-outline-success btn-sm">
                 <i class="fas fa-file-excel me-1"></i>
                 {{ trans('crm.upload_excel') }}
@@ -38,6 +39,7 @@
                 <i class="fas fa-plus me-1"></i>
                 {{ trans('crm.new_prospect') }}
             </a>
+            @endcan
         </div>
     </div>
 
@@ -132,9 +134,11 @@
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-inbox fa-3x mb-3"></i>
                     <p class="mb-0">{{ trans('crm.no_prospects') }}</p>
+                    @can('crm_prospects_create')
                     <a href="{{ route('crm.prospects.create') }}" class="btn btn-sm btn-primary mt-3">
                         <i class="fas fa-plus me-1"></i> {{ trans('crm.add_first_prospect') }}
                     </a>
+                    @endcan
                 </div>
             @else
                 <div class="table-responsive">
@@ -221,16 +225,23 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
+                                        @can('crm_prospects_view')
                                         <a href="{{ route('crm.prospects.show', $prospect->id) }}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="عرض">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @endcan
+                                        
+                                        @can('crm_prospects_edit')
                                         <a href="{{ route('crm.prospects.edit', $prospect->id) }}"
                                            class="btn btn-sm btn-outline-warning"
                                            title="تعديل">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endcan
+                                        
+                                        @can('crm_prospects_delete')
                                         <form action="{{ route('crm.prospects.destroy', $prospect->id) }}"
                                               method="POST"
                                               class="d-inline"
@@ -243,6 +254,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

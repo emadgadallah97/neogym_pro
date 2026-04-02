@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class CrmInteractionsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:crm_interactions_create')->only(['store']);
+        $this->middleware('permission:crm_interactions_delete')->only(['destroy']);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

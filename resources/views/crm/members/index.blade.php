@@ -429,11 +429,14 @@
                                                     <button class="btn btn-outline-secondary btn-sm" disabled>{{ trans('crm.whatsapp_btn') }}</button>
                                                 @endif
 
+                                                @can('crm_members_view')
                                                 <a href="{{ route('crm.members.show', $member->id) }}"
                                                    class="btn btn-outline-primary btn-sm">
                                                     {{ trans('crm.view_btn') }}
                                                 </a>
+                                                @endcan
 
+                                                @can('crm_followups_create')
                                                 <button type="button"
                                                         class="btn btn-outline-warning btn-sm"
                                                         data-mid="{{ $member->id }}"
@@ -443,6 +446,7 @@
                                                         onclick="segOpenFollowup(this)">
                                                     {{ trans('crm.followup_btn') }}
                                                 </button>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

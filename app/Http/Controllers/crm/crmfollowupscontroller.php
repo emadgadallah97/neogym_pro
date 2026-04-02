@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\DB;
 
 class CrmFollowupsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:crm_followups_view')->only(['index']);
+        $this->middleware('permission:crm_followups_create')->only(['store']);
+        $this->middleware('permission:crm_followups_edit')->only(['update']);
+        $this->middleware('permission:crm_followups_delete')->only(['destroy']);
+        $this->middleware('permission:crm_followups_mark_done')->only(['markDone']);
+    }
+
     public function create() { return redirect()->route('crm.followups.index'); }
     public function show($id) { return redirect()->route('crm.followups.index'); }
     public function edit($id) { return redirect()->route('crm.followups.index'); }

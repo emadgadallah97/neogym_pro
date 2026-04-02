@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\DB;
 
 class CrmMembersController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:crm_members_view');
+    }
+
     protected function segmentsMetaData(): array
     {
         return [

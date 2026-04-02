@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class CrmDashboardController extends Controller
 {
-            public function __construct()
+    public function __construct()
     {
-                $this->middleware('permission:crm');
+        $this->middleware('permission:crm_dashboard_view');
     }
     public function index(Request $request)
     {

@@ -41,10 +41,12 @@
                         المعلومات الشخصية
                     </h6>
                     <div class="d-flex gap-1">
+                        @can('crm_prospects_edit')
                         <a href="{{ route('crm.prospects.edit', $prospect->id) }}"
                            class="btn btn-sm btn-outline-warning">
                             <i class="fas fa-edit me-1"></i> تعديل
                         </a>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body">
@@ -150,24 +152,29 @@
                         <span class="badge bg-primary ms-1">{{ $prospect->followups->count() }}</span>
                     </h6>
                     <div class="d-flex gap-2 align-items-center">
+                        @can('crm_followups_view')
                         @if($prospect->followups->count() > 0)
                             <a href="{{ route('crm.followups.index', [
                                     'quick'  => 'prospect',
                                     'type'   => 'prospect',
                                     'search' => $prospect->full_name,
-                               ]) }}"
+                                ]) }}"
                                class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-list me-1"></i> كل المتابعات
                             </a>
                         @endif
+                        @endcan
 
+                        @can('crm_followups_create')
                         {{-- ✅ يفتح الموديل مباشرة --}}
                         <button type="button"
                                 class="btn btn-sm btn-primary"
                                 onclick="openProspectFollowupModal()">
                             <i class="fas fa-plus me-1"></i> متابعة جديدة
                         </button>
+                        @endcan
                     </div>
+                </div>
                 </div>
                 <div class="card-body p-0">
                     @if($prospect->followups->isEmpty())
@@ -218,6 +225,7 @@
                                             <small>{{ Str::limit($followup->notes, 50) }}</small>
                                         </td>
                                         <td class="text-center">
+                                            @can('crm_followups_view')
                                             <a href="{{ route('crm.followups.index', [
                                                     'quick'       => 'all',
                                                     'followup_id' => $followup->id,
@@ -226,6 +234,7 @@
                                                title="عرض هذه المتابعة">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            @endcan
                                         </td>
                                     </tr>
                                     @endforeach
@@ -250,6 +259,7 @@
                     </h6>
                 </div>
                 <div class="card-body d-grid gap-2">
+                    @can('crm_prospects_convert')
                     <form action="{{ route('crm.prospects.convert', $prospect->id) }}"
                           method="POST"
                           onsubmit="return confirm('هل أنت متأكد من تحويل هذا العضو المحتمل إلى عضو فعلي؟')">
@@ -259,12 +269,15 @@
                             تحويل لعضو فعلي
                         </button>
                     </form>
+                    @endcan
 
+                    @can('crm_followups_create')
                     {{-- ✅ يفتح الموديل مباشرة --}}
                     <button type="button" class="btn btn-primary" onclick="openProspectFollowupModal()">
                         <i class="fas fa-plus me-1"></i>
                         متابعة جديدة
                     </button>
+                    @endcan
 
                     @if($prospect->whatsapp)
                     <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $prospect->whatsapp) }}"
@@ -282,6 +295,7 @@
 
                     <hr class="my-2">
 
+                    @can('crm_prospects_disqualify')
                     <button type="button"
                             class="btn btn-outline-danger"
                             data-bs-toggle="modal"
@@ -289,6 +303,7 @@
                         <i class="fas fa-user-times me-1"></i>
                         إلغاء / غير مهتم
                     </button>
+                    @endcan
                 </div>
             </div>
 

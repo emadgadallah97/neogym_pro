@@ -216,11 +216,13 @@
                         </a>
                     @endif
 
+                    @can('crm_followups_create')
                     <button type="button"
                             class="btn btn-warning btn-sm"
                             onclick="mpOpenFollowup()">
                         <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup_modal_title') }}
                     </button>
+                    @endcan
 
                     <a href="{{ route('crm.members.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-arrow-right me-1"></i> {{ trans('crm.back_btn') }}
@@ -579,9 +581,11 @@
                     <i class="fas fa-comments me-2 text-warning"></i>{{ trans('crm.crm_followup_log') }}
                     <span class="badge bg-light text-dark fw-normal ms-1" id="mpFollowupCount">{{ $followups->count() }}</span>
                 </div>
+                @can('crm_followups_create')
                 <button type="button" class="btn btn-warning btn-sm" onclick="mpOpenFollowup()">
                     <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup_modal_title') }}
                 </button>
+                @endcan
             </div>
 
             {{-- Empty state --}}

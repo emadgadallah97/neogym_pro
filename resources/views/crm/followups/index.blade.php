@@ -104,9 +104,11 @@
             </nav>
             <h4 class="fw-bold mb-0">{{ trans('crm.followups_title') }}</h4>
         </div>
+        @can('crm_followups_create')
         <button type="button" class="btn btn-warning btn-sm" onclick="fuOpenCreateModal()">
             <i class="fas fa-plus me-1"></i> {{ trans('crm.add_followup') }}
         </button>
+        @endcan
     </div>
 
     {{-- Tabs --}}

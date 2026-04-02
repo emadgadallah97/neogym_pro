@@ -155,6 +155,7 @@
                         <div class="fu-actions">
 
                             {{-- تمت --}}
+                            @can('crm_followups_edit')
                             @if($fu->status === 'pending')
                                 <button type="button" class="btn btn-success btn-sm" onclick="fuMarkDone({{ $fu->id }})">
                                     {{ trans('crm.done_btn') }}
@@ -162,6 +163,7 @@
                             @else
                                 <button class="btn btn-outline-success btn-sm" disabled>{{ trans('crm.done_btn') }}</button>
                             @endif
+                            @endcan
 
                             {{-- تفاعل --}}
                             <button type="button"
@@ -175,6 +177,7 @@
                             </button>
 
                             {{-- تعديل --}}
+                            @can('crm_followups_edit')
                             <button type="button"
                                     class="btn btn-outline-warning btn-sm"
                                     data-id="{{ $fu->id }}"
@@ -190,11 +193,14 @@
                                     onclick="fuOpenEditModal(this)">
                                 {{ trans('crm.edit') }}
                             </button>
+                            @endcan
 
                             {{-- حذف --}}
+                            @can('crm_followups_delete')
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="fuDeleteFollowup({{ $fu->id }})">
                                 {{ trans('crm.delete') }}
                             </button>
+                            @endcan
                         </div>
 
                         {{-- Interaction Collapse --}}
@@ -202,6 +208,7 @@
                             <div class="fu-int-box">
 
                                 {{-- Add interaction (no form) --}}
+                                @can('crm_interactions_create')
                                 <div class="row g-2 align-items-end mb-3"
                                      id="fuIntForm{{ $fu->id }}"
                                      data-member="{{ $fu->member_id }}"
@@ -252,14 +259,17 @@
                                             <i class="fas fa-save me-1"></i> {{ trans('crm.save_interaction') }}
                                         </button>
 
+                                        @can('crm_followups_edit')
                                         @if($fu->status === 'pending')
                                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                                     onclick="fuCancelFollowup({{ $fu->id }})">
                                                 {{ trans('crm.cancel_followup_btn') }}
                                             </button>
                                         @endif
+                                        @endcan
                                     </div>
                                 </div>
+                                @endcan
 
                                 {{-- Interactions list --}}
                                 @if($ints->isNotEmpty())
@@ -286,11 +296,13 @@
                                                         <td>{{ $it->result }}</td>
                                                         <td style="white-space:normal;min-width:200px">{{ $it->notes ?? '—' }}</td>
                                                         <td class="text-center">
+                                                            @can('crm_interactions_delete')
                                                             <button type="button"
                                                                     class="btn btn-outline-danger btn-sm"
                                                                     onclick="fuDeleteInteraction({{ $it->id }})">
                                                                 {{ trans('crm.th_int_cancel') }}
                                                             </button>
+                                                            @endcan
                                                         </td>
                                                     </tr>
                                                 @endforeach

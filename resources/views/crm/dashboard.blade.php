@@ -36,12 +36,16 @@
         <a href="{{ route('crm.prospects.index') }}" class="btn btn-sm btn-outline-primary">
             <i class="fas fa-users me-1"></i> {{ trans('crm.seg_prospects') }}
         </a>
+        @can('crm_prospects_create')
         <a href="{{ route('crm.prospects.create') }}" class="btn btn-sm btn-outline-secondary">
             <i class="fas fa-user-tag me-1"></i> {{ trans('crm.new_prospect') }}
         </a>
+        @endcan
+        @can('crm_followups_create')
         <a href="{{ route('crm.followups.index') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus me-1"></i> {{ trans('crm.new_followup') }}
         </a>
+        @endcan
     </div>
 </div>
 
@@ -275,9 +279,11 @@
                         </span>
                     @endif
                 </h6>
+                @can('crm_followups_view')
                 <a href="{{ route('crm.followups.index') }}" class="btn btn-outline-primary btn-sm">
                     {{ trans('crm.view_all') }}
                 </a>
+                @endcan
             </div>
             <div class="card-body p-0">
                 @if($todayFollowups->isEmpty())
@@ -342,6 +348,7 @@
                                             </a>
                                             @endif
                                             {{-- ✅ التوجه لصفحة المتابعات مع فلتر المتابعة المحددة --}}
+                                            @can('crm_followups_view')
                                             <a href="{{ route('crm.followups.index', [
                                                     'quick'       => 'all',
                                                     'followup_id' => $followup->id,
@@ -350,6 +357,7 @@
                                                title="{{ trans('crm.view_details') }}">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

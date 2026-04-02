@@ -17,6 +17,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class CrmProspectsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:crm_prospects_view')->only(['index', 'show']);
+        $this->middleware('permission:crm_prospects_create')->only(['create', 'store', 'importForm', 'importStore', 'downloadTemplate']);
+        $this->middleware('permission:crm_prospects_edit')->only(['edit', 'update']);
+        $this->middleware('permission:crm_prospects_delete')->only(['destroy']);
+        $this->middleware('permission:crm_prospects_convert')->only(['convert']);
+        $this->middleware('permission:crm_prospects_disqualify')->only(['disqualify']);
+    }
+
     // ══════════════════════════════════════════════════════
     //  INDEX
     // ══════════════════════════════════════════════════════
