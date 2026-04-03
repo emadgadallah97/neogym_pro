@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class expenses_typescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_expenses_types_view');
+    }
+
     public function index()
     {
         $ExpensesTypes = ExpensesType::orderByDesc('id')->get();

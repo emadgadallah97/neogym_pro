@@ -17,6 +17,11 @@ use App\Traits\store\file_storage;
 
 class general_settingsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_general_view');
+    }
+
     use file_storage;
 
     public function index()

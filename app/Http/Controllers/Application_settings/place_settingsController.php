@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 class place_settingsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_places_view');
+    }
 
 
   public function index()

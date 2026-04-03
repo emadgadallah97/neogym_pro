@@ -11,6 +11,11 @@ use RealRashid\SweetAlert\Facades\Alert;
 
 class currenciesController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_currencies_view');
+    }
+
     /**
      * Display a listing of the resource.
      */

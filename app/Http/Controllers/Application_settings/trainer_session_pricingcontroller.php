@@ -10,6 +10,11 @@ use Illuminate\Validation\Rule;
 
 class trainer_session_pricingcontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_trainer_pricing_view');
+    }
+
     public function index(Request $request)
     {
         // Ajax for DataTables

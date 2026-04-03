@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Validator;
 
 class subscriptions_typescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_subscriptions_types_view');
+    }
+
     public function index()
     {
         $SubscriptionsTypes = subscriptions_type::orderByDesc('id')->get();

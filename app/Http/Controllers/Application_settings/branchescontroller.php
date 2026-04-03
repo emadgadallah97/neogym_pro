@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class branchesController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_branches_view');
+    }
+
     public function index()
     {
         // ✅ كل الفروع بغض النظر عن GlobalScope

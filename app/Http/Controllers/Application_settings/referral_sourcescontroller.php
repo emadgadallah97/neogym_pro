@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class referral_sourcescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_referral_sources_view');
+    }
+
     public function index()
     {
         $ReferralSources = ReferralSource::orderBy('sort_order')->orderByDesc('id')->get();

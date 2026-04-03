@@ -9,6 +9,11 @@ use App\Http\Controllers\Controller;
 
 class income_typescontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_income_types_view');
+    }
+
     public function index()
     {
         $IncomeTypes = IncomeType::orderByDesc('id')->get();

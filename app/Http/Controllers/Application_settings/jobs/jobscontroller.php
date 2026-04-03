@@ -12,6 +12,11 @@ use App\Models\employee\Job;
 
 class jobscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_jobs_view');
+    }
+
     public function index()
     {
         $Jobs = Job::orderBy('id', 'desc')->get();

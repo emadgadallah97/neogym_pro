@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class commission_settingscontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:settings_commissions_view');
+    }
+
     private int $singletonId = 1;
 
     private function getSingleton(): CommissionSetting
