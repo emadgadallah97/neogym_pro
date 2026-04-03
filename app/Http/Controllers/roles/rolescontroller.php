@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class rolescontroller extends Controller
 {
-    function __construct() {
-               // $this->middleware('permission:security_control');
-
+    public function __construct()
+    {
+        $this->middleware('permission:roles_view', ['only' => ['index', 'show']]);
+        $this->middleware('permission:roles_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:roles_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:roles_delete', ['only' => ['destroy']]);
     }
 
     public function index(Request $request)

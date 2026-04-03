@@ -66,10 +66,12 @@
                 <div class="d-flex justify-content-between">
                     <div class="col-lg-12 margin-tb">
                         <div class="pull-right">
+                            @can('roles_create')
                             <a style="margin: 10px;" class="btn btn-outline-success waves-effect waves-light shadow-none"
                                 href="{{ route('roles.create') }}">
                                 {{ trans('user_management_trans.role_create') }}
                             </a>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -94,12 +96,17 @@
                                 <td>{{ ++$i }}</td>
                                 <td>{{ $role->name }}</td>
                                 <td>
+                                    @can('roles_view')
                                     <a class="btn btn-success btn-sm"
                                         href="{{ route('roles.show', $role->id) }}">{{ trans('user_management_trans.show') }}</a>
+                                    @endcan
 
+                                    @can('roles_edit')
                                     <a class="btn btn-primary btn-sm"
                                         href="{{ route('roles.edit', $role->id) }}">{{ trans('user_management_trans.edit') }}</a>
+                                    @endcan
 
+                                    @can('roles_delete')
                                     @if ($role->name !== 'owner')
                                     <form action="{{ route('roles.destroy', $role->id) }}"
                                         method="POST" style="display:inline">
@@ -111,6 +118,7 @@
                                         </button>
                                     </form>
                                     @endif
+                                    @endcan
                                 </td>
                             </tr>
                             @endforeach
