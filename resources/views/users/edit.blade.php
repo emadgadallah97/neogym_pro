@@ -126,6 +126,7 @@
     </div>
 
     {{-- Change Password Card --}}
+    @can('users_password_edit')
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white border-bottom py-3">
@@ -156,6 +157,7 @@
             </div>
         </div>
     </div>
+    @endcan
 </div>
 
 <script>

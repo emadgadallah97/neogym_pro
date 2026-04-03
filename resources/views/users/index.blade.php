@@ -22,9 +22,11 @@
         <div class="card shadow-sm border-0">
             <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold">{{ trans('users.users_list') }}</h5>
+                @can('users_create')
                 <a href="{{ route('users.create') }}" class="btn btn-primary btn-label waves-effect waves-light btn-sm">
                     <i class="ri-add-line label-icon align-middle fs-16 me-2"></i> {{ trans('users.title_create') }}
                 </a>
+                @endcan
             </div>
 
             <div class="card-body">
@@ -128,20 +130,25 @@
                                     <div class="d-flex gap-2 flex-wrap">
 
                                         {{-- Show --}}
+                                        @can('users_view')
                                         <a href="{{ route('users.show', $user->id) }}"
                                             class="btn btn-sm btn-soft-success btn-icon"
                                             title="{{ trans('users.show') ?? 'عرض' }}">
                                             <i class="ri-eye-line"></i>
                                         </a>
+                                        @endcan
 
                                         {{-- Edit --}}
+                                        @can('users_edit')
                                         <a href="{{ route('users.edit', $user->id) }}"
                                             class="btn btn-sm btn-soft-info btn-icon"
                                             title="{{ trans('users.edit') }}">
                                             <i class="ri-pencil-line"></i>
                                         </a>
+                                        @endcan
 
                                         {{-- Delete --}}
+                                        @can('users_delete')
                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST"
                                             onsubmit="return confirm('{{ trans('users.delete_confirm') }}')">
                                             @csrf
@@ -152,6 +159,7 @@
                                                 <i class="ri-delete-bin-line"></i>
                                             </button>
                                         </form>
+                                        @endcan
 
                                     </div>
                                 </td>

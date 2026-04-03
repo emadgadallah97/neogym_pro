@@ -48,9 +48,11 @@
     <div class="col-12 mb-3 d-flex justify-content-between align-items-center">
         <h4 class="mb-0 fw-bold">{{ trans('users.title_show') }}</h4>
         <div>
+            @can('users_edit')
             <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning shadow-sm btn-sm">
                 <i class="fas fa-edit me-1"></i> {{ trans('users.edit') }}
             </a>
+            @endcan
             <a href="{{ route('users.index') }}" class="btn btn-secondary shadow-sm btn-sm ms-2">
                 <i class="fas fa-arrow-right me-1"></i> {{ trans('users.back') }}
             </a>

@@ -33,14 +33,14 @@ class PermissionTableSeeder extends Seeder
                 'title'    => ['en' => 'Attendance',     'ar' => 'الحضور والغياب'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
-                        [
+            [
                 'name'     => 'employees',
                 'title'    => ['en' => 'Employees',     'ar' => 'الموظفين'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
             [
                 'name'     => 'human_resources',
-                'title'    => ['en' => 'Human Resources','ar' => 'الموارد البشرية'],
+                'title'    => ['en' => 'Human Resources', 'ar' => 'الموارد البشرية'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
             [
@@ -91,12 +91,12 @@ class PermissionTableSeeder extends Seeder
             ],
             [
                 'name'     => 'treasury.manual',
-                'title'    => ['en' => 'Treasury Manual','ar' => 'حركة يدوية خزينة'],
+                'title'    => ['en' => 'Treasury Manual', 'ar' => 'حركة يدوية خزينة'],
                 'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
             ],
             [
                 'name'     => 'treasury.review',
-                'title'    => ['en' => 'Treasury Review','ar' => 'مراجعة فترات الخزينة'],
+                'title'    => ['en' => 'Treasury Review', 'ar' => 'مراجعة فترات الخزينة'],
                 'category' => ['en' => 'Treasury',       'ar' => 'الخزينة'],
             ],
             [
@@ -106,12 +106,12 @@ class PermissionTableSeeder extends Seeder
             ],
             [
                 'name'     => 'user_management',
-                'title'    => ['en' => 'User Management','ar' => 'إدارة المستخدمين'],
+                'title'    => ['en' => 'User Management', 'ar' => 'إدارة المستخدمين'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
             [
                 'name'     => 'security_control',
-                'title'    => ['en' => 'Security Control','ar' => 'السرية والتحكم'],
+                'title'    => ['en' => 'Security Control', 'ar' => 'السرية والتحكم'],
                 'category' => ['en' => 'Modules',        'ar' => 'الموديولات'],
             ],
             [
@@ -138,7 +138,7 @@ class PermissionTableSeeder extends Seeder
             \Database\Seeders\permissions\AccountingPermissionSeeder::class,
             \Database\Seeders\permissions\HRPermissionSeeder::class,
             \Database\Seeders\permissions\CRMPermissionSeeder::class,
-            \Database\Seeders\permissions\UsersermissionSeeder::class,
+            \Database\Seeders\permissions\UsersPermissionSeeder::class,
             \Database\Seeders\permissions\RolesermissionSeeder::class,
             \Database\Seeders\permissions\ReportsermissionSeeder::class,
             \Database\Seeders\permissions\SettingsPermissionSeeder::class,
