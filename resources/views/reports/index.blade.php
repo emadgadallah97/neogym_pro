@@ -78,6 +78,7 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-4 g-3 gy-4">
 
     {{-- ① تقرير الحضور --}}
+    @can('reports_attendances_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -99,8 +100,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ② تقرير الموظفين --}}
+    @can('reports_employees_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -122,8 +125,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ③ تقرير الأعضاء --}}
+    @can('reports_members_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -145,8 +150,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ④ تقرير الخطط والاشتراكات --}}
+    @can('reports_subscriptions_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -168,8 +175,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑤ تقرير المبيعات --}}
+    @can('reports_sales_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -191,8 +200,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑥ تقرير المدفوعات --}}
+    @can('reports_payments_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -214,8 +225,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑦ تقرير العمولات --}}
+    @can('reports_commissions_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -237,8 +250,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ⑧ تقرير الاشتراكات الخاصة (PT) --}}
+    @can('reports_pt_addons_view')
     <div class="col">
         <div class="card report-card h-100 shadow-sm border-0">
             <div class="card-body d-flex flex-column text-center p-3">
@@ -260,6 +275,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
 </div>
 

@@ -17,6 +17,13 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class employees_reportcontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:reports_employees_view', ['only' => ['index']]);
+        $this->middleware('permission:reports_print', ['only' => ['print']]);
+        $this->middleware('permission:reports_export', ['only' => ['exportExcel']]);
+    }
+
     public function index(Request $request)
     {
         $action = (string)$request->get('action', '');

@@ -17,6 +17,12 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class attendances_reportcontroller extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:reports_attendances_view', ['only' => ['index']]);
+        $this->middleware('permission:reports_print', ['only' => ['print']]);
+        $this->middleware('permission:reports_export', ['only' => ['exportExcel']]);
+    }
 
     public function index(Request $request)
     {

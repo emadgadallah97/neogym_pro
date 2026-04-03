@@ -331,15 +331,19 @@
                         <i class="ri-refresh-line align-bottom me-1"></i> {{ __('reports.reset') ?? 'إعادة تعيين' }}
                     </a>
 
-                    <a class="btn btn-soft-success" target="_blank" id="btnPrint"
-                       href="{{ route('members_report.index', array_merge(request()->all(), ['action' => 'print'])) }}">
-                        <i class="ri-printer-line align-bottom me-1"></i> {{ __('reports.print') ?? 'طباعة' }}
-                    </a>
+                    @can('reports_print')
+                        <a class="btn btn-soft-success" target="_blank" id="btnPrint"
+                           href="{{ route('members_report.index', array_merge(request()->all(), ['action' => 'print'])) }}">
+                            <i class="ri-printer-line align-bottom me-1"></i> {{ __('reports.print') ?? 'طباعة' }}
+                        </a>
+                    @endcan
 
-                    <a class="btn btn-soft-success" id="btnExport"
-                       href="{{ route('members_report.index', array_merge(request()->all(), ['action' => 'export_excel'])) }}">
-                        <i class="ri-file-excel-2-line align-bottom me-1"></i> {{ __('reports.export_excel') ?? 'تصدير Excel' }}
-                    </a>
+                    @can('reports_export')
+                        <a class="btn btn-soft-success" id="btnExport"
+                           href="{{ route('members_report.index', array_merge(request()->all(), ['action' => 'export_excel'])) }}">
+                            <i class="ri-file-excel-2-line align-bottom me-1"></i> {{ __('reports.export_excel') ?? 'تصدير Excel' }}
+                        </a>
+                    @endcan
                 </div>
             </div>
         </form>

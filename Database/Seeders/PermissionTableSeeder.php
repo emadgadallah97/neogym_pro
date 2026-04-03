@@ -139,8 +139,8 @@ class PermissionTableSeeder extends Seeder
             \Database\Seeders\permissions\HRPermissionSeeder::class,
             \Database\Seeders\permissions\CRMPermissionSeeder::class,
             \Database\Seeders\permissions\UsersPermissionSeeder::class,
-            \Database\Seeders\permissions\RolesermissionSeeder::class,
-            \Database\Seeders\permissions\ReportsermissionSeeder::class,
+            \Database\Seeders\permissions\RolesPermissionSeeder::class,
+            \Database\Seeders\permissions\ReportsPermissionSeeder::class,
             \Database\Seeders\permissions\SettingsPermissionSeeder::class,
         ]);
 
