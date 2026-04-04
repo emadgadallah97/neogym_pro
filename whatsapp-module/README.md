@@ -300,6 +300,8 @@ $wa->sendTemplate('birthday', '01001234567', [
 | `Unauthorized` من Node | طابق `API_SECRET_KEY` (Node) و`api_key` (إعدادات Laravel). |
 | Laravel لا يصل إلى Node | تحقق من `service_url`، الجدار الناري، وأن Node يستمع على `0.0.0.0` أو العنوان الصحيح. |
 | الوارد لا يُسجَّل | صحح `LARAVEL_INCOMING_WEBHOOK_URL` (من جهة Node يجب أن يصل إلى Laravel)، وطابق السرّ في الطرفين، و`php artisan config:clear`. |
+| في قائمة المحادثات يظهر رقم طويل غريب بدل رقم المرسل | واتساب يرسل أحياناً معرّف **`@lid`** بدل **`@c.us`**. الخدمة تحاول تحويله إلى الرقم عبر `getContactLidAndPhone` ثم `getContact`؛ حدّث **`whatsapp-web.js`** (`npm update` في `node-service`) وأعد تشغيل Node. |
+| الوارد يتقطع بينما الإرسال يعمل | راجع سجل Node لأخطاء `forwardIncomingToLaravel`؛ تأكد أن Laravel لا يعيد **5xx** مؤقتاً. يُعاد إرسال الطلب إلى الويب هوك تلقائياً عند أخطاء شبكة أو 5xx/429. |
 
 ---
 

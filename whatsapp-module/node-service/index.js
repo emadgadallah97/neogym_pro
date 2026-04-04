@@ -68,42 +68,145 @@ function clearQrAndInfo() {
   clientInfo = null;
 }
 
-function forwardIncomingToLaravel(phone, body, messageId) {
-  if (!LARAVEL_INCOMING_WEBHOOK_URL || !WHATSAPP_INTERNAL_SECRET) {
-    return;
+/**
+ * يحوّل مرسل الرسالة إلى أرقام فقط بصيغة دولية مناسبة لـ Laravel.
+ * واتساب يرسل أحياناً @lid بدلاً من @c.us؛ نحلّها عبر واجهات المكتبة ثم نرجع الرقم الحقيقي.
+ *
+ * @param {import('whatsapp-web.js').Message} msg
+ * @param {import('whatsapp-web.js').Client} waClient
+ * @returns {Promise<string|null>}
+ */
+async function resolvePhoneDigitsForIncoming(msg, waClient) {
+  var fromRaw = String(msg.from || '');
+  if (fromRaw.endsWith('@g.us')) {
+    return null;
   }
+
+  if (fromRaw.endsWith('@c.us')) {
+    var d1 = fromRaw.replace(/@c\.us$/i, '').replace(/\D/g, '');
+    if (d1.length >= 7 && d1.length <= 20) {
+      return d1;
+    }
+    return null;
+  }
+
+  if (fromRaw.endsWith('@lid') && waClient && typeof waClient.getContactLidAndPhone === 'function') {
+    try {
+      var mapped = await waClient.getContactLidAndPhone([fromRaw]);
+      var first = Array.isArray(mapped) && mapped.length ? mapped[0] : null;
+      if (first && first.pn) {
+        var dPn = String(first.pn)
+          .replace(/@c\.us$/i, '')
+          .replace(/\D/g, '');
+        if (dPn.length >= 7 && dPn.length <= 20) {
+          return dPn;
+        }
+      }
+    } catch (e) {
+      console.warn('getContactLidAndPhone', e.message);
+    }
+  }
+
   try {
-    var u = new URL(LARAVEL_INCOMING_WEBHOOK_URL);
-    var mod = u.protocol === 'https:' ? require('https') : require('http');
-    var payload = JSON.stringify({
-      phone: phone,
-      message: body,
-      message_id: messageId || null,
-    });
-    var opts = {
-      method: 'POST',
-      hostname: u.hostname,
-      port: u.port || (u.protocol === 'https:' ? 443 : 80),
-      path: (u.pathname || '/') + (u.search || ''),
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload),
-        'X-WhatsApp-Internal': WHATSAPP_INTERNAL_SECRET,
-        Accept: 'application/json',
-      },
-      timeout: 15000,
-    };
-    var req = mod.request(opts, function (res) {
-      res.resume();
-    });
-    req.on('error', function (e) {
-      console.error('forwardIncomingToLaravel', e.message);
-    });
-    req.write(payload);
-    req.end();
+    var contact = await msg.getContact();
+    if (contact && contact.id && contact.id._serialized) {
+      var ser = String(contact.id._serialized);
+      if (ser.endsWith('@c.us')) {
+        var d2 = ser.replace(/@c\.us$/i, '').replace(/\D/g, '');
+        if (d2.length >= 7 && d2.length <= 20) {
+          return d2;
+        }
+      }
+    }
+    if (contact && contact.number) {
+      var dNum = String(contact.number).replace(/\D/g, '');
+      if (dNum.length >= 7 && dNum.length <= 20) {
+        return dNum;
+      }
+    }
   } catch (e) {
-    console.error('forwardIncomingToLaravel url', e.message);
+    console.warn('resolvePhone getContact', e.message);
   }
+
+  var fallback = fromRaw.split('@')[0].replace(/\D/g, '');
+  if (fallback.length >= 7 && fallback.length <= 20) {
+    return fallback;
+  }
+  return null;
+}
+
+/**
+ * @param {string} phone
+ * @param {string} body
+ * @param {string} messageId
+ * @param {number} [attempt]
+ * @returns {Promise<{ ok?: boolean, skipped?: boolean, status?: number }>}
+ */
+function forwardIncomingToLaravel(phone, body, messageId, attempt) {
+  return new Promise(function (resolve) {
+    if (!LARAVEL_INCOMING_WEBHOOK_URL || !WHATSAPP_INTERNAL_SECRET) {
+      resolve({ skipped: true });
+      return;
+    }
+    attempt = attempt || 0;
+    try {
+      var u = new URL(LARAVEL_INCOMING_WEBHOOK_URL);
+      var mod = u.protocol === 'https:' ? require('https') : require('http');
+      var payload = JSON.stringify({
+        phone: phone,
+        message: body,
+        message_id: messageId || null,
+      });
+      var opts = {
+        method: 'POST',
+        hostname: u.hostname,
+        port: u.port || (u.protocol === 'https:' ? 443 : 80),
+        path: (u.pathname || '/') + (u.search || ''),
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+          'X-WhatsApp-Internal': WHATSAPP_INTERNAL_SECRET,
+          Accept: 'application/json',
+        },
+      };
+      var req = mod.request(opts, function (res) {
+        var status = res.statusCode || 0;
+        res.resume();
+        if (status >= 200 && status < 300) {
+          resolve({ ok: true, status: status });
+          return;
+        }
+        console.error('forwardIncomingToLaravel HTTP', status, 'attempt', attempt);
+        if (attempt < 2 && (status >= 500 || status === 429)) {
+          setTimeout(function () {
+            forwardIncomingToLaravel(phone, body, messageId, attempt + 1).then(resolve);
+          }, 900 * (attempt + 1));
+        } else {
+          resolve({ ok: false, status: status });
+        }
+      });
+      req.on('error', function (e) {
+        console.error('forwardIncomingToLaravel net', e.message, 'attempt', attempt);
+        if (attempt < 2) {
+          setTimeout(function () {
+            forwardIncomingToLaravel(phone, body, messageId, attempt + 1).then(resolve);
+          }, 900 * (attempt + 1));
+        } else {
+          resolve({ ok: false, error: e.message });
+        }
+      });
+      if (typeof req.setTimeout === 'function') {
+        req.setTimeout(20000, function () {
+          req.destroy();
+        });
+      }
+      req.write(payload);
+      req.end();
+    } catch (e) {
+      console.error('forwardIncomingToLaravel url', e.message);
+      resolve({ ok: false, error: e.message });
+    }
+  });
 }
 
 function deleteSessionFolderContents() {
@@ -170,16 +273,12 @@ function attachClientEvents(c) {
       if (msg.fromMe) {
         return;
       }
-      // تجنّب getChat() هنا — يزيد استدعاءات Puppeteer ويُسهّل أخطاء "detached Frame".
       var fromStr = String(msg.from || '');
       if (fromStr.endsWith('@g.us')) {
         return;
       }
-      var fromRaw = msg.from || '';
-      var phone = String(fromRaw)
-        .replace(/@c.us$/i, '')
-        .replace(/\D/g, '');
-      if (phone.length < 7) {
+      var phone = await resolvePhoneDigitsForIncoming(msg, c);
+      if (!phone || phone.length < 7) {
         return;
       }
       var body = typeof msg.body === 'string' ? msg.body : '';
@@ -190,7 +289,7 @@ function attachClientEvents(c) {
       if (msg.id && msg.id._serialized) {
         mid = msg.id._serialized;
       }
-      forwardIncomingToLaravel(phone, body || ' ', mid);
+      await forwardIncomingToLaravel(phone, body || ' ', mid);
     } catch (e) {
       console.error('message handler', e);
     }
