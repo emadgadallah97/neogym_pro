@@ -15,3 +15,5 @@ public/attachments
 .vscode
 start.bat
 AGENTS.md
+/whatsapp-module/node-service/node_modules
+/whatsapp-module/node-service/session

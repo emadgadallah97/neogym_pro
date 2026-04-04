@@ -72,6 +72,7 @@ Route::group(
         require base_path('routes/crm.php');
         require base_path('routes/users.php');
         require base_path('routes/roles.php');
+        require base_path('routes/whatsapp.php');
 
 
 
